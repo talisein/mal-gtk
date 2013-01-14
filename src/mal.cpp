@@ -59,9 +59,8 @@ namespace MAL {
 			print_curl_share_error(code);
 		}
 
-			run_password_dialog();
-
 		if (!user_info->has_details()) {
+			run_password_dialog();
 		}
 	}
 
