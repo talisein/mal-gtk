@@ -33,10 +33,22 @@ namespace MAL {
 	void AnimeListView::on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter) {
 		Anime anime = iter->get_value(columns.anime);
 		const int episodes = iter->get_value(columns.episodes);
+		bool is_changed = false;
 		if (episodes != anime.episodes) {
+			is_changed = true;
 			std::cerr << "Episodes is now " << episodes << std::endl;
 			anime.episodes = episodes;
 			iter->set_value(columns.anime, anime);
+		}
+		const int score = iter->get_value(columns.score);
+		if (score != anime.score) {
+			is_changed = true;
+			std::cerr << "Score is now " << score << std::endl;
+			anime.score = score;
+			iter->set_value(columns.anime, anime);
+		}
+
+		if (is_changed) {
 			std::thread t(std::bind(&AnimeListView::send_anime_update, this, anime));
 			t.detach();
 		}
@@ -78,7 +90,7 @@ namespace MAL {
 		status_combo_box->signal_changed().connect(sigc::mem_fun(*this, &AnimeListView::on_filter_changed));
 		treeview->append_column("Title", columns.series_title);
 		treeview->append_column("Status", columns.series_status);
-		treeview->append_column("Score", columns.score);
+		treeview->append_column_numeric_editable("Score", columns.score, "%d");
 		treeview->append_column("Type", columns.type);
 		treeview->append_column_numeric_editable("Seen", columns.episodes, "%d");
 		treeview->append_column("Eps.", columns.series_episodes);
