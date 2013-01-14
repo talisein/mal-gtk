@@ -5,6 +5,30 @@
 
 namespace MAL {
 
+	AnimeStatusCellRendererCombo::AnimeStatusCellRendererCombo() :
+		Gtk::CellRendererCombo(),
+		model(Gtk::ListStore::create(columns))
+	{
+		auto iter = model->append();
+		iter->set_value(columns.text, Glib::ustring(to_string(WATCHING)));
+		iter->set_value(columns.status, WATCHING);
+		iter = model->append();
+		iter->set_value(columns.text, Glib::ustring(to_string(COMPLETED)));
+		iter->set_value(columns.status, COMPLETED);
+		iter = model->append();
+		iter->set_value(columns.text, Glib::ustring(to_string(ONHOLD)));
+		iter->set_value(columns.status, ONHOLD);
+		iter = model->append();
+		iter->set_value(columns.text, Glib::ustring(to_string(DROPPED)));
+		iter->set_value(columns.status, DROPPED);
+		iter = model->append();
+		iter->set_value(columns.text, Glib::ustring(to_string(PLANTOWATCH)));
+		iter->set_value(columns.status, PLANTOWATCH);
+		property_model() = model;
+		property_text_column() = columns.text.index();
+		property_has_entry() = false;
+	}
+
 	AnimeStatusComboBox::AnimeStatusComboBox() {
 			append("Watching");
 			append("Completed");
@@ -54,6 +78,24 @@ namespace MAL {
 		}
 	}
 
+	void AnimeListView::on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text) {
+		Gtk::TreeModel::iterator iter = model->get_iter(path);
+
+		if (iter) {
+			auto status = anime_status_from_string(new_text);
+			Anime anime = iter->get_value(columns.anime);
+			if (status != anime.status) {
+				std::cerr << "Status is now " << to_string(status) << std::endl;
+				iter->set_value(columns.status, Glib::ustring(to_string(status)));
+				anime.status = status;
+				iter->set_value(columns.anime, anime);
+				std::thread t(std::bind(&AnimeListView::send_anime_update, this, anime));
+				t.detach();
+			}
+		}
+		
+	}
+
 	// NOT Executed on the main thread. Be careful!
 	void AnimeListView::send_anime_update(Anime anime) {
 		auto success = mal->update_anime_sync(anime);
@@ -94,6 +136,14 @@ namespace MAL {
 		treeview->append_column("Type", columns.type);
 		treeview->append_column_numeric_editable("Seen", columns.episodes, "%d");
 		treeview->append_column("Eps.", columns.series_episodes);
+		auto crc            = Gtk::manage(new Gtk::TreeViewColumn("Status"));
+		status_cellrenderer = Gtk::manage(new AnimeStatusCellRendererCombo());
+		crc->pack_start(*status_cellrenderer);
+		crc->add_attribute(status_cellrenderer->property_text(), columns.status);
+		status_cellrenderer->signal_edited().connect(sigc::mem_fun(*this, &AnimeListView::on_status_cr_changed));
+		status_cellrenderer->property_editable() = true;
+
+		treeview->append_column(*crc);
 		show_all();
 		signal_refreshed.connect(sigc::mem_fun(*this, &AnimeListView::refresh_cb));
 		refresh_async();
@@ -103,7 +153,7 @@ namespace MAL {
 		status_filter = status_combo_box->get_anime_status();
 		refresh_cb();
 	}
-	
+
 	// Pulls the latest anime list from MAL. Should be done off the
 	// main thread.
 	void AnimeListView::refresh() {
@@ -139,6 +189,7 @@ namespace MAL {
 			              iter->set_value(columns.type, Glib::ustring(to_string(anime.series_type)));
 			              iter->set_value(columns.episodes, static_cast<int>(anime.episodes));
 			              iter->set_value(columns.series_episodes, static_cast<int>(anime.series_episodes));
+			              iter->set_value(columns.status, Glib::ustring(to_string(anime.status)));
 			              iter->set_value(columns.anime, anime);
 		              });
 		model_changed_connection = model->signal_row_changed().connect(model_changed_functor);

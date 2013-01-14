@@ -30,10 +30,11 @@ namespace MAL {
 	
 	std::string to_string(const SeriesType s);
 	std::string to_string(const SeriesStatus s);
-
+	std::string to_string(const AnimeStatus s);
 	SeriesType anime_series_type_from_int(const int i);
 	SeriesStatus anime_series_status_from_int(const int i);
 	AnimeStatus anime_status_from_int(const int i);
+	AnimeStatus anime_status_from_string(const std::string& s);
 
 	class Anime {
 	public:
