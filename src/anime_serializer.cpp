@@ -9,7 +9,9 @@ namespace MAL {
 	              ANIMEDBID, SERIESTITLE, SERIESTYPE, SERIESEPISODES, SERIESSTATUS,
 	              SERIESDATEBEGIN, SERIESDATEEND, SERIESIMAGEURL, SERIESSYNONYMS,
 	              ANIME, MYID, MYWATCHEDEPISODES, MYSTARTDATE, MYFINISHDATE, MYSCORE,
-	              MYSTATUS, MYREWATCHING, MYREWATCHINGEP, MYLASTUPDATED, MYTAGS };
+	              MYSTATUS, MYREWATCHING, MYREWATCHINGEP, MYLASTUPDATED, MYTAGS,
+	              USERID, SYNOPSIS
+	};
 
 	struct xmlTextReaderDeleter {
 		void operator()(xmlTextReaderPtr reader) const {
@@ -21,31 +23,43 @@ namespace MAL {
 		FIELDS field;
 		if (tag.compare("my_id") == 0) 
 			field = MYID;
-		else if (tag.compare("series_animedb_id") == 0) 
+		else if (tag.compare("series_animedb_id") == 0 
+		         || tag.compare("id") == 0) 
 			field = ANIMEDBID;
-		else if (tag.compare("series_title") == 0) 
+		else if (tag.compare("series_title") == 0
+		         || tag.compare("title") == 0) 
 			field = SERIESTITLE;
-		else if (tag.compare("series_type") == 0) 
+		else if (tag.compare("series_type") == 0
+		         || tag.compare("type") == 0) 
 			field = SERIESTYPE;
-		else if (tag.compare("series_episodes") == 0) 
+		else if (tag.compare("series_episodes") == 0
+		         || tag.compare("episodes") == 0) 
 			field = SERIESEPISODES;
-		else if (tag.compare("series_status") == 0) 
+		else if (tag.compare("series_status") == 0
+		         || tag.compare("status") == 0) 
 			field = SERIESSTATUS;
-		else if (tag.compare("series_start") == 0) 
+		else if (tag.compare("series_start") == 0
+		         || tag.compare("start_date") == 0) 
 			field = SERIESDATEBEGIN;
-		else if (tag.compare("series_end") == 0) 
+		else if (tag.compare("series_end") == 0
+		         || tag.compare("end_date") == 0) 
 			field = SERIESDATEEND;
-		else if (tag.compare("series_image") == 0) 
+		else if (tag.compare("series_image") == 0
+		         || tag.compare("image") == 0) 
 			field = SERIESIMAGEURL;
-		else if (tag.compare("series_synonyms") == 0) 
+		else if (tag.compare("series_synonyms") == 0
+		         || tag.compare("synonyms") == 0) 
 			field = SERIESSYNONYMS;
-		else if (tag.compare("my_watched_episodes") == 0) 
+		else if (tag.compare("english") == 0) 
+			field = SERIESSYNONYMS;
+		else if (tag.compare("my_watched_episodes") == 0)
 			field = MYWATCHEDEPISODES;
 		else if (tag.compare("my_start_date") == 0) 
 			field = MYSTARTDATE;
 		else if (tag.compare("my_finish_date") == 0) 
 			field = MYFINISHDATE;
-		else if (tag.compare("my_score") == 0) 
+		else if (tag.compare("my_score") == 0
+		         || tag.compare("score") == 0) 
 			field = MYSCORE;
 		else if (tag.compare("my_status") == 0) 
 			field = MYSTATUS;
@@ -60,7 +74,7 @@ namespace MAL {
 		else if (tag.compare("user_name") == 0)
 			field = FIELDNONE;
 		else if (tag.compare("user_id") == 0)
-			field = FIELDNONE;
+			field = USERID;
 		else if (tag.compare("user_watching") == 0)
 			field = FIELDNONE;
 		else if (tag.compare("user_completed") == 0)
@@ -77,9 +91,13 @@ namespace MAL {
 			field = FIELDNONE;
 		else if (tag.compare("myanimelist") == 0)
 			field = FIELDNONE;
+		else if (tag.compare("synopsis") == 0)
+			field = FIELDNONE;
+		else if (tag.compare("entry") == 0)
+			field = FIELDNONE;
 		else {
 			field = FIELDNONE;
-			std::cerr << "Unknown tag: " << tag;
+			std::cerr << "Unknown tag: " << tag << std::endl;
 		}
 
 		return field;
@@ -95,16 +113,21 @@ namespace MAL {
 			break;
 		case SERIESTITLE:
 			anime.series_title = text;
-			//std::cerr << text << ": ";
 			break;
 		case SERIESTYPE:
-			anime.series_type = anime_series_type_from_int(std::stoi(text));
+			if (text.size() == 1) 
+				anime.series_type = anime_series_type_from_int(std::stoi(text));
+			else
+				anime.series_type = anime_series_type_from_string(text);
 			break;
 		case SERIESEPISODES:
 			anime.series_episodes = std::stoi(text);
 			break;
 		case SERIESSTATUS:
-			anime.series_status = anime_series_status_from_int(std::stoi(text));
+			if (text.size() == 1)
+				anime.series_status = anime_series_status_from_int(std::stoi(text));
+			else
+				anime.series_status = anime_series_status_from_string(text);
 			break;
 		case SERIESDATEBEGIN:
 			anime.series_date_begin = text;
@@ -174,6 +197,8 @@ namespace MAL {
 		case FIELDNONE:
 			//std::cerr << " = " << text << std::endl;
 			break;
+		case USERID:
+			break;
 		default:
 			std::cerr << "Invalid field. Text = " << text << std::endl;
 		}
@@ -184,16 +209,19 @@ namespace MAL {
 		std::unique_ptr<char[]> cstr(new char[xml.size()]);
 		std::memcpy(cstr.get(), xml.c_str(), xml.size());
 		std::unique_ptr<xmlTextReader, xmlTextReaderDeleter> reader(xmlReaderForMemory(
-			         cstr.get(), xml.size(), "", "UTF-8", 0));
+			         cstr.get(), xml.size(), "", "UTF-8", XML_PARSE_RECOVER));
 
 		if (!reader) {
 			std::cerr << "Error: Couldn't create XML reader" << std::endl;
 			return res;
 		}
-		
+
 		int ret = 1;
 		FIELDS field = FIELDNONE;
 		Anime anime;
+		bool entry_after_anime = false;
+		bool seen_anime = false;
+		bool seen_entry = false;
 		for( ret = xmlTextReaderRead(reader.get()); ret == 1;
 		     ret = xmlTextReaderRead(reader.get()) ) {
 			const xmlChar *name  = xmlTextReaderConstName(reader.get());
@@ -203,13 +231,27 @@ namespace MAL {
 			if (name) {
 				const std::string name_str(reinterpret_cast<const char*>(name));
 				if (node_type == 1) {         // Element start
-					if (name_str.compare("anime") == 0)
-						anime = Anime();
-					else
+					if (name_str.compare("entry") == 0) {
+						if (seen_anime && !seen_entry) 
+							entry_after_anime = true;
+						seen_entry = true;
+					} else if (name_str.compare("anime") == 0) {
+						seen_anime = true;
+					} else {
 						field = field_from_tag(name_str);
+					}
 				} else if (node_type == 15) { // End Element
-					if (name_str.compare("anime") == 0)
-						res.push_back(anime);
+					if (entry_after_anime) {
+						if (name_str.compare("entry") == 0) {
+							res.push_back(anime);
+							anime = Anime();
+						}
+					} else {
+						if (name_str.compare("anime") == 0) {
+							res.push_back(anime);
+							anime = Anime();
+						}
+					}
 					field = FIELDNONE;
 				} else if (value) {           // Text
 					const std::string value_str(reinterpret_cast<const char*>(value));

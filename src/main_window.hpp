@@ -1,13 +1,24 @@
 #include <glibmm/dispatcher.h>
 #include <gtkmm/applicationwindow.h>
 #include <gtkmm/grid.h>
+#include <gtkmm/entry.h>
 #include "mal.hpp"
 #include "anime_list_view.hpp"
 
 namespace MAL {
 
-	class AnimeSearchView : public Gtk::Grid {
+	class AnimeSearchPage : public Gtk::Grid {
+	public:
+		AnimeSearchPage(const std::shared_ptr<MAL>&);
 
+	private:
+		std::shared_ptr<MAL> mal;
+		void do_search_async();
+		void do_search();
+		
+		Gtk::Entry *entry;
+		std::list<Anime> search_list;
+		AnimeListView *list_view;
 	};
 
 	class MainWindow : public Gtk::ApplicationWindow {
@@ -16,8 +27,8 @@ namespace MAL {
 
 	private:
 
-		AnimeListView *anime_list_view;
-		AnimeSearchView *anime_search_view;
+		AnimeListPage *anime_list_view;
+		AnimeSearchPage *anime_search_view;
 	};
 
 }

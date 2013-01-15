@@ -11,6 +11,12 @@
 
 namespace MAL {
 
+	struct CURLEscapeDeleter {
+		void operator()(char* str) const {
+			curl_free(str);
+		}
+	};
+
 	struct CURLEasyDeleter {
 		void operator()(CURL* curl) const {
 			curl_easy_cleanup(curl);
@@ -34,20 +40,37 @@ namespace MAL {
 		MAL(std::unique_ptr<UserInfo>&& info);
 		~MAL() = default;
 
-		/** Returns the anime list for username. As slow as the internet.
-		 * Safe to call from multiple threads 
+		/** Returns the anime list for username. As slow as the
+		 * internet.
+		 * Safe to call from multiple threads.
 		 */
 		std::list<Anime> get_anime_list_sync();
 
-		/** Updates MAL.net with the new anime details
-		 * Safe to call from multiple threads
+		/** Searches MAL.net. Slow as the Internet.
+		 * Safe to call from multiple threads.
+		 */
+		std::list<Anime> search_anime_sync(const std::string& terms);
+
+		/** Updates MAL.net with the new anime details. As slow as the
+		 * Internet.
+		 * Safe to call from multiple threads.
 		 */
 		bool update_anime_sync(const Anime& anime);
+
+		/** Adds an anime to the MAL.net anime list. As slow as the
+		 * Internet.
+		 * Safe to call from multiple threads.
+		 */
+		bool add_anime_sync(const Anime& anime);
+
+		Glib::Dispatcher signal_anime_added;
+
 		typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
 	private:
 		const std::string LIST_BASE_URL = "http://myanimelist.net/malappinfo.php?u=";
+		const std::string SEARCH_BASE_URL = "http://myanimelist.net/api/anime/search.xml?q=";
 		const std::string UPDATED_BASE_URL = "http://myanimelist.net/api/animelist/update/";
-
+		const std::string ADD_BASE_URL = "http://myanimelist.net/api/animelist/add/";
 		std::unique_ptr<UserInfo> user_info;
 		Glib::Dispatcher signal_run_password_dialog;
 		void run_password_dialog();

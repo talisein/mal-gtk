@@ -56,26 +56,28 @@ namespace MAL {
 	}
 
 	void AnimeListView::on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter) {
-		Anime anime = iter->get_value(columns.anime);
-		const int episodes = iter->get_value(columns.episodes);
-		bool is_changed = false;
-		if (episodes != anime.episodes) {
-			is_changed = true;
-			std::cerr << "Episodes is now " << episodes << std::endl;
-			anime.episodes = episodes;
-			iter->set_value(columns.anime, anime);
-		}
-		const int score = iter->get_value(columns.score);
-		if (score != anime.score) {
-			is_changed = true;
-			std::cerr << "Score is now " << score << std::endl;
-			anime.score = score;
-			iter->set_value(columns.anime, anime);
-		}
+		if (do_updates) {
+			Anime anime = iter->get_value(columns.anime);
+			const int episodes = iter->get_value(columns.episodes);
+			bool is_changed = false;
+			if (episodes != anime.episodes) {
+				is_changed = true;
+				std::cerr << "Episodes is now " << episodes << std::endl;
+				anime.episodes = episodes;
+				iter->set_value(columns.anime, anime);
+			}
+			const int score = iter->get_value(columns.score);
+			if (score != anime.score) {
+				is_changed = true;
+				std::cerr << "Score is now " << score << std::endl;
+				anime.score = score;
+				iter->set_value(columns.anime, anime);
+			}
 
-		if (is_changed) {
-			std::thread t(std::bind(&AnimeListView::send_anime_update, this, anime));
-			t.detach();
+			if (is_changed) {
+				std::thread t(std::bind(&AnimeListView::send_anime_update, this, anime));
+				t.detach();
+			}
 		}
 	}
 
@@ -90,8 +92,14 @@ namespace MAL {
 				iter->set_value(columns.status, Glib::ustring(to_string(status)));
 				anime.status = status;
 				iter->set_value(columns.anime, anime);
-				std::thread t(std::bind(&AnimeListView::send_anime_update, this, anime));
-				t.detach();
+				if (do_updates) {
+					std::thread t(std::bind(&AnimeListView::send_anime_update, this, anime));
+					t.detach();
+				} else {
+					anime.score = 0;
+					std::thread t(std::bind(&AnimeListView::send_anime_add, this, anime));
+					t.detach();
+				}
 			}
 		}
 		
@@ -114,28 +122,61 @@ namespace MAL {
 		}
 	}
 
-	AnimeListView::AnimeListView(const std::shared_ptr<MAL>& mal_p) :
-		Gtk::Grid(),
+	// NOT Executed on the main thread. Be careful!
+	void AnimeListView::send_anime_add(Anime anime) {
+		mal->add_anime_sync(anime);
+	}
+
+	AnimeListPage::AnimeListPage(const std::shared_ptr<MAL>& mal_p) :
 		mal(mal_p),
 		status_filter(WATCHING),
+		list_view(Gtk::manage(new AnimeListView(mal_p, status_filter)))
+	{
+		set_orientation(Gtk::ORIENTATION_VERTICAL);
+
+		status_combo_box = Gtk::manage(new AnimeStatusComboBox());
+		add(*status_combo_box);
+		add(*list_view);
+		status_combo_box->signal_changed().connect(sigc::mem_fun(*this, &AnimeListPage::on_filter_changed));
+		show_all();
+		refresh_async();
+	}
+
+	void AnimeListPage::on_filter_changed() {
+		status_filter = status_combo_box->get_anime_status();
+		list_view->set_status_filter(status_filter);
+	}
+
+	AnimeListView::AnimeListView(const std::shared_ptr<MAL>& mal_p,
+	                             const AnimeStatus filter,
+	                             const bool do_updates_) :
+		Gtk::Grid(),
+		mal(mal_p),
+		do_updates(do_updates_),
+		status_filter(filter),
 		model_changed_functor(sigc::mem_fun(*this, &AnimeListView::on_model_changed)),
 		model(Gtk::ListStore::create(columns)),
 		treeview(Gtk::manage(new Gtk::TreeView(model)))
 	{
-		set_orientation(Gtk::ORIENTATION_VERTICAL);
 		Gtk::ScrolledWindow *sw = Gtk::manage(new Gtk::ScrolledWindow());
 		sw->add(*treeview);
 		sw->set_hexpand(true);
 		sw->set_vexpand(true);
-		status_combo_box = Gtk::manage(new AnimeStatusComboBox());
-		add(*status_combo_box);
 		add(*sw);
-		status_combo_box->signal_changed().connect(sigc::mem_fun(*this, &AnimeListView::on_filter_changed));
+
 		treeview->append_column("Title", columns.series_title);
 		treeview->append_column("Status", columns.series_status);
-		treeview->append_column_numeric_editable("Score", columns.score, "%d");
+
+		if (do_updates)
+			treeview->append_column_numeric_editable("Score", columns.score, "%d");
+		else
+			treeview->append_column("Score", columns.score);
+
 		treeview->append_column("Type", columns.type);
-		treeview->append_column_numeric_editable("Seen", columns.episodes, "%d");
+
+		if (do_updates)
+			treeview->append_column_numeric_editable("Seen", columns.episodes, "%d");
+
 		treeview->append_column("Eps.", columns.series_episodes);
 		auto crc            = Gtk::manage(new Gtk::TreeViewColumn("Status"));
 		status_cellrenderer = Gtk::manage(new AnimeStatusCellRendererCombo());
@@ -147,26 +188,28 @@ namespace MAL {
 		treeview->append_column(*crc);
 		show_all();
 		signal_refreshed.connect(sigc::mem_fun(*this, &AnimeListView::refresh_cb));
-		refresh_async();
 	}
 
-	void AnimeListView::on_filter_changed() {
-		status_filter = status_combo_box->get_anime_status();
+	void AnimeListView::set_status_filter(const AnimeStatus status) {
+		status_filter = status;
 		refresh_cb();
+	}
+
+	void AnimeListView::set_anime_list(std::list<Anime>& anime) {
+		std::swap(anime_list, anime);
+		signal_refreshed();
 	}
 
 	// Pulls the latest anime list from MAL. Should be done off the
 	// main thread.
-	void AnimeListView::refresh() {
+	void AnimeListPage::refresh() {
 		auto list = mal->get_anime_list_sync();
-		std::swap(anime_list, list);
-
-		signal_refreshed();
+		list_view->set_anime_list(list);
 	}
 
 	// Asynchronous call to refresh the anime list from MAL
-	void AnimeListView::refresh_async() {
-		std::thread t(std::bind(&AnimeListView::refresh, this));
+	void AnimeListPage::refresh_async() {
+		std::thread t(std::bind(&AnimeListPage::refresh, this));
 		t.detach();
 	}
 
@@ -175,11 +218,15 @@ namespace MAL {
 		if (model_changed_connection.connected())
 			model_changed_connection.disconnect();
 		model->clear();
-		auto iter = std::partition(std::begin(anime_list),
-		                           std::end(anime_list),
-		                           [&](const Anime& anime) {
-			                           return anime.status == status_filter;
-		                           });
+		auto iter = std::end(anime_list);
+		if (status_filter != ANIMESTATUS_INVALID) {
+			iter = std::partition(std::begin(anime_list),
+			                      std::end(anime_list),
+			                      [&](const Anime& anime) {
+				                      return anime.status == status_filter;
+			                      });
+		}
+		
 		std::for_each(std::begin(anime_list),
 		              iter,
 		              [&](const Anime& anime) {
@@ -190,7 +237,11 @@ namespace MAL {
 			              iter->set_value(columns.type, Glib::ustring(to_string(anime.series_type)));
 			              iter->set_value(columns.episodes, static_cast<int>(anime.episodes));
 			              iter->set_value(columns.series_episodes, static_cast<int>(anime.series_episodes));
-			              iter->set_value(columns.status, Glib::ustring(to_string(anime.status)));
+			              if (do_updates) {
+				              iter->set_value(columns.status, Glib::ustring(to_string(anime.status)));
+			              } else {
+				              iter->set_value(columns.status, Glib::ustring("Add To My Anime List..."));
+			              }
 			              iter->set_value(columns.anime, anime);
 		              });
 		model_changed_connection = model->signal_row_changed().connect(model_changed_functor);

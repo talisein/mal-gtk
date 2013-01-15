@@ -126,7 +126,55 @@ namespace MAL {
 		}
 
 		out = serializer.deserialize(*buf);
+
 		return out;
+	}
+
+	std::list<Anime> MAL::search_anime_sync(const std::string& terms) {
+		std::list<Anime> res;
+		
+		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
+		std::unique_ptr<std::string> buf(new std::string());
+		std::unique_ptr<char, CURLEscapeDeleter> terms_escaped(curl_easy_escape(curl.get(), terms.c_str(), terms.size()));
+		const std::string url = SEARCH_BASE_URL + terms_escaped.get();
+
+		setup_curl_easy(curl.get(), url, buf.get());
+		CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_USERNAME, user_info->get_username().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_PASSWORD, user_info->get_password().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+
+		code = curl_easy_perform(curl.get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+			long res = 0;
+			code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
+			if (code != CURLE_OK)
+				print_curl_error(code);
+			else if (res == 401) {
+				signal_run_password_dialog();
+			}
+		}
+
+		auto start = buf->find("<synopsis>");
+		auto end = buf->find("</synopsis>");
+		while (start != std::string::npos) {
+			buf->erase(start, end - start + 11);
+			start = buf->find("<synopsis>");
+			end = buf->find("</synopsis>");
+		}
+
+		res = serializer.deserialize(*buf);
+		
+		return res;
 	}
 
 	bool MAL::update_anime_sync(const Anime& anime) {
@@ -175,6 +223,53 @@ namespace MAL {
 			return true;
 		else
 			return false;
+	}
+
+	bool MAL::add_anime_sync(const Anime& anime) {
+		const std::string url = ADD_BASE_URL + std::to_string(anime.series_animedb_id) + ".xml";
+		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
+		std::unique_ptr<std::string> buf(new std::string());
+		setup_curl_easy(curl.get(), url, buf.get());
+		auto xml = serializer.serialize(anime);
+		xml.insert(0, "data=");
+		CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_COPYPOSTFIELDS, xml.c_str());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_USERNAME, user_info->get_username().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_PASSWORD, user_info->get_password().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+
+		code = curl_easy_perform(curl.get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+			long res = 0;
+			curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
+			if (res == 401) {
+				signal_run_password_dialog();
+			}
+		}
+
+		std::cerr << "Response: " << *buf << std::endl;
+		if (code == CURLE_OK) {
+			signal_anime_added();
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	void MAL::print_curl_error(CURLcode code) {

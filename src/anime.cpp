@@ -22,6 +22,25 @@ namespace MAL {
 		}
 	}
 
+	SeriesType anime_series_type_from_string(const std::string& s) {
+		if (s.compare(to_string(TV)) == 0)
+			return TV;
+		else if (s.compare(to_string(OVA)) == 0)
+			return OVA;
+		else if (s.compare(to_string(MOVIE)) == 0)
+			return MOVIE;
+		else if (s.compare(to_string(SPECIAL)) == 0)
+			return SPECIAL;
+		else if (s.compare(to_string(ONA)) == 0)
+			return ONA;
+		else if (s.compare(to_string(MUSIC)) == 0)
+			return MUSIC;
+		else {
+			std::cerr << "Error: Unknown series type '" << s << "'" << std::endl;
+			return SERIESTYPE_INVALID;
+		}
+	}
+
 	SeriesStatus anime_series_status_from_int(const int i) {
 		switch (i) {
 		case 1:
@@ -32,6 +51,22 @@ namespace MAL {
 			return NOTYETAIRED;
 		default:
 			std::cerr << "Error: Unknown series status " << i << std::endl;
+			return SERIESSTATUS_INVALID;
+		}
+	}
+
+	SeriesStatus anime_series_status_from_string(const std::string& s) {
+		if (s.compare(to_string(AIRING)) == 0 ||
+		    s.compare("Currently Airing") == 0)
+			return AIRING;
+		else if (s.compare(to_string(FINISHED)) == 0 ||
+		    s.compare("Finished Airing") == 0)
+			return FINISHED;
+		else if (s.compare(to_string(FINISHED)) == 0 ||
+		    s.compare("Not yet aired") == 0)
+			return FINISHED;
+		else {
+			std::cerr << "Error: Unknown series status '" << s << "'" << std::endl;
 			return SERIESSTATUS_INVALID;
 		}
 	}
@@ -53,6 +88,7 @@ namespace MAL {
 			return ANIMESTATUS_INVALID;
 		}
 	}
+
 	AnimeStatus anime_status_from_string(const std::string& s) {
 		if (s.compare(to_string(WATCHING)) == 0)
 			return WATCHING;

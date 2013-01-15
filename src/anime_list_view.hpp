@@ -35,11 +35,15 @@ namespace MAL {
 		AnimeStatus get_anime_status() const;
 	};
 
+
 	class AnimeListView : public Gtk::Grid {
 	public:
-		AnimeListView(const std::shared_ptr<MAL>&);
+		AnimeListView(const std::shared_ptr<MAL>&,
+		              const AnimeStatus filter = ANIMESTATUS_INVALID,
+		              const bool do_updates = true);
 
-		void refresh_async();
+		void set_status_filter(const AnimeStatus status);
+		void set_anime_list(std::list<Anime>& anime);
 	private:
 		std::shared_ptr<MAL> mal;
 		class AnimeModelColumns : public Gtk::TreeModel::ColumnRecord
@@ -64,27 +68,39 @@ namespace MAL {
 				add(anime);
 			} 
 		} columns;
-		
 
+		bool do_updates;
 		AnimeStatus status_filter;
-		AnimeStatusComboBox *status_combo_box;
-		void on_filter_changed();
-
 		AnimeStatusCellRendererCombo *status_cellrenderer;
 		void on_status_cr_changed(const Glib::ustring& text, const Glib::ustring& iter);
 
 		std::list<Anime> anime_list;
-		void refresh();
-		void refresh_cb();
 		Glib::Dispatcher signal_refreshed;
+		void refresh_cb();
 		
 		const sigc::slot<void, const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator&> model_changed_functor;
 		sigc::connection model_changed_connection;
 		void on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator&);
 		void send_anime_update(Anime anime);
+		void send_anime_add(Anime anime);
 
 		Glib::RefPtr<Gtk::ListStore> model;
 		Gtk::TreeView *treeview;
+	};
+
+	class AnimeListPage : public Gtk::Grid {
+	public:
+		AnimeListPage(const std::shared_ptr<MAL>&);
+		void refresh_async();
+
+	private:
+		std::shared_ptr<MAL> mal;
+		AnimeStatus status_filter;
+		AnimeListView* list_view;
+		AnimeStatusComboBox *status_combo_box;
+		void on_filter_changed();
+		void refresh();
+
 	};
 
 
