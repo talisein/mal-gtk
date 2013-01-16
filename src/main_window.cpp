@@ -17,9 +17,13 @@ namespace MAL {
 		add(*entry);
 		auto action = Gtk::Action::create();
 		action->signal_activate().connect(sigc::mem_fun(*this, &AnimeSearchPage::do_search_async));
-		auto button = Gtk::manage(new Gtk::Button(Gtk::Stock::FIND));
-		button->set_label("Search");
+		auto button = Gtk::manage(new Gtk::Button("Search"));
 		button->set_always_show_image(true);
+		auto icon = button->render_icon_pixbuf(Gtk::Stock::FIND, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
+		auto image = Gtk::manage(new Gtk::Image(icon));
+		button->set_image(*image);
+		button->set_tooltip_text("Search myanimelist.net for anime that maches the entered terms.");
+
 		button->set_related_action(action);
 		attach_next_to(*button, *entry, Gtk::POS_RIGHT, 1, 1);
 		button->show();
@@ -49,6 +53,7 @@ namespace MAL {
 		anime_search_view(Gtk::manage(new AnimeSearchPage(mal)))
 	{
 		auto book = Gtk::manage(new Gtk::Notebook());
+		book->set_show_border(false);
 		book->append_page(*anime_list_view, "My Anime List");
 		book->append_page(*anime_search_view, "Search");
 		book->show_all();

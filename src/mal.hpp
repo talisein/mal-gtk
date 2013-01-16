@@ -88,6 +88,9 @@ namespace MAL {
 		std::unique_ptr<pair_lock_functor_t> share_lock_functors;
 		std::map<curl_lock_data, std::unique_ptr<std::mutex>> map_mutex;
 		std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
-
+		const std::map<const std::string, const std::string> html_entities;
+		
+		void parse_entities(std::string& s) const;
+		std::map<const std::string, const std::string> initialize_entities() const;
 	};
 }

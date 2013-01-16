@@ -209,7 +209,7 @@ namespace MAL {
 		std::unique_ptr<char[]> cstr(new char[xml.size()]);
 		std::memcpy(cstr.get(), xml.c_str(), xml.size());
 		std::unique_ptr<xmlTextReader, xmlTextReaderDeleter> reader(xmlReaderForMemory(
-			         cstr.get(), xml.size(), "", "UTF-8", XML_PARSE_RECOVER));
+			         cstr.get(), xml.size(), "", "UTF-8", XML_PARSE_RECOVER | XML_PARSE_NOENT ));
 
 		if (!reader) {
 			std::cerr << "Error: Couldn't create XML reader" << std::endl;

@@ -136,8 +136,13 @@ namespace MAL {
 		list_view(Gtk::manage(new AnimeListView(mal_p, status_filter)))
 	{
 		set_orientation(Gtk::ORIENTATION_VERTICAL);
-		auto button = Gtk::manage(new Gtk::Button(Gtk::Stock::REFRESH));
+		auto button = Gtk::manage(new Gtk::Button(""));
 		button->set_always_show_image(true);
+		auto icon = button->render_icon_pixbuf(Gtk::Stock::REFRESH, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
+		auto image = Gtk::manage(new Gtk::Image(icon));
+		button->set_image(*image);
+		button->set_tooltip_text("Refresh data from myanimelist.net\nThis is rarely necessary. If you enter some invalid data here such as a score of 100, refreshing will fix the score to what MAL says, e.g. 10. If you have modified your MAL data via the website since starting this program, a refresh will pull in those changes.");
+
 		status_combo_box = Gtk::manage(new AnimeStatusComboBox());
 		add(*status_combo_box);
 		attach_next_to(*button, *status_combo_box, Gtk::POS_RIGHT, 1, 1);
