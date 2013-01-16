@@ -267,7 +267,8 @@ namespace MAL {
 			              iter->set_value(columns.series_title, Glib::ustring(anime.series_title));
 			              iter->set_value(columns.series_status, Glib::ustring(to_string(anime.series_status)));
 			              iter->set_value(columns.series_season, Glib::ustring(anime_season_from_date(anime.series_date_begin)));
-			              iter->set_value(columns.series_start_date, Glib::ustring(anime.series_date_begin));
+			              auto sort_text = anime.series_date_begin.substr(0,7);
+			              iter->set_value(columns.series_start_date, Glib::ustring(sort_text));
 			              iter->set_value(columns.score, static_cast<float>(anime.score));
 			              iter->set_value(columns.type, Glib::ustring(to_string(anime.series_type)));
 			              iter->set_value(columns.episodes, static_cast<int>(anime.episodes));
