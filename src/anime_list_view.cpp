@@ -174,6 +174,7 @@ namespace MAL {
 
 		auto title = Gtk::manage(new Gtk::TreeViewColumn("Title", columns.series_title));
 		title->set_sort_column(columns.series_title);
+		title->set_expand(true);
 		treeview->append_column(*title);
 		treeview->append_column("Airing Status", columns.series_status);
 		auto season = Gtk::manage(new Gtk::TreeViewColumn("Season", columns.series_season));
@@ -182,17 +183,11 @@ namespace MAL {
 		treeview->append_column(*season);
 		season->set_sort_column(columns.series_start_date);
 
-		int num_columns;
 		if (do_updates) {
-			num_columns = treeview->append_column_numeric_editable("Score", columns.score, "%.0f");
+			treeview->append_column_numeric_editable("Score", columns.score, "%.0f");
 		} else {
-			num_columns = treeview->append_column_numeric("Score", columns.score, "%.2f");
+			treeview->append_column_numeric("Score", columns.score, "%.2f");
 		}
-		auto score = treeview->get_column(num_columns - 1);
-		auto score_cr = score->get_first_cell();
-		score_cr->set_alignment(1.0, 0.5);
-		score->set_expand(true);
-		score->set_alignment(Gtk::ALIGN_END);
 
 		treeview->append_column("Type", columns.type);
 
@@ -248,9 +243,25 @@ namespace MAL {
 				                      return anime.status == status_filter;
 			                      });
 		}
+		std::vector<Anime> animes;
+		animes.reserve(std::distance(std::begin(anime_list), iter));
+		std::copy(std::begin(anime_list),
+		          iter,
+		          std::back_inserter(animes));
+			
+		std::sort(std::begin(animes),
+		          std::end(animes),
+		          [](const Anime& lhs, const Anime& rhs) {
+			          auto season = lhs.series_date_begin.substr(0,7).compare(rhs.series_date_begin.substr(0,7));
+			          if (season == 0)
+				          return lhs.series_title.compare(rhs.series_title) < 0;
+			          else
+				          return season > 0;
+		          });
 		
-		std::for_each(std::begin(anime_list),
-		              iter,
+		
+		std::for_each(std::begin(animes),
+		              std::end(animes),
 		              [&](const Anime& anime) {
 			              auto iter = model->append();
 			              iter->set_value(columns.series_title, Glib::ustring(anime.series_title));
