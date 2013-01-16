@@ -3,6 +3,7 @@
 #include <thread>
 #include <gtkmm/label.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/stock.h>
 
 namespace MAL {
 
@@ -97,6 +98,8 @@ namespace MAL {
 					t.detach();
 				} else {
 					anime.score = 0;
+					if (anime.status == COMPLETED)
+						anime.episodes = anime.series_episodes;
 					std::thread t(std::bind(&AnimeListView::send_anime_add, this, anime));
 					t.detach();
 				}
@@ -133,12 +136,17 @@ namespace MAL {
 		list_view(Gtk::manage(new AnimeListView(mal_p, status_filter)))
 	{
 		set_orientation(Gtk::ORIENTATION_VERTICAL);
-
+		auto button = Gtk::manage(new Gtk::Button(Gtk::Stock::REFRESH));
+		button->set_always_show_image(true);
 		status_combo_box = Gtk::manage(new AnimeStatusComboBox());
 		add(*status_combo_box);
-		add(*list_view);
+		attach_next_to(*button, *status_combo_box, Gtk::POS_RIGHT, 1, 1);
+		attach_next_to(*list_view, *status_combo_box, Gtk::POS_BOTTOM, 2, 1);
+		status_combo_box->set_hexpand(true);
+		button->signal_clicked().connect(sigc::mem_fun(*this, &AnimeListPage::refresh_async));
 		status_combo_box->signal_changed().connect(sigc::mem_fun(*this, &AnimeListPage::on_filter_changed));
 		show_all();
+		mal->signal_anime_added.connect(sigc::mem_fun(*this, &AnimeListPage::refresh_async));
 		refresh_async();
 	}
 
@@ -164,13 +172,27 @@ namespace MAL {
 		sw->set_vexpand(true);
 		add(*sw);
 
-		treeview->append_column("Title", columns.series_title);
-		treeview->append_column("Status", columns.series_status);
+		auto title = Gtk::manage(new Gtk::TreeViewColumn("Title", columns.series_title));
+		title->set_sort_column(columns.series_title);
+		treeview->append_column(*title);
+		treeview->append_column("Airing Status", columns.series_status);
+		auto season = Gtk::manage(new Gtk::TreeViewColumn("Season", columns.series_season));
+		auto season_cr = season->get_first_cell();
+		season_cr->set_alignment(1.0, 0.5);
+		treeview->append_column(*season);
+		season->set_sort_column(columns.series_start_date);
 
-		if (do_updates)
-			treeview->append_column_numeric_editable("Score", columns.score, "%d");
-		else
-			treeview->append_column("Score", columns.score);
+		int num_columns;
+		if (do_updates) {
+			num_columns = treeview->append_column_numeric_editable("Score", columns.score, "%.0f");
+		} else {
+			num_columns = treeview->append_column_numeric("Score", columns.score, "%.2f");
+		}
+		auto score = treeview->get_column(num_columns - 1);
+		auto score_cr = score->get_first_cell();
+		score_cr->set_alignment(1.0, 0.5);
+		score->set_expand(true);
+		score->set_alignment(Gtk::ALIGN_END);
 
 		treeview->append_column("Type", columns.type);
 
@@ -178,7 +200,7 @@ namespace MAL {
 			treeview->append_column_numeric_editable("Seen", columns.episodes, "%d");
 
 		treeview->append_column("Eps.", columns.series_episodes);
-		auto crc            = Gtk::manage(new Gtk::TreeViewColumn("Status"));
+		auto crc            = Gtk::manage(new Gtk::TreeViewColumn("Viewing Status"));
 		status_cellrenderer = Gtk::manage(new AnimeStatusCellRendererCombo());
 		crc->pack_start(*status_cellrenderer);
 		crc->add_attribute(status_cellrenderer->property_text(), columns.status);
@@ -233,7 +255,9 @@ namespace MAL {
 			              auto iter = model->append();
 			              iter->set_value(columns.series_title, Glib::ustring(anime.series_title));
 			              iter->set_value(columns.series_status, Glib::ustring(to_string(anime.series_status)));
-			              iter->set_value(columns.score, static_cast<int>(anime.score));
+			              iter->set_value(columns.series_season, Glib::ustring(anime_season_from_date(anime.series_date_begin)));
+			              iter->set_value(columns.series_start_date, Glib::ustring(anime.series_date_begin));
+			              iter->set_value(columns.score, static_cast<float>(anime.score));
 			              iter->set_value(columns.type, Glib::ustring(to_string(anime.series_type)));
 			              iter->set_value(columns.episodes, static_cast<int>(anime.episodes));
 			              iter->set_value(columns.series_episodes, static_cast<int>(anime.series_episodes));

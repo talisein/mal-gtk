@@ -71,6 +71,7 @@ namespace MAL {
 		const std::string SEARCH_BASE_URL = "http://myanimelist.net/api/anime/search.xml?q=";
 		const std::string UPDATED_BASE_URL = "http://myanimelist.net/api/animelist/update/";
 		const std::string ADD_BASE_URL = "http://myanimelist.net/api/animelist/add/";
+
 		std::unique_ptr<UserInfo> user_info;
 		Glib::Dispatcher signal_run_password_dialog;
 		void run_password_dialog();

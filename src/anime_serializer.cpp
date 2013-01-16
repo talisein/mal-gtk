@@ -164,7 +164,7 @@ namespace MAL {
 			anime.date_finish = text;
 			break;
 		case MYSCORE:
-			anime.score = std::stoi(text);
+			anime.score = std::stof(text);
 			break;
 		case MYSTATUS:
 			anime.status = anime_status_from_int(std::stoi(text));

@@ -51,12 +51,14 @@ namespace MAL {
 		public:
 			Gtk::TreeModelColumn<Glib::ustring> series_title;
 			Gtk::TreeModelColumn<Glib::ustring> series_status;
-			Gtk::TreeModelColumn<gint> score;
+			Gtk::TreeModelColumn<float> score;
 			Gtk::TreeModelColumn<Glib::ustring> type;
 			Gtk::TreeModelColumn<gint> episodes;
 			Gtk::TreeModelColumn<gint> series_episodes;
 			Gtk::TreeModelColumn<Glib::ustring> status;
 			Gtk::TreeModelColumn<Anime> anime;
+			Gtk::TreeModelColumn<Glib::ustring> series_season;
+			Gtk::TreeModelColumn<Glib::ustring> series_start_date;
 
 			AnimeModelColumns() { add(series_title);
 				add(series_status);
@@ -65,6 +67,8 @@ namespace MAL {
 				add(episodes);
 				add(series_episodes);
 				add(status);
+				add(series_season);
+				add(series_start_date);
 				add(anime);
 			} 
 		} columns;

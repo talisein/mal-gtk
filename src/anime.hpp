@@ -31,6 +31,9 @@ namespace MAL {
 	std::string to_string(const SeriesType s);
 	std::string to_string(const SeriesStatus s);
 	std::string to_string(const AnimeStatus s);
+
+	std::string anime_season_from_date(const std::string& s);
+
 	SeriesType anime_series_type_from_int(const int i);
 	SeriesType anime_series_type_from_string(const std::string& s);
 
@@ -39,6 +42,7 @@ namespace MAL {
 
 	AnimeStatus anime_status_from_int(const int i);
 	AnimeStatus anime_status_from_string(const std::string& s);
+
 
 	class Anime {
 	public:
@@ -58,7 +62,7 @@ namespace MAL {
 		int64_t               id; //
 		AnimeStatus           status; //
 		int16_t               episodes; //
-		int16_t               score; //
+		float                 score; //
 		int16_t               downloaded_episodes;
 		int16_t               storage_type;
 		float                 storage_value;

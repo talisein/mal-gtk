@@ -1,5 +1,6 @@
 #include <thread>
 #include <gtkmm/notebook.h>
+#include <gtkmm/stock.h>
 #include "main_window.hpp"
 
 namespace MAL {
@@ -16,7 +17,9 @@ namespace MAL {
 		add(*entry);
 		auto action = Gtk::Action::create();
 		action->signal_activate().connect(sigc::mem_fun(*this, &AnimeSearchPage::do_search_async));
-		auto button = Gtk::manage(new Gtk::Button("Submit"));
+		auto button = Gtk::manage(new Gtk::Button(Gtk::Stock::FIND));
+		button->set_label("Search");
+		button->set_always_show_image(true);
 		button->set_related_action(action);
 		attach_next_to(*button, *entry, Gtk::POS_RIGHT, 1, 1);
 		button->show();
@@ -51,6 +54,7 @@ namespace MAL {
 		book->show_all();
 		add(*book);
 		anime_list_view->show_all();
+		resize(1200,600);
 	}
 
 
