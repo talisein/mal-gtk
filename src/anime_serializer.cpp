@@ -4,14 +4,82 @@
 #include <cstring>
 #include <memory>
 
+namespace {
+	static std::map<const std::string, const MAL::FIELDS> initialize_field_map() {
+		return {
+			{ "my_id",                    MAL::MYID },
+			{ "series_animedb_id",        MAL::ANIMEDBID },
+			{ "id",                       MAL::ANIMEDBID },
+			{ "series_title",             MAL::SERIESTITLE },
+			{ "title",                    MAL::SERIESTITLE },
+			{ "series_type",              MAL::SERIESTYPE },
+			{ "type",                     MAL::SERIESTYPE },
+			{ "series_episodes",          MAL::SERIESEPISODES },
+			{ "episodes",                 MAL::SERIESEPISODES },
+			{ "series_status",            MAL::SERIESSTATUS },
+			{ "status",                   MAL::SERIESSTATUS },
+			{ "series_start",             MAL::SERIESDATEBEGIN },
+			{ "start_date",               MAL::SERIESDATEBEGIN },
+			{ "series_end",               MAL::SERIESDATEEND },
+			{ "end_date",                 MAL::SERIESDATEEND },
+			{ "series_image",             MAL::SERIESIMAGEURL },
+			{ "image",                    MAL::SERIESIMAGEURL },
+			{ "series_synonyms",          MAL::SERIESSYNONYMS },
+			{ "synonyms",                 MAL::SERIESSYNONYMS },
+			{ "my_score",                 MAL::MYSCORE },
+			{ "score",                    MAL::MYSCORE },
+			{ "english",                  MAL::SERIESSYNONYMS },
+			{ "my_watched_episodes",      MAL::MYWATCHEDEPISODES },
+			{ "my_start_date",            MAL::MYSTARTDATE },
+			{ "my_finish_date",           MAL::MYFINISHDATE },
+			{ "my_status",                MAL::MYSTATUS },
+			{ "my_rewatching",            MAL::MYREWATCHING },
+			{ "my_rewatching_ep",         MAL::MYREWATCHINGEP },
+			{ "my_last_updated",          MAL::MYLASTUPDATED },
+			{ "my_tags",                  MAL::MYTAGS },
+			{ "user_id",                  MAL::USERID },
+			{ "synopsis",                 MAL::SYNOPSIS },
+			{ "user_name",                MAL::FIELDNONE },
+			{ "user_watching",            MAL::FIELDNONE },
+			{ "user_completed",           MAL::FIELDNONE },
+			{ "user_onhold",              MAL::FIELDNONE },
+			{ "user_dropped",             MAL::FIELDNONE },
+			{ "user_plantowatch",         MAL::FIELDNONE },
+			{ "user_days_spent_watching", MAL::FIELDNONE },
+			{ "myinfo",                   MAL::FIELDNONE },
+			{ "myanimelist",              MAL::FIELDNONE },
+			{ "entry",                    MAL::ENTRY },
+			{ "anime",                    MAL::ANIME }
+		};
+	}
+
+	static std::map<const MAL::FIELDS, const decltype(std::mem_fn(&MAL::Anime::set_id))> initialize_member_map() {
+		return {
+			{ MAL::ANIMEDBID,         std::mem_fn(&MAL::Anime::set_series_animedb_id) },
+			{ MAL::SERIESTITLE,       std::mem_fn(&MAL::Anime::set_series_title) },
+			{ MAL::SERIESTYPE,        std::mem_fn(&MAL::Anime::set_series_type) },
+			{ MAL::SERIESEPISODES,    std::mem_fn(&MAL::Anime::set_series_episodes) },
+			{ MAL::SERIESSTATUS,      std::mem_fn(&MAL::Anime::set_series_status) },
+			{ MAL::SERIESDATEBEGIN,   std::mem_fn(&MAL::Anime::set_series_date_begin) },
+			{ MAL::SERIESDATEEND,     std::mem_fn(&MAL::Anime::set_series_date_end) },
+			{ MAL::SERIESIMAGEURL,    std::mem_fn(&MAL::Anime::set_image_url) },
+			{ MAL::SERIESSYNONYMS,    std::mem_fn(&MAL::Anime::set_series_synonyms) },
+			{ MAL::MYID,              std::mem_fn(&MAL::Anime::set_id) },
+			{ MAL::MYWATCHEDEPISODES, std::mem_fn(&MAL::Anime::set_episodes) },
+			{ MAL::MYSTARTDATE,       std::mem_fn(&MAL::Anime::set_date_start) },
+			{ MAL::MYFINISHDATE,      std::mem_fn(&MAL::Anime::set_date_finish) },
+			{ MAL::MYSCORE,           std::mem_fn(&MAL::Anime::set_score) },
+			{ MAL::MYSTATUS,          std::mem_fn(&MAL::Anime::set_status) },
+			{ MAL::MYREWATCHING,      std::mem_fn(&MAL::Anime::set_enable_rewatching) },
+			{ MAL::MYREWATCHINGEP,    std::mem_fn(&MAL::Anime::set_rewatch_episode) },
+			{ MAL::MYLASTUPDATED,     std::mem_fn(&MAL::Anime::set_last_updated) },
+			{ MAL::MYTAGS,            std::mem_fn(&MAL::Anime::set_tags) },
+			{ MAL::SYNOPSIS,          std::mem_fn(&MAL::Anime::set_series_synopsis) },
+		};
+	}
+}
+
 namespace MAL {
-	enum FIELDS { FIELDNONE, 
-	              ANIMEDBID, SERIESTITLE, SERIESTYPE, SERIESEPISODES, SERIESSTATUS,
-	              SERIESDATEBEGIN, SERIESDATEEND, SERIESIMAGEURL, SERIESSYNONYMS,
-	              ANIME, MYID, MYWATCHEDEPISODES, MYSTARTDATE, MYFINISHDATE, MYSCORE,
-	              MYSTATUS, MYREWATCHING, MYREWATCHINGEP, MYLASTUPDATED, MYTAGS,
-	              USERID, SYNOPSIS
-	};
 
 	struct xmlTextReaderDeleter {
 		void operator()(xmlTextReaderPtr reader) const {
@@ -19,189 +87,10 @@ namespace MAL {
 		}
 	};
 
-	static FIELDS field_from_tag(const std::string& tag) {
-		FIELDS field;
-		if (tag.compare("my_id") == 0) 
-			field = MYID;
-		else if (tag.compare("series_animedb_id") == 0 
-		         || tag.compare("id") == 0) 
-			field = ANIMEDBID;
-		else if (tag.compare("series_title") == 0
-		         || tag.compare("title") == 0) 
-			field = SERIESTITLE;
-		else if (tag.compare("series_type") == 0
-		         || tag.compare("type") == 0) 
-			field = SERIESTYPE;
-		else if (tag.compare("series_episodes") == 0
-		         || tag.compare("episodes") == 0) 
-			field = SERIESEPISODES;
-		else if (tag.compare("series_status") == 0
-		         || tag.compare("status") == 0) 
-			field = SERIESSTATUS;
-		else if (tag.compare("series_start") == 0
-		         || tag.compare("start_date") == 0) 
-			field = SERIESDATEBEGIN;
-		else if (tag.compare("series_end") == 0
-		         || tag.compare("end_date") == 0) 
-			field = SERIESDATEEND;
-		else if (tag.compare("series_image") == 0
-		         || tag.compare("image") == 0) 
-			field = SERIESIMAGEURL;
-		else if (tag.compare("series_synonyms") == 0
-		         || tag.compare("synonyms") == 0) 
-			field = SERIESSYNONYMS;
-		else if (tag.compare("english") == 0) 
-			field = SERIESSYNONYMS;
-		else if (tag.compare("my_watched_episodes") == 0)
-			field = MYWATCHEDEPISODES;
-		else if (tag.compare("my_start_date") == 0) 
-			field = MYSTARTDATE;
-		else if (tag.compare("my_finish_date") == 0) 
-			field = MYFINISHDATE;
-		else if (tag.compare("my_score") == 0
-		         || tag.compare("score") == 0) 
-			field = MYSCORE;
-		else if (tag.compare("my_status") == 0) 
-			field = MYSTATUS;
-		else if (tag.compare("my_rewatching") == 0) 
-			field = MYREWATCHING;
-		else if (tag.compare("my_rewatching_ep") == 0) 
-			field = MYREWATCHINGEP;
-		else if (tag.compare("my_last_updated") == 0) 
-			field = MYLASTUPDATED;
-		else if (tag.compare("my_tags") == 0) 
-			field = MYTAGS;
-		else if (tag.compare("user_name") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("user_id") == 0)
-			field = USERID;
-		else if (tag.compare("user_watching") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("user_completed") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("user_onhold") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("user_dropped") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("user_plantowatch") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("user_days_spent_watching") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("myinfo") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("myanimelist") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("synopsis") == 0)
-			field = FIELDNONE;
-		else if (tag.compare("entry") == 0)
-			field = FIELDNONE;
-		else {
-			field = FIELDNONE;
-			std::cerr << "Unknown tag: " << tag << std::endl;
-		}
-
-		return field;
-	}
-
-	static void set_anime_for_field(Anime& anime, const FIELDS field, const std::string& text) {
-		switch (field) {
-		case MYID:
-			anime.id = std::stoll(text);
-			break;
-		case ANIMEDBID:
-			anime.series_animedb_id = std::stoll(text);
-			break;
-		case SERIESTITLE:
-			anime.series_title = text;
-			break;
-		case SERIESTYPE:
-			if (text.size() == 1) 
-				anime.series_type = anime_series_type_from_int(std::stoi(text));
-			else
-				anime.series_type = anime_series_type_from_string(text);
-			break;
-		case SERIESEPISODES:
-			anime.series_episodes = std::stoi(text);
-			break;
-		case SERIESSTATUS:
-			if (text.size() == 1)
-				anime.series_status = anime_series_status_from_int(std::stoi(text));
-			else
-				anime.series_status = anime_series_status_from_string(text);
-			break;
-		case SERIESDATEBEGIN:
-			anime.series_date_begin = text;
-			break;
-		case SERIESDATEEND:
-			anime.series_date_end = text;
-			break;
-		case SERIESIMAGEURL:
-			anime.image_url = text;
-			break;
-		case SERIESSYNONYMS:
-			{
-				auto iter = text.find("; ");
-				decltype(iter) start = 0;
-				while (iter != text.npos) {
-					auto const substr = text.substr(start, iter - start);
-					if (substr.size() > 0) {
-						anime.series_synonyms.insert(substr);
-					}
-
-					start = iter + 2;
-					iter = text.find("; ", start);
-				}
-				anime.series_synonyms.insert(text.substr(start, iter - start));
-			}
-			break;
-		case MYWATCHEDEPISODES:
-			anime.episodes = std::stoi(text);
-			break;
-		case MYSTARTDATE:
-			anime.date_start = text;
-			break;
-		case MYFINISHDATE:
-			anime.date_finish = text;
-			break;
-		case MYSCORE:
-			anime.score = std::stof(text);
-			break;
-		case MYSTATUS:
-			anime.status = anime_status_from_int(std::stoi(text));
-			break;
-		case MYREWATCHING:
-			anime.enable_rewatching = text.compare("0")==0?false:true;
-			break;
-		case MYREWATCHINGEP:
-			anime.rewatch_episode = std::stoi(text);
-			break;
-		case MYLASTUPDATED:
-			anime.last_updated = std::stoull(text);
-			break;
-		case MYTAGS:
-			{
-				auto iter = text.find("; ");
-				decltype(iter) start = 0;
-				while (iter != text.npos) {
-					auto const substr = text.substr(start, iter - start);
-					if (substr.size() > 0) {
-						anime.tags.insert(substr);
-					}
-
-					start = iter + 2;
-					iter = text.find("; ", start);
-				}
-				anime.tags.insert(text.substr(start, iter - start));
-			}
-			break;
-		case FIELDNONE:
-			//std::cerr << " = " << text << std::endl;
-			break;
-		case USERID:
-			break;
-		default:
-			std::cerr << "Invalid field. Text = " << text << std::endl;
-		}
+	AnimeSerializer::AnimeSerializer() :
+		field_map(initialize_field_map()),
+		member_map(initialize_member_map())
+	{
 	}
 
 	std::list<Anime> AnimeSerializer::deserialize(const std::string& xml) const {
@@ -230,36 +119,48 @@ namespace MAL {
 
 			if (name) {
 				const std::string name_str(reinterpret_cast<const char*>(name));
+				auto iter = field_map.find(name_str);
+				if (iter != field_map.end()) {
+					field = iter->second;
+				} else {
+					if (name_str.compare("#text") != 0)
+						std::cerr << "Unexpected field " << name_str << std::endl;
+				}
+
 				if (node_type == 1) {         // Element start
-					if (name_str.compare("entry") == 0) {
+					if (field == ENTRY) {
 						if (seen_anime && !seen_entry) 
 							entry_after_anime = true;
 						seen_entry = true;
-					} else if (name_str.compare("anime") == 0) {
+					} else if (field == ANIME) {
 						seen_anime = true;
-					} else {
-						field = field_from_tag(name_str);
 					}
+
 				} else if (node_type == 15) { // End Element
 					if (entry_after_anime) {
-						if (name_str.compare("entry") == 0) {
+						if (field == ENTRY) {
 							res.push_back(anime);
 							anime = Anime();
 						}
 					} else {
-						if (name_str.compare("anime") == 0) {
+						if (field == ANIME) {
 							res.push_back(anime);
 							anime = Anime();
 						}
 					}
 					field = FIELDNONE;
+
 				} else if (value) {           // Text
 					const std::string value_str(reinterpret_cast<const char*>(value));
-					if (name_str.compare("#text") == 0)
-						set_anime_for_field(anime, field, value_str);
-					else
+					if (name_str.compare("#text") == 0) {
+						auto iter = member_map.find(field);
+						if ( iter != member_map.end() ) {
+							iter->second(anime, value_str);
+						}
+					} else {
 						std::cerr << "Error: Unexpected " << name_str << " = " 
 						          << value_str << std::endl;
+					}
 				}
 			}
 		}
