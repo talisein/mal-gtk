@@ -360,6 +360,13 @@ namespace MAL {
 		show_all();
 		signal_refreshed.connect(sigc::mem_fun(*this, &AnimeListView::refresh_cb));
 		treeview->signal_row_activated().connect(sigc::mem_fun(*this, &AnimeListView::on_my_row_activated));
+        treeview->set_rules_hint(true);
+#if GTK_CHECK_VERSION(3,8,0)
+        Glib::Value<bool> sc_val;
+        sc_val.init(Glib::Value<bool>::value_type());
+        sc_val.set(true);
+        treeview->set_property_value("activate-on-single-click", sc_val);
+#endif
 	}
 
 	void AnimeListView::on_my_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*) {
