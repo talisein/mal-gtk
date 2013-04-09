@@ -65,6 +65,8 @@ namespace MAL {
 
 		Glib::Dispatcher signal_anime_added;
 
+		std::string get_anime_image_sync(const Anime& anime);
+
 		typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
 	private:
 		const std::string LIST_BASE_URL = "http://myanimelist.net/malappinfo.php?u=";
@@ -92,5 +94,6 @@ namespace MAL {
 		
 		void parse_entities(std::string& s) const;
 		std::map<const std::string, const std::string> initialize_entities() const;
+        std::map<int_fast64_t, std::unique_ptr<std::string> > anime_image_cache;
 	};
 }

@@ -1,7 +1,7 @@
 #pragma once
-#include <set>
 #include <string>
 #include <ctime>
+#include <set>
 
 namespace MAL {
 	enum AnimeStatus { ANIMESTATUS_INVALID = -1,
@@ -49,35 +49,37 @@ namespace MAL {
 		Anime() = default;
 		~Anime() = default;
 		
-		int64_t               series_animedb_id;
-		std::string           series_title;
 		SeriesType            series_type;
-		int16_t               series_episodes;
 		SeriesStatus          series_status;
+		std::set<std::string> series_synonyms;
+		std::string           series_title;
 		std::string           series_date_begin;
 		std::string           series_date_end;
-		std::string           image_url;
-		std::set<std::string> series_synonyms;
 		std::string           series_synopsis;
-		int64_t               id; //
-		AnimeStatus           status; //
-		int16_t               episodes; //
-		float                 score; //
-		int16_t               downloaded_episodes;
-		int16_t               storage_type;
-		float                 storage_value;
-		int16_t               times_watched;
-		int16_t               rewatch_value;
-		std::string           date_start; //
-		std::string           date_finish; //
-		int16_t               priority;
-		bool                  enable_discussion;
+		std::string           image_url;
+		int_fast64_t          series_animedb_id;
+		int_fast16_t          series_episodes;
+
+		std::set<std::string> tags;              // We know how to serialize
+		std::string           date_start;        // these fields
+		std::string           date_finish;       //
+		AnimeStatus           status;            //
+		int_fast64_t          id;                //
+		int_fast16_t          episodes;          //
+		int_fast16_t          rewatch_episode;   //
+		std::time_t           last_updated;      //
+		float                 score;             //
 		bool                  enable_rewatching; //
+
 		std::string           comments;
 		std::string           fansub_group;
-		std::set<std::string> tags; //
-		int16_t               rewatch_episode; //
-		std::time_t           last_updated; //
+		int_fast16_t          downloaded_episodes;
+		int_fast16_t          storage_type;
+		int_fast16_t          times_watched;
+		int_fast16_t          rewatch_value;
+		int_fast16_t          priority;
+		float                 storage_value;
+		bool                  enable_discussion;
 
 
 		void set_series_animedb_id   (const std::string&);

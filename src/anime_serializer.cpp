@@ -1,8 +1,18 @@
-#include "anime_serializer.hpp"
 #include <iostream>
-#include <libxml/xmlreader.h>
 #include <cstring>
 #include <memory>
+#include <libxml/xmlreader.h>
+#include "anime_serializer.hpp"
+
+namespace MAL {
+	enum FIELDS : int_fast8_t { FIELDNONE, FIELDTEXT,
+			ANIMEDBID, SERIESTITLE, SERIESTYPE, SERIESEPISODES, SERIESSTATUS,
+			SERIESDATEBEGIN, SERIESDATEEND, SERIESIMAGEURL, SERIESSYNONYMS,
+			ANIME, ENTRY, MYID, MYWATCHEDEPISODES, MYSTARTDATE, MYFINISHDATE, MYSCORE,
+			MYSTATUS, MYREWATCHING, MYREWATCHINGEP, MYLASTUPDATED, MYTAGS,
+			USERID, SYNOPSIS
+			};
+}
 
 namespace {
 	static std::map<const std::string, const MAL::FIELDS> initialize_field_map() {
@@ -39,6 +49,9 @@ namespace {
 			{ "my_tags",                  MAL::MYTAGS },
 			{ "user_id",                  MAL::USERID },
 			{ "synopsis",                 MAL::SYNOPSIS },
+			{ "entry",                    MAL::ENTRY },
+			{ "anime",                    MAL::ANIME },
+			{ "#text",                    MAL::FIELDTEXT },
 			{ "user_name",                MAL::FIELDNONE },
 			{ "user_watching",            MAL::FIELDNONE },
 			{ "user_completed",           MAL::FIELDNONE },
@@ -48,8 +61,6 @@ namespace {
 			{ "user_days_spent_watching", MAL::FIELDNONE },
 			{ "myinfo",                   MAL::FIELDNONE },
 			{ "myanimelist",              MAL::FIELDNONE },
-			{ "entry",                    MAL::ENTRY },
-			{ "anime",                    MAL::ANIME }
 		};
 	}
 
@@ -77,9 +88,6 @@ namespace {
 			{ MAL::SYNOPSIS,          std::mem_fn(&MAL::Anime::set_series_synopsis) },
 		};
 	}
-}
-
-namespace MAL {
 
 	struct xmlTextReaderDeleter {
 		void operator()(xmlTextReaderPtr reader) const {
@@ -87,12 +95,27 @@ namespace MAL {
 		}
 	};
 
+	static std::string xmlchar_to_str(const xmlChar* str) {
+		if (str)
+			return std::string(reinterpret_cast<const char*>(str));
+		else
+			return std::string();
+	}
+}
+
+namespace MAL {
+
 	AnimeSerializer::AnimeSerializer() :
 		field_map(initialize_field_map()),
 		member_map(initialize_member_map())
 	{
 	}
 
+
+	/** Handles deserialization from both myanimelist and search results.
+	 * Search results are      <anime><entry></entry><entry></entry></anime>
+	 * myanimelist results are <entry><anime></anime><anime></anime></entry>
+	 */
 	std::list<Anime> AnimeSerializer::deserialize(const std::string& xml) const {
 		std::list<Anime> res;
 		std::unique_ptr<char[]> cstr(new char[xml.size()]);
@@ -105,66 +128,66 @@ namespace MAL {
 			return res;
 		}
 
-		int ret = 1;
-		FIELDS field = FIELDNONE;
 		Anime anime;
+		int ret                = 1;
+		FIELDS field           = FIELDNONE;
+		FIELDS prev_field      = FIELDNONE;
 		bool entry_after_anime = false;
-		bool seen_anime = false;
-		bool seen_entry = false;
+		bool seen_anime        = false;
+		bool seen_entry        = false;
 		for( ret = xmlTextReaderRead(reader.get()); ret == 1;
 		     ret = xmlTextReaderRead(reader.get()) ) {
-			const xmlChar *name  = xmlTextReaderConstName(reader.get());
-			const xmlChar *value = xmlTextReaderConstValue(reader.get());
-			const int node_type  = xmlTextReaderNodeType(reader.get());
+			const std::string name  = xmlchar_to_str(xmlTextReaderConstName (reader.get()));
+			const std::string value = xmlchar_to_str(xmlTextReaderConstValue(reader.get()));
 
-			if (name) {
-				const std::string name_str(reinterpret_cast<const char*>(name));
-				auto iter = field_map.find(name_str);
-				if (iter != field_map.end()) {
-					field = iter->second;
+			if (name.size() > 0) {
+				auto field_iter = field_map.find(name);
+				if (field_iter != field_map.end()) {
+					prev_field = field;
+					field = field_iter->second;
 				} else {
-					if (name_str.compare("#text") != 0)
-						std::cerr << "Unexpected field " << name_str << std::endl;
+					std::cerr << "Unexpected field " << name << std::endl;
 				}
 
-				if (node_type == 1) {         // Element start
-					if (field == ENTRY) {
-						if (seen_anime && !seen_entry) 
-							entry_after_anime = true;
-						seen_entry = true;
-					} else if (field == ANIME) {
-						seen_anime = true;
-					}
-
-				} else if (node_type == 15) { // End Element
-					if (entry_after_anime) {
-						if (field == ENTRY) {
-							res.push_back(anime);
-							anime = Anime();
-						}
-					} else {
-						if (field == ANIME) {
-							res.push_back(anime);
-							anime = Anime();
-						}
+				switch (xmlTextReaderNodeType(reader.get())) {
+				case XML_READER_TYPE_ELEMENT:
+					entry_after_anime |= (field == ENTRY) && seen_anime && !seen_entry;
+					seen_entry        |= field == ENTRY;
+					seen_anime        |= field == ANIME;
+					break;
+				case XML_READER_TYPE_END_ELEMENT:
+					if ( ( entry_after_anime && field == ENTRY) ||
+					     (!entry_after_anime && field == ANIME)) {
+						res.push_back(anime);
+						anime = Anime();
 					}
 					field = FIELDNONE;
-
-				} else if (value) {           // Text
-					const std::string value_str(reinterpret_cast<const char*>(value));
-					if (name_str.compare("#text") == 0) {
-						auto iter = member_map.find(field);
-						if ( iter != member_map.end() ) {
-							iter->second(anime, value_str);
+					break;
+				case XML_READER_TYPE_TEXT:
+					if( field != FIELDTEXT ) {
+						std::cerr << "There's a problem!" << std::endl;
+					}
+					if (value.size() > 0) {
+						auto member_iter = member_map.find(prev_field);
+						if ( member_iter != member_map.end() ) {
+							member_iter->second(anime, value);
 						}
 					} else {
-						std::cerr << "Error: Unexpected " << name_str << " = " 
-						          << value_str << std::endl;
+						std::cerr << "Error: Unexpected " << name << " = " 
+						          << value << std::endl;
 					}
+					break;
+				case XML_READER_TYPE_SIGNIFICANT_WHITESPACE:
+					break;
+				default:
+					std::cerr << "Warning: Unexpected node type "
+					          << xmlTextReaderNodeType(reader.get())
+					          << " : " << name << "=" << value << std::endl;
+					break;
 				}
 			}
 		}
-
+		
 		if ( ret != 0 ) {
 			std::cerr << "Error: Failed to parse! ret = " << ret << std::endl;
 		}

@@ -132,6 +132,26 @@ namespace MAL {
 		return out;
 	}
 
+	std::string MAL::get_anime_image_sync(const Anime& anime) {
+        auto iter = anime_image_cache.find(anime.series_animedb_id);
+        if (iter == std::end(anime_image_cache)) {
+            std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
+            std::unique_ptr<std::string> buf(new std::string());
+            setup_curl_easy(curl.get(), anime.image_url, buf.get());
+            CURLcode code = curl_easy_perform(curl.get());
+            
+            if (code != CURLE_OK) {
+                print_curl_error(code);
+                return std::string();
+            } else {
+                auto inserted = anime_image_cache.insert(std::move(std::make_pair(anime.series_animedb_id, std::move(buf))));
+                return *inserted.first->second;
+            }
+        } else {
+            return *iter->second;
+        }
+	}
+
 	std::list<Anime> MAL::search_anime_sync(const std::string& terms) {
 		std::list<Anime> res;
 		
@@ -214,11 +234,12 @@ namespace MAL {
 			}
 		}
 
-		std::cerr << "Response: " << *buf << std::endl;
 		if (buf->compare("Updated") == 0) 
 			return true;
-		else
+		else {
+            std::cerr << "myanimelist.net Error: Response: " << *buf << std::endl;
 			return false;
+        }
 	}
 
 	bool MAL::add_anime_sync(const Anime& anime) {

@@ -56,9 +56,9 @@ namespace MAL {
 		book->set_show_border(false);
 		book->append_page(*anime_list_view, "My Anime List");
 		book->append_page(*anime_search_view, "Search");
-		book->show_all();
+		book->show();
+		anime_search_view->show_all();
 		add(*book);
-		anime_list_view->show_all();
 		resize(1200,600);
 	}
 

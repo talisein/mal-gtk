@@ -155,34 +155,37 @@ namespace MAL {
 	}
 
 	std::string anime_season_from_date(const std::string& s) {
-		std::string res;
-		int year, month;
-		year = std::stod(s.substr(0,4));
-		month = std::stod(s.substr(5,2));
+		int year = 0, month = 0;
+        try {
+            year = std::stoi(s.substr(0,4));
+            month = std::stoi(s.substr(5,2));
+        } catch (std::exception e) {
+            return "Unknown";
+        }
+
 		if (year == 0)
 			return "Unknown";
 		else {
-			res = s.substr(0,4);
 			switch (month) {
-			case 12:
-			case 1:
-			case 2:
-				return res.insert(0, "Winter ");
-			case 3:
-			case 4:
-			case 5:
-				return res.insert(0, "Spring ");
-			case 6:
-			case 7:
-			case 8:
-				return res.insert(0, "Summer ");
-			case 9:
-			case 10:
-			case 11:
-				return res.insert(0, "Autumn ");
-
-			default:
-				return s.substr(0, 7);
+                case 12:
+                    ++year; 
+                case 1:
+                case 2:
+                    return "Winter " + std::to_string(year);
+                case 3:
+                case 4:
+                case 5:
+                    return "Spring " + std::to_string(year);
+                case 6:
+                case 7:
+                case 8:
+                    return "Summer " + std::to_string(year);
+                case 9:
+                case 10:
+                case 11:
+                    return "Autumn " + std::to_string(year);
+                default:
+                    return s.substr(0, 7);
 			}
 		}
 	}
