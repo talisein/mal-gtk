@@ -329,6 +329,8 @@ namespace MAL {
 		auto title = Gtk::manage(new Gtk::TreeViewColumn("Title", columns_p->series_title));
 		title->set_sort_column(columns_p->series_title);
 		title->set_expand(true);
+        auto title_cr = static_cast<Gtk::CellRendererText*>(title->get_first_cell());
+        title_cr->property_ellipsize().set_value(Pango::ELLIPSIZE_END);
 		treeview->append_column(*title);
 		treeview->append_column("Airing Status", columns_p->series_status);
 		auto season = Gtk::manage(new Gtk::TreeViewColumn("Season", columns_p->series_season));

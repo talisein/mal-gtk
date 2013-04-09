@@ -116,15 +116,15 @@ namespace MAL {
         void on_increment_clicked();
         void update_list_model();
 
-		Gtk::Image                         *image;
-		Gtk::Label                         *title;
-		Gtk::Button                        *increment_button;
-		Gtk::Entry                         *episodes;
-		Gtk::Label                         *series_episodes;
-        Gtk::Entry                         *score;
-		AnimeStatusComboBox                *anime_status;
-        std::shared_ptr<AnimeModelColumns>  columns;
-		Glib::Dispatcher                signal_image_available;
+		Gtk::Image                          *image;
+		Gtk::Label                          *title;
+		Gtk::Button                         *increment_button;
+		Gtk::Entry                          *episodes;
+		Gtk::Label                          *series_episodes;
+        Gtk::Entry                          *score;
+		AnimeStatusComboBox                 *anime_status;
+        std::shared_ptr<AnimeModelColumns>   columns;
+		Glib::Dispatcher                     signal_image_available;
 		Glib::RefPtr<Gio::MemoryInputStream> image_stream;
 		void on_image_available();
 		void do_fetch_image();
