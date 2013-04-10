@@ -50,12 +50,14 @@ namespace MAL {
 	MainWindow::MainWindow(const std::shared_ptr<MAL>& mal) :
 		Gtk::ApplicationWindow(),
 		anime_list_view(Gtk::manage(new AnimeListPage(mal))),
+		manga_list_view(Gtk::manage(new MangaListPage(mal))),
 		anime_search_view(Gtk::manage(new AnimeSearchPage(mal)))
 	{
 		auto book = Gtk::manage(new Gtk::Notebook());
 		book->set_show_border(false);
 		book->append_page(*anime_list_view, "My Anime List");
 		book->append_page(*anime_search_view, "Search");
+		book->append_page(*manga_list_view, "My Manga List");
 		book->show();
 		anime_search_view->show_all();
 		add(*book);

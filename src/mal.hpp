@@ -6,7 +6,9 @@
 #include <curl/curl.h>
 #include <glibmm/dispatcher.h>
 #include "anime.hpp"
+#include "manga.hpp"
 #include "anime_serializer.hpp"
+#include "manga_serializer.hpp"
 #include "user_info.hpp"
 
 namespace MAL {
@@ -46,6 +48,12 @@ namespace MAL {
 		 */
 		std::list<Anime> get_anime_list_sync();
 
+		/** Returns the manga list for username. As slow as the
+		 * internet.
+		 * Safe to call from multiple threads.
+		 */
+		std::list<Manga> get_manga_list_sync();
+
 		/** Searches MAL.net. Slow as the Internet.
 		 * Safe to call from multiple threads.
 		 */
@@ -57,15 +65,29 @@ namespace MAL {
 		 */
 		bool update_anime_sync(const Anime& anime);
 
+		/** Updates MAL.net with the new manga details. As slow as the
+		 * Internet.
+		 * Safe to call from multiple threads.
+		 */
+		bool update_manga_sync(const Manga& manga);
+
 		/** Adds an anime to the MAL.net anime list. As slow as the
 		 * Internet.
 		 * Safe to call from multiple threads.
 		 */
 		bool add_anime_sync(const Anime& anime);
 
+		/** Adds an anime to the MAL.net anime list. As slow as the
+		 * Internet.
+		 * Safe to call from multiple threads.
+		 */
+		bool add_manga_sync(const Manga& manga);
+
 		Glib::Dispatcher signal_anime_added;
+		Glib::Dispatcher signal_manga_added;
 
 		std::string get_anime_image_sync(const Anime& anime);
+		std::string get_manga_image_sync(const Manga& manga);
 
 		typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
 	private:
@@ -73,6 +95,8 @@ namespace MAL {
 		const std::string SEARCH_BASE_URL = "http://myanimelist.net/api/anime/search.xml?q=";
 		const std::string UPDATED_BASE_URL = "http://myanimelist.net/api/animelist/update/";
 		const std::string ADD_BASE_URL = "http://myanimelist.net/api/animelist/add/";
+		const std::string MANGA_UPDATED_BASE_URL = "http://myanimelist.net/api/mangalist/update/";
+		const std::string MANGA_ADD_BASE_URL = "http://myanimelist.net/api/mangalist/add/";
 
 		std::unique_ptr<UserInfo> user_info;
 		Glib::Dispatcher signal_run_password_dialog;
@@ -86,6 +110,7 @@ namespace MAL {
 		void setup_curl_easy(CURL* easy, const std::string& url, std::string*);
 
 		AnimeSerializer serializer;
+		MangaSerializer manga_serializer;
 		std::unique_ptr<char[]> curl_ebuffer;
 		std::unique_ptr<pair_lock_functor_t> share_lock_functors;
 		std::map<curl_lock_data, std::unique_ptr<std::mutex>> map_mutex;
@@ -95,5 +120,6 @@ namespace MAL {
 		void parse_entities(std::string& s) const;
 		std::map<const std::string, const std::string> initialize_entities() const;
         std::map<int_fast64_t, std::unique_ptr<std::string> > anime_image_cache;
+        std::map<int_fast64_t, std::unique_ptr<std::string> > manga_image_cache;
 	};
 }

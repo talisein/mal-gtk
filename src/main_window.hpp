@@ -4,6 +4,7 @@
 #include <gtkmm/entry.h>
 #include "mal.hpp"
 #include "anime_list_view.hpp"
+#include "manga_list_view.hpp"
 
 namespace MAL {
 
@@ -28,6 +29,7 @@ namespace MAL {
 	private:
 
 		AnimeListPage *anime_list_view;
+		MangaListPage *manga_list_view;
 		AnimeSearchPage *anime_search_view;
 	};
 

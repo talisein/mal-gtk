@@ -132,6 +132,31 @@ namespace MAL {
 		return out;
 	}
 
+	std::list<Manga> MAL::get_manga_list_sync() {
+		std::list<Manga> out;
+		if (!user_info->get_username()) {
+			std::cerr << "Error: No username provided." << std::endl;
+			return out;
+		}
+
+		const std::string url = LIST_BASE_URL + user_info->get_username().get() + "&status=all&type=manga";
+		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
+		std::unique_ptr<std::string> buf(new std::string());
+
+		setup_curl_easy(curl.get(), url, buf.get());
+		CURLcode code = curl_easy_perform(curl.get());
+		
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+			return out;
+		}
+
+		parse_entities(*buf);
+		out = manga_serializer.deserialize(*buf);
+
+		return out;
+	}
+
 	std::string MAL::get_anime_image_sync(const Anime& anime) {
         auto iter = anime_image_cache.find(anime.series_animedb_id);
         if (iter == std::end(anime_image_cache)) {
@@ -144,7 +169,27 @@ namespace MAL {
                 print_curl_error(code);
                 return std::string();
             } else {
-                auto inserted = anime_image_cache.insert(std::move(std::make_pair(anime.series_animedb_id, std::move(buf))));
+                auto inserted = anime_image_cache.insert(std::make_pair(anime.series_animedb_id, std::move(buf)));
+                return *inserted.first->second;
+            }
+        } else {
+            return *iter->second;
+        }
+	}
+
+	std::string MAL::get_manga_image_sync(const Manga& manga) {
+        auto iter = manga_image_cache.find(manga.series_mangadb_id);
+        if (iter == std::end(manga_image_cache)) {
+            std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
+            std::unique_ptr<std::string> buf(new std::string());
+            setup_curl_easy(curl.get(), manga.image_url, buf.get());
+            CURLcode code = curl_easy_perform(curl.get());
+            
+            if (code != CURLE_OK) {
+                print_curl_error(code);
+                return std::string();
+            } else {
+                auto inserted = manga_image_cache.insert(std::make_pair(manga.series_mangadb_id, std::move(buf)));
                 return *inserted.first->second;
             }
         } else {
@@ -242,6 +287,55 @@ namespace MAL {
         }
 	}
 
+	bool MAL::update_manga_sync(const Manga& manga) {
+		const std::string url = MANGA_UPDATED_BASE_URL + std::to_string(manga.series_mangadb_id) + ".xml";
+		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
+		std::unique_ptr<std::string> buf(new std::string());
+		setup_curl_easy(curl.get(), url, buf.get());
+		auto xml = manga_serializer.serialize(manga);
+		xml.insert(0, "data=");
+
+		CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_COPYPOSTFIELDS, xml.c_str());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_USERNAME, user_info->get_username().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_PASSWORD, user_info->get_password().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+
+		code = curl_easy_perform(curl.get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+			long res = 0;
+			code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
+			if (code != CURLE_OK)
+				print_curl_error(code);
+			else if (res == 401) {
+				signal_run_password_dialog();
+			}
+		}
+
+		if (buf->compare("Updated") == 0) 
+			return true;
+		else {
+            std::cerr << "myanimelist.net Error: Response: " << *buf << std::endl;
+			return false;
+        }
+	}
+
 	bool MAL::add_anime_sync(const Anime& anime) {
 		const std::string url = ADD_BASE_URL + std::to_string(anime.series_animedb_id) + ".xml";
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
@@ -283,6 +377,53 @@ namespace MAL {
 		std::cerr << "Response: " << *buf << std::endl;
 		if (code == CURLE_OK) {
 			signal_anime_added();
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	bool MAL::add_manga_sync(const Manga& manga) {
+		const std::string url = MANGA_ADD_BASE_URL + std::to_string(manga.series_mangadb_id) + ".xml";
+		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
+		std::unique_ptr<std::string> buf(new std::string());
+		setup_curl_easy(curl.get(), url, buf.get());
+		auto xml = manga_serializer.serialize(manga);
+		xml.insert(0, "data=");
+		CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_COPYPOSTFIELDS, xml.c_str());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_USERNAME, user_info->get_username().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_PASSWORD, user_info->get_password().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+
+		code = curl_easy_perform(curl.get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+			long res = 0;
+			curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
+			if (res == 401) {
+				signal_run_password_dialog();
+			}
+		}
+
+		std::cerr << "Response: " << *buf << std::endl;
+		if (code == CURLE_OK) {
+			signal_manga_added();
 			return true;
 		} else {
 			return false;
