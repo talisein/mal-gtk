@@ -34,28 +34,16 @@ namespace MAL {
 	}
 
 	AnimeStatusComboBox::AnimeStatusComboBox() {
-			append("Watching");
-			append("Completed");
-			append("On Hold");
-			append("Dropped");
-			append("Plan To Watch");
-			set_active_text("Watching");
+        append(to_string(WATCHING));
+        append(to_string(COMPLETED));
+        append(to_string(ONHOLD));
+        append(to_string(DROPPED));
+        append(to_string(PLANTOWATCH));
+        set_active_text(to_string(WATCHING));
 	}
 
 	AnimeStatus AnimeStatusComboBox::get_anime_status() const {
-		auto const text = get_active_text();
-		if (text.compare("Watching") == 0)
-			return WATCHING;
-		else if (text.compare("Completed") == 0)
-			return COMPLETED;
-		else if (text.compare("On Hold") == 0)
-			return ONHOLD;
-		else if (text.compare("Dropped") == 0)
-			return DROPPED;
-		else if (text.compare("Plan To Watch") == 0)
-			return PLANTOWATCH;
-		else
-			return ANIMESTATUS_INVALID;
+        return anime_status_from_string(get_active_text());
 	}
 
 	void AnimeListView::on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter) {
@@ -68,7 +56,7 @@ namespace MAL {
 				anime.episodes = episodes;
 				iter->set_value(columns_p->anime, anime);
 			}
-			const int score = iter->get_value(columns_p->score);
+			const float score = iter->get_value(columns_p->score);
 			if (score != anime.score) {
 				is_changed = true;
 				anime.score = score;
@@ -233,7 +221,7 @@ namespace MAL {
 		              std::end(anime.series_synonyms),
 		              [&title_str](const std::string& alt){
 			              title_str.append("\n")
-				                   .append(Glib::Markup::escape_text(alt));
+                              .append(Glib::Markup::escape_text(alt));
 		              });
 
 		title_str.append("</small></small>");

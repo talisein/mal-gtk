@@ -16,8 +16,8 @@ namespace MAL {
 
 	class AnimeStatusColumns : public Gtk::TreeModel::ColumnRecord {
 	public:
-			Gtk::TreeModelColumn<Glib::ustring> text;
-			Gtk::TreeModelColumn<AnimeStatus> status;
+        Gtk::TreeModelColumn<Glib::ustring> text;
+        Gtk::TreeModelColumn<AnimeStatus> status;
 		AnimeStatusColumns() { add(text); add(status); };
 	};
 
@@ -136,9 +136,7 @@ namespace MAL {
 		AnimeListPage(const std::shared_ptr<MAL>&);
 		void refresh_async();
 
-
-	private:
-		
+    private:
 		std::shared_ptr<MAL> mal;
 		AnimeStatus status_filter;
 		AnimeDetailView* detail_view;
@@ -146,7 +144,6 @@ namespace MAL {
 		AnimeStatusComboBox *status_combo_box;
 		void on_filter_changed();
 		void refresh();
-
 	};
 
 
