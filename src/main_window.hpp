@@ -22,6 +22,21 @@ namespace MAL {
 		AnimeListView *list_view;
 	};
 
+	class MangaSearchPage : public Gtk::Grid {
+	public:
+		MangaSearchPage(const std::shared_ptr<MAL>&);
+
+	private:
+		std::shared_ptr<MAL> mal;
+		void do_search_async();
+		void do_search();
+
+		Gtk::Entry *entry;
+		std::list<Manga> search_list;
+		MangaListView *list_view;
+	};
+
+
 	class MainWindow : public Gtk::ApplicationWindow {
 	public:
 		MainWindow(const std::shared_ptr<MAL>&);
@@ -31,6 +46,7 @@ namespace MAL {
 		AnimeListPage *anime_list_view;
 		MangaListPage *manga_list_view;
 		AnimeSearchPage *anime_search_view;
+		MangaSearchPage *manga_search_view;
 	};
 
 }

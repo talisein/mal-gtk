@@ -41,23 +41,61 @@ namespace MAL {
 
 	void AnimeSearchPage::do_search() {
 		auto list = mal->search_anime_sync(entry->get_text());
+        list_view->set_anime_list(list);
+	}
 
-		if (list.size() > 0) {
-			list_view->set_anime_list(list);
-		}
+	MangaSearchPage::MangaSearchPage(const std::shared_ptr<MAL>& mal_p) :
+		mal(mal_p),
+		entry(Gtk::manage(new Gtk::Entry())),
+		list_view(Gtk::manage(new MangaListView(mal_p, MANGASTATUS_INVALID, false)))
+	{
+		set_orientation(Gtk::ORIENTATION_VERTICAL);
+		entry->set_hexpand(true);
+		entry->set_activates_default(true);
+		entry->show();
+		add(*entry);
+		auto action = Gtk::Action::create();
+		action->signal_activate().connect(sigc::mem_fun(*this, &MangaSearchPage::do_search_async));
+		auto button = Gtk::manage(new Gtk::Button("Search"));
+		button->set_always_show_image(true);
+		auto icon = button->render_icon_pixbuf(Gtk::Stock::FIND, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
+		auto image = Gtk::manage(new Gtk::Image(icon));
+		button->set_image(*image);
+		button->set_tooltip_text("Search myanimelist.net for anime that maches the entered terms.");
+
+		button->set_related_action(action);
+		attach_next_to(*button, *entry, Gtk::POS_RIGHT, 1, 1);
+		button->show();
+		show();
+		button->set_can_default(true);
+		button->set_receives_default(true);
+		attach_next_to(*list_view, *entry, Gtk::POS_BOTTOM, 2, 1);
+		show_all();
+	}
+
+	void MangaSearchPage::do_search_async() {
+		auto t = std::thread(std::bind(&MangaSearchPage::do_search, this));
+		t.detach();
+	}
+
+	void MangaSearchPage::do_search() {
+		auto list = mal->search_manga_sync(entry->get_text());
+        list_view->set_manga_list(list);
 	}
 
 	MainWindow::MainWindow(const std::shared_ptr<MAL>& mal) :
 		Gtk::ApplicationWindow(),
 		anime_list_view(Gtk::manage(new AnimeListPage(mal))),
 		manga_list_view(Gtk::manage(new MangaListPage(mal))),
-		anime_search_view(Gtk::manage(new AnimeSearchPage(mal)))
+		anime_search_view(Gtk::manage(new AnimeSearchPage(mal))),
+		manga_search_view(Gtk::manage(new MangaSearchPage(mal)))
 	{
 		auto book = Gtk::manage(new Gtk::Notebook());
 		book->set_show_border(false);
 		book->append_page(*anime_list_view, "My Anime List");
-		book->append_page(*anime_search_view, "Search");
+		book->append_page(*anime_search_view, "Anime Search");
 		book->append_page(*manga_list_view, "My Manga List");
+		book->append_page(*manga_search_view, "Manga Search");
 		book->show();
 		anime_search_view->show_all();
 		add(*book);

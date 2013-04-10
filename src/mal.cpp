@@ -238,6 +238,45 @@ namespace MAL {
 		return res;
 	}
 
+	std::list<Manga> MAL::search_manga_sync(const std::string& terms) {
+		std::list<Manga> res;
+
+		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
+		std::unique_ptr<std::string> buf(new std::string());
+		std::unique_ptr<char, CURLEscapeDeleter> terms_escaped(curl_easy_escape(curl.get(), terms.c_str(), terms.size()));
+		const std::string url = MANGA_SEARCH_BASE_URL + terms_escaped.get();
+
+		setup_curl_easy(curl.get(), url, buf.get());
+		CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_USERNAME, user_info->get_username().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(curl.get(), CURLOPT_PASSWORD, user_info->get_password().get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+
+		code = curl_easy_perform(curl.get());
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+			long res = 0;
+			code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
+			if (code != CURLE_OK)
+				print_curl_error(code);
+			else if (res == 401) {
+				signal_run_password_dialog();
+			}
+		}
+
+		parse_entities(*buf);
+		res = manga_serializer.deserialize(*buf);
+		return res;
+	}
+
 	bool MAL::update_anime_sync(const Anime& anime) {
 		const std::string url = UPDATED_BASE_URL + std::to_string(anime.series_animedb_id) + ".xml";
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());

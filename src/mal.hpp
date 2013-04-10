@@ -59,6 +59,11 @@ namespace MAL {
 		 */
 		std::list<Anime> search_anime_sync(const std::string& terms);
 
+		/** Searches MAL.net. Slow as the Internet.
+		 * Safe to call from multiple threads.
+		 */
+		std::list<Manga> search_manga_sync(const std::string& terms);
+
 		/** Updates MAL.net with the new anime details. As slow as the
 		 * Internet.
 		 * Safe to call from multiple threads.
@@ -95,6 +100,7 @@ namespace MAL {
 		const std::string SEARCH_BASE_URL = "http://myanimelist.net/api/anime/search.xml?q=";
 		const std::string UPDATED_BASE_URL = "http://myanimelist.net/api/animelist/update/";
 		const std::string ADD_BASE_URL = "http://myanimelist.net/api/animelist/add/";
+		const std::string MANGA_SEARCH_BASE_URL = "http://myanimelist.net/api/manga/search.xml?q=";
 		const std::string MANGA_UPDATED_BASE_URL = "http://myanimelist.net/api/mangalist/update/";
 		const std::string MANGA_ADD_BASE_URL = "http://myanimelist.net/api/mangalist/add/";
 
