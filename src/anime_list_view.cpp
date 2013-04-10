@@ -66,7 +66,7 @@ namespace MAL {
 			if (is_changed) {
 				std::thread t(std::bind(&AnimeListView::send_anime_update, this, anime));
 				t.detach();
-                if (detailed_anime.series_animedb_id == anime.series_animedb_id)
+                if (detailed_anime.series_itemdb_id == anime.series_itemdb_id)
                     row_activated_cb(anime);
 			}
 		}
@@ -106,7 +106,7 @@ namespace MAL {
 			auto iter = std::find_if(std::begin(anime_list),
 			                         std::end(anime_list),
 			                         [&anime](const Anime& a) {
-				                         return anime.series_animedb_id == a.series_animedb_id;
+				                         return anime.series_itemdb_id == a.series_itemdb_id;
 			                         });
 			if (iter != std::end(anime_list)) {
 				// Since we're off the main thread, do a threadsafe iter_swap
@@ -213,7 +213,7 @@ namespace MAL {
 	}
 
 	void AnimeDetailView::display_anime(const Anime& in) {
-        auto oldid = anime.series_animedb_id;
+        auto oldid = anime.series_itemdb_id;
 		anime = in;
 		auto title_str = Glib::Markup::escape_text(anime.series_title);
 		title_str.insert(0, "<big><big><big>").append("</big></big></big><small><small>");
@@ -234,7 +234,7 @@ namespace MAL {
         ss << anime.score;
         score->set_text(ss.str());
 		show_all();
-        if (oldid != anime.series_animedb_id) {
+        if (oldid != anime.series_itemdb_id) {
             //image->hide();
             std::thread t(std::bind(&AnimeDetailView::do_fetch_image, this));
             t.detach();
@@ -256,7 +256,7 @@ namespace MAL {
     }
 
     bool AnimeDetailView::on_foreach(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter) {
-        if (iter->get_value(columns->anime).series_animedb_id == anime.series_animedb_id) {
+        if (iter->get_value(columns->anime).series_itemdb_id == anime.series_itemdb_id) {
             try {
                 if (iter->get_value(columns->episodes) != std::stoi(episodes->get_text())) {
                     iter->set_value(columns->episodes, std::stoi(episodes->get_text()));
@@ -282,7 +282,7 @@ namespace MAL {
     }
 
 	void AnimeDetailView::do_fetch_image() {
-		auto str     = mal->get_anime_image_sync(anime);
+		auto str     = mal->get_image_sync(anime);
 		image_stream = Gio::MemoryInputStream::create();
 		auto buf = g_malloc(str.size());
 		std::memcpy(buf, str.c_str(), str.size());
@@ -425,7 +425,7 @@ namespace MAL {
 			              auto iter = model->append();
 			              iter->set_value(columns_p->series_title, Glib::ustring(anime.series_title));
 			              iter->set_value(columns_p->series_status, Glib::ustring(to_string(anime.series_status)));
-			              iter->set_value(columns_p->series_season, Glib::ustring(anime_season_from_date(anime.series_date_begin)));
+			              iter->set_value(columns_p->series_season, Glib::ustring(anime.get_season_began()));
 			              auto sort_text = anime.series_date_begin.substr(0,7);
 			              iter->set_value(columns_p->series_start_date, Glib::ustring(sort_text));
 			              iter->set_value(columns_p->score, static_cast<float>(anime.score));

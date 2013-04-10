@@ -20,7 +20,7 @@ namespace MAL {
 
 	private:
 		const std::map<const std::string, const FIELDS> field_map;
-		const std::map<const FIELDS, const decltype(std::mem_fn(&Anime::set_id))> member_map;
+		const std::map<const FIELDS, std::function<void (Anime&, const std::string&)> > member_map;
 	};
 
 }

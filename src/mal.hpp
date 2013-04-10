@@ -91,7 +91,7 @@ namespace MAL {
 		Glib::Dispatcher signal_anime_added;
 		Glib::Dispatcher signal_manga_added;
 
-		std::string get_anime_image_sync(const Anime& anime);
+		std::string get_image_sync(const MALItem& item);
 		std::string get_manga_image_sync(const Manga& manga);
 
 		typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
@@ -125,7 +125,7 @@ namespace MAL {
 		
 		void parse_entities(std::string& s) const;
 		std::map<const std::string, const std::string> initialize_entities() const;
-        std::map<int_fast64_t, std::unique_ptr<std::string> > anime_image_cache;
+        std::map<std::string, std::unique_ptr<std::string> > image_cache;
         std::map<int_fast64_t, std::unique_ptr<std::string> > manga_image_cache;
 	};
 }

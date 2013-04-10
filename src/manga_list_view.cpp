@@ -73,7 +73,7 @@ namespace MAL {
 			if (is_changed) {
 				std::thread t(std::bind(&MangaListView::send_manga_update, this, manga));
 				t.detach();
-                if (detailed_manga.series_mangadb_id == manga.series_mangadb_id)
+                if (detailed_manga.series_itemdb_id == manga.series_itemdb_id)
                     row_activated_cb(manga);
 			}
 		}
@@ -119,7 +119,7 @@ namespace MAL {
 			auto iter = std::find_if(std::begin(manga_list),
 			                         std::end(manga_list),
 			                         [&manga](const Manga& m) {
-				                         return manga.series_mangadb_id == m.series_mangadb_id;
+				                         return manga.series_itemdb_id == m.series_itemdb_id;
 			                         });
 			if (iter != std::end(manga_list)) {
 				// Since we're off the main thread, do a threadsafe iter_swap
@@ -245,7 +245,7 @@ namespace MAL {
 	}
 
 	void MangaDetailView::display_manga(const Manga& in) {
-        auto oldid = manga.series_mangadb_id;
+        auto oldid = manga.series_itemdb_id;
 		manga = in;
 		auto title_str = Glib::Markup::escape_text(manga.series_title);
 		title_str.insert(0, "<big><big><big>").append("</big></big></big><small><small>");
@@ -268,7 +268,7 @@ namespace MAL {
         ss << manga.score;
         score->set_text(ss.str());
 		show_all();
-        if (oldid != manga.series_mangadb_id) {
+        if (oldid != manga.series_itemdb_id) {
             std::thread t(std::bind(&MangaDetailView::do_fetch_image, this));
             t.detach();
         }
@@ -299,7 +299,7 @@ namespace MAL {
     }
 
     bool MangaDetailView::on_foreach(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter) {
-        if (iter->get_value(columns->manga).series_mangadb_id == manga.series_mangadb_id) {
+        if (iter->get_value(columns->manga).series_itemdb_id == manga.series_itemdb_id) {
             try {
                 if (iter->get_value(columns->chapters) != std::stoi(chapters->get_text())) {
                     iter->set_value(columns->chapters, std::stoi(chapters->get_text()));
@@ -330,7 +330,7 @@ namespace MAL {
     }
 
 	void MangaDetailView::do_fetch_image() {
-		auto str     = mal->get_manga_image_sync(manga);
+		auto str     = mal->get_image_sync(manga);
 		image_stream = Gio::MemoryInputStream::create();
 		auto buf = g_malloc(str.size());
 		std::memcpy(buf, str.c_str(), str.size());
@@ -368,7 +368,7 @@ namespace MAL {
         auto title_cr = static_cast<Gtk::CellRendererText*>(title->get_first_cell());
         title_cr->property_ellipsize().set_value(Pango::ELLIPSIZE_END);
 		treeview->append_column(*title);
-		treeview->append_column("Airing Status", columns_p->series_status);
+		treeview->append_column("Pub. Status", columns_p->series_status);
 		auto season = Gtk::manage(new Gtk::TreeViewColumn("Season", columns_p->series_season));
 		auto season_cr = season->get_first_cell();
 		season_cr->set_alignment(1.0, 0.5);
@@ -476,7 +476,7 @@ namespace MAL {
 			              auto iter = model->append();
 			              iter->set_value(columns_p->series_title, Glib::ustring(manga.series_title));
 			              iter->set_value(columns_p->series_status, Glib::ustring(to_string(manga.series_status)));
-			              iter->set_value(columns_p->series_season, Glib::ustring(manga_season_from_date(manga.series_date_begin)));
+			              iter->set_value(columns_p->series_season, Glib::ustring(manga.get_season_began()));
 			              auto sort_text = manga.series_date_begin.substr(0,7);
 			              iter->set_value(columns_p->series_start_date, Glib::ustring(sort_text));
 			              iter->set_value(columns_p->score, static_cast<float>(manga.score));

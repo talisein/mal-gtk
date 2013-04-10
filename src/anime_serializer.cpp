@@ -64,28 +64,31 @@ namespace {
 		};
 	}
 
-	static std::map<const MAL::FIELDS, const decltype(std::mem_fn(&MAL::Anime::set_id))> initialize_member_map() {
+	static std::map<const MAL::FIELDS, std::function<void (MAL::Anime&, const std::string&)> > initialize_member_map() {
 		return {
-			{ MAL::ANIMEDBID,         std::mem_fn(&MAL::Anime::set_series_animedb_id) },
+			{ MAL::ANIMEDBID,         std::mem_fn(&MAL::Anime::set_series_itemdb_id) },
 			{ MAL::SERIESTITLE,       std::mem_fn(&MAL::Anime::set_series_title) },
-			{ MAL::SERIESTYPE,        std::mem_fn(&MAL::Anime::set_series_type) },
-			{ MAL::SERIESEPISODES,    std::mem_fn(&MAL::Anime::set_series_episodes) },
-			{ MAL::SERIESSTATUS,      std::mem_fn(&MAL::Anime::set_series_status) },
 			{ MAL::SERIESDATEBEGIN,   std::mem_fn(&MAL::Anime::set_series_date_begin) },
 			{ MAL::SERIESDATEEND,     std::mem_fn(&MAL::Anime::set_series_date_end) },
 			{ MAL::SERIESIMAGEURL,    std::mem_fn(&MAL::Anime::set_image_url) },
 			{ MAL::SERIESSYNONYMS,    std::mem_fn(&MAL::Anime::set_series_synonyms) },
-			{ MAL::MYID,              std::mem_fn(&MAL::Anime::set_id) },
-			{ MAL::MYWATCHEDEPISODES, std::mem_fn(&MAL::Anime::set_episodes) },
+			{ MAL::SYNOPSIS,          std::mem_fn(&MAL::Anime::set_series_synopsis) },
+
+			{ MAL::SERIESTYPE,        std::mem_fn(&MAL::Anime::set_series_type) },
+			{ MAL::SERIESSTATUS,      std::mem_fn(&MAL::Anime::set_series_status) },
+			{ MAL::SERIESEPISODES,    std::mem_fn(&MAL::Anime::set_series_episodes) },
+
+			{ MAL::MYTAGS,            std::mem_fn(&MAL::Anime::set_tags) },
 			{ MAL::MYSTARTDATE,       std::mem_fn(&MAL::Anime::set_date_start) },
 			{ MAL::MYFINISHDATE,      std::mem_fn(&MAL::Anime::set_date_finish) },
-			{ MAL::MYSCORE,           std::mem_fn(&MAL::Anime::set_score) },
-			{ MAL::MYSTATUS,          std::mem_fn(&MAL::Anime::set_status) },
-			{ MAL::MYREWATCHING,      std::mem_fn(&MAL::Anime::set_enable_rewatching) },
-			{ MAL::MYREWATCHINGEP,    std::mem_fn(&MAL::Anime::set_rewatch_episode) },
+			{ MAL::MYID,              std::mem_fn(&MAL::Anime::set_id) },
 			{ MAL::MYLASTUPDATED,     std::mem_fn(&MAL::Anime::set_last_updated) },
-			{ MAL::MYTAGS,            std::mem_fn(&MAL::Anime::set_tags) },
-			{ MAL::SYNOPSIS,          std::mem_fn(&MAL::Anime::set_series_synopsis) },
+			{ MAL::MYSCORE,           std::mem_fn(&MAL::Anime::set_score) },
+			{ MAL::MYREWATCHING,      std::mem_fn(&MAL::Anime::set_enable_reconsuming) },
+
+			{ MAL::MYSTATUS,          std::mem_fn(&MAL::Anime::set_status) },
+			{ MAL::MYWATCHEDEPISODES, std::mem_fn(&MAL::Anime::set_episodes) },
+			{ MAL::MYREWATCHINGEP,    std::mem_fn(&MAL::Anime::set_rewatch_episode) },
 		};
 	}
 
@@ -125,6 +128,7 @@ namespace MAL {
 
 		if (!reader) {
 			std::cerr << "Error: Couldn't create XML reader" << std::endl;
+            std::cerr << "XML follows: " << xml << std::endl;
 			return res;
 		}
 
@@ -209,7 +213,7 @@ namespace MAL {
 		out += std::to_string(anime.score);
 		out += "</score>";
 		out += "<downloaded_episodes>";
-		out += std::to_string(anime.downloaded_episodes);
+		out += std::to_string(anime.downloaded_items);
 		out += "</downloaded_episodes>";
 		out += "<storage_type>";
 		//out += std::to_string(anime.storage_type);
@@ -218,10 +222,10 @@ namespace MAL {
 		//out += std::to_string(anime.storage_value);
 		out += "</storage_value>";
 		out += "<times_rewatched>";
-		//out += std::to_string(anime.times_watched);
+		//out += std::to_string(anime.times_consumed);
 		out += "</times_rewatched>";
 		out += "<rewatch_value>";
-		//out += std::to_string(anime.rewatch_value);
+		//out += std::to_string(anime.reconsume_value);
 		out += "</rewatch_value>";
 		out += "<date_start>";
 		out += anime.date_start;
@@ -236,7 +240,7 @@ namespace MAL {
 		//out += anime.enable_discussion?"1":"0";
 		out += "</enable_discussion>";
 		out += "<enable_rewatching>";
-		out += (anime.enable_rewatching)?"1":"0";
+		out += (anime.enable_reconsuming)?"1":"0";
 		out += "</enable_rewatching>";
 		out += "<comments>";
 		//out += anime.comments;

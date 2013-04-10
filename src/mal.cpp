@@ -157,19 +157,19 @@ namespace MAL {
 		return out;
 	}
 
-	std::string MAL::get_anime_image_sync(const Anime& anime) {
-        auto iter = anime_image_cache.find(anime.series_animedb_id);
-        if (iter == std::end(anime_image_cache)) {
+	std::string MAL::get_image_sync(const MALItem& item) {
+        auto iter = image_cache.find(item.image_url);
+        if (iter == std::end(image_cache)) {
             std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
             std::unique_ptr<std::string> buf(new std::string());
-            setup_curl_easy(curl.get(), anime.image_url, buf.get());
+            setup_curl_easy(curl.get(), item.image_url, buf.get());
             CURLcode code = curl_easy_perform(curl.get());
             
             if (code != CURLE_OK) {
                 print_curl_error(code);
                 return std::string();
             } else {
-                auto inserted = anime_image_cache.insert(std::make_pair(anime.series_animedb_id, std::move(buf)));
+                auto inserted = image_cache.insert(std::make_pair(item.image_url, std::move(buf)));
                 return *inserted.first->second;
             }
         } else {
@@ -178,7 +178,7 @@ namespace MAL {
 	}
 
 	std::string MAL::get_manga_image_sync(const Manga& manga) {
-        auto iter = manga_image_cache.find(manga.series_mangadb_id);
+        auto iter = manga_image_cache.find(manga.series_itemdb_id);
         if (iter == std::end(manga_image_cache)) {
             std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
             std::unique_ptr<std::string> buf(new std::string());
@@ -189,7 +189,7 @@ namespace MAL {
                 print_curl_error(code);
                 return std::string();
             } else {
-                auto inserted = manga_image_cache.insert(std::make_pair(manga.series_mangadb_id, std::move(buf)));
+                auto inserted = manga_image_cache.insert(std::make_pair(manga.series_itemdb_id, std::move(buf)));
                 return *inserted.first->second;
             }
         } else {
@@ -232,8 +232,11 @@ namespace MAL {
 		}
 
 		parse_entities(*buf);
-
-		res = serializer.deserialize(*buf);
+        if (buf->size() > 0)
+            res = serializer.deserialize(*buf);
+        else
+            std::cerr << "Info: Null response for search terms \"" << terms 
+                      << "\"." << std::endl;
 		
 		return res;
 	}
@@ -273,12 +276,17 @@ namespace MAL {
 		}
 
 		parse_entities(*buf);
-		res = manga_serializer.deserialize(*buf);
+        if (buf->size() > 0)
+            res = manga_serializer.deserialize(*buf);
+        else
+            std::cerr << "Info: Null response for search terms \"" << terms 
+                      << "\"." << std::endl;
+
 		return res;
 	}
 
 	bool MAL::update_anime_sync(const Anime& anime) {
-		const std::string url = UPDATED_BASE_URL + std::to_string(anime.series_animedb_id) + ".xml";
+		const std::string url = UPDATED_BASE_URL + std::to_string(anime.series_itemdb_id) + ".xml";
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());
 		setup_curl_easy(curl.get(), url, buf.get());
@@ -327,7 +335,7 @@ namespace MAL {
 	}
 
 	bool MAL::update_manga_sync(const Manga& manga) {
-		const std::string url = MANGA_UPDATED_BASE_URL + std::to_string(manga.series_mangadb_id) + ".xml";
+		const std::string url = MANGA_UPDATED_BASE_URL + std::to_string(manga.series_itemdb_id) + ".xml";
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());
 		setup_curl_easy(curl.get(), url, buf.get());
@@ -376,7 +384,7 @@ namespace MAL {
 	}
 
 	bool MAL::add_anime_sync(const Anime& anime) {
-		const std::string url = ADD_BASE_URL + std::to_string(anime.series_animedb_id) + ".xml";
+		const std::string url = ADD_BASE_URL + std::to_string(anime.series_itemdb_id) + ".xml";
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());
 		setup_curl_easy(curl.get(), url, buf.get());
@@ -423,7 +431,7 @@ namespace MAL {
 	}
 
 	bool MAL::add_manga_sync(const Manga& manga) {
-		const std::string url = MANGA_ADD_BASE_URL + std::to_string(manga.series_mangadb_id) + ".xml";
+		const std::string url = MANGA_ADD_BASE_URL + std::to_string(manga.series_itemdb_id) + ".xml";
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());
 		setup_curl_easy(curl.get(), url, buf.get());

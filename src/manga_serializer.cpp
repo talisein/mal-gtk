@@ -68,30 +68,33 @@ namespace {
                 };
 	}
 
-	static std::map<const MAL::MANGA_FIELDS, const decltype(std::mem_fn(&MAL::Manga::set_id))> initialize_member_map() {
+	static std::map<const MAL::MANGA_FIELDS, std::function<void (MAL::Manga&, const std::string&)> > initialize_member_map() {
 		return {
-			{ MAL::MANGADBID,         std::mem_fn(&MAL::Manga::set_series_mangadb_id) },
+			{ MAL::MANGADBID,         std::mem_fn(&MAL::Manga::set_series_itemdb_id) },
 			{ MAL::SERIESTITLE,       std::mem_fn(&MAL::Manga::set_series_title) },
-			{ MAL::SERIESTYPE,        std::mem_fn(&MAL::Manga::set_series_type) },
-			{ MAL::SERIESCHAPTERS,    std::mem_fn(&MAL::Manga::set_series_chapters) },
-			{ MAL::SERIESVOLUMES,     std::mem_fn(&MAL::Manga::set_series_volumes) },
-			{ MAL::SERIESSTATUS,      std::mem_fn(&MAL::Manga::set_series_status) },
 			{ MAL::SERIESDATEBEGIN,   std::mem_fn(&MAL::Manga::set_series_date_begin) },
 			{ MAL::SERIESDATEEND,     std::mem_fn(&MAL::Manga::set_series_date_end) },
 			{ MAL::SERIESIMAGEURL,    std::mem_fn(&MAL::Manga::set_image_url) },
 			{ MAL::SERIESSYNONYMS,    std::mem_fn(&MAL::Manga::set_series_synonyms) },
-			{ MAL::MYID,              std::mem_fn(&MAL::Manga::set_id) },
-			{ MAL::MYSCORE,           std::mem_fn(&MAL::Manga::set_score) },
-			{ MAL::MYREADCHAPTERS,    std::mem_fn(&MAL::Manga::set_chapters) },
-			{ MAL::MYREADVOLUMES,     std::mem_fn(&MAL::Manga::set_volumes) },
+			{ MAL::SYNOPSIS,          std::mem_fn(&MAL::Manga::set_series_synopsis) },
+
+			{ MAL::SERIESTYPE,        std::mem_fn(&MAL::Manga::set_series_type) },
+			{ MAL::SERIESCHAPTERS,    std::mem_fn(&MAL::Manga::set_series_chapters) },
+			{ MAL::SERIESVOLUMES,     std::mem_fn(&MAL::Manga::set_series_volumes) },
+			{ MAL::SERIESSTATUS,      std::mem_fn(&MAL::Manga::set_series_status) },
+
+			{ MAL::MYTAGS,            std::mem_fn(&MAL::Manga::set_tags) },
 			{ MAL::MYSTARTDATE,       std::mem_fn(&MAL::Manga::set_date_start) },
 			{ MAL::MYFINISHDATE,      std::mem_fn(&MAL::Manga::set_date_finish) },
-			{ MAL::MYSTATUS,          std::mem_fn(&MAL::Manga::set_status) },
-			{ MAL::MYREREADING,       std::mem_fn(&MAL::Manga::set_enable_rereading) },
-			{ MAL::MYREREADINGCHAP,   std::mem_fn(&MAL::Manga::set_rereading_chapter) },
+			{ MAL::MYID,              std::mem_fn(&MAL::Manga::set_id) },
 			{ MAL::MYLASTUPDATED,     std::mem_fn(&MAL::Manga::set_last_updated) },
-			{ MAL::MYTAGS,            std::mem_fn(&MAL::Manga::set_tags) },
-			{ MAL::SYNOPSIS,          std::mem_fn(&MAL::Manga::set_series_synopsis) },
+			{ MAL::MYSCORE,           std::mem_fn(&MAL::Manga::set_score) },
+			{ MAL::MYREREADING,       std::mem_fn(&MAL::Manga::set_enable_reconsuming) },
+
+			{ MAL::MYREADCHAPTERS,    std::mem_fn(&MAL::Manga::set_chapters) },
+			{ MAL::MYREADVOLUMES,     std::mem_fn(&MAL::Manga::set_volumes) },
+			{ MAL::MYSTATUS,          std::mem_fn(&MAL::Manga::set_status) },
+			{ MAL::MYREREADINGCHAP,   std::mem_fn(&MAL::Manga::set_rereading_chapter) },
                 };
 	}
 
@@ -131,6 +134,7 @@ namespace MAL {
 
 		if (!reader) {
 			std::cerr << "Error: Couldn't create XML reader" << std::endl;
+            std::cerr << "XML follows: " << xml << std::endl;
 			return res;
 		}
 
@@ -218,7 +222,7 @@ namespace MAL {
 		out += std::to_string(manga.score);
 		out += "</score>";
 		out += "<downloaded_chapters>";
-		out += std::to_string(manga.downloaded_chapters);
+		out += std::to_string(manga.downloaded_items);
 		out += "</downloaded_chapters>";
 		out += "<times_reread>";
 		out += "</times_reread>";
@@ -235,7 +239,7 @@ namespace MAL {
 		out += "<enable_discussion>";
 		out += "</enable_discussion>";
 		out += "<enable_rereading>";
-		out += (manga.enable_rereading)?"1":"0";
+		out += (manga.enable_reconsuming)?"1":"0";
 		out += "</enable_rereading>";
 		out += "<comments>";
 		out += "</comments>";

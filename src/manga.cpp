@@ -160,52 +160,6 @@ namespace MAL {
 		}
 	}
 
-	std::string manga_season_from_date(const std::string& s) {
-		int year = 0, month = 0;
-        try {
-            year = std::stoi(s.substr(0,4));
-            month = std::stoi(s.substr(5,2));
-        } catch (std::exception e) {
-            return "Unknown";
-        }
-
-		if (year == 0)
-			return "Unknown";
-		else {
-			switch (month) {
-                case 12:
-                    ++year; 
-                case 1:
-                case 2:
-                    return "Winter " + std::to_string(year);
-                case 3:
-                case 4:
-                case 5:
-                    return "Spring " + std::to_string(year);
-                case 6:
-                case 7:
-                case 8:
-                    return "Summer " + std::to_string(year);
-                case 9:
-                case 10:
-                case 11:
-                    return "Autumn " + std::to_string(year);
-                default:
-                    return s.substr(0, 7);
-			}
-		}
-	}
-
-	void Manga::set_series_mangadb_id(const std::string& id)
-	{
-		series_mangadb_id = std::stoll(id);
-	}
-
-	void Manga::set_series_title(const std::string& title)
-	{
-		series_title = title;
-	}
-
 	void Manga::set_series_type(const std::string& str)
 	{
 		if (str.size() == 1)
@@ -232,42 +186,9 @@ namespace MAL {
 			series_status = manga_series_status_from_string(str);
 	}
 
-	void Manga::set_series_date_begin(const std::string& str)
+	void Manga::set_status(const std::string& str)
 	{
-		series_date_begin = str;
-	}
-
-	void Manga::set_series_date_end(const std::string& str)
-	{
-		series_date_end = str;
-	}
-
-	void Manga::set_image_url(const std::string& str)
-	{
-		image_url = str;
-	}
-
-	void Manga::set_series_synonyms(const std::string& str)
-	{
-		auto iter = str.find("; ");
-		decltype(iter) start = 0;
-		while (iter != std::string::npos) {
-			auto const substr = str.substr(start, iter - start);
-			if (substr.size() > 0) {
-				series_synonyms.insert(substr);
-			}
-
-			start = iter + 2;
-			iter = str.find("; ", start);
-		}
-		auto const substr = str.substr(start, iter - start);
-		if (substr.size() > 0)
-			series_synonyms.insert(substr);
-	}
-
-	void Manga::set_id(const std::string& str)
-	{
-		id = std::stoll(str);
+		status = manga_status_from_int(std::stoi(str));
 	}
 
 	void Manga::set_chapters(const std::string& str)
@@ -280,103 +201,13 @@ namespace MAL {
 		volumes = std::stoi(str);
 	}
 
-	void Manga::set_score(const std::string& str)
-	{
-		score = std::stof(str);
-	}
-
-	void Manga::set_date_start(const std::string& str)
-	{
-		date_start = str;
-	}
-
-	void Manga::set_date_finish(const std::string& str)
-	{
-		date_finish = str;
-	}
-
-	void Manga::set_status(const std::string& str)
-	{
-		status = manga_status_from_int(std::stoi(str));
-	}
-
-	void Manga::set_enable_rereading(const std::string& str)
-	{
-		enable_rereading = str.compare("0")==0?false:true;
-	}
-
 	void Manga::set_rereading_chapter(const std::string& str)
 	{
 		rereading_chapter = std::stoi(str);
-	}
-
-	void Manga::set_last_updated(const std::string& str)
-	{
-		last_updated = std::stoull(str);
-	}
-
-	void Manga::set_tags(const std::string& str)
-	{
-		auto iter = str.find("; ");
-		decltype(iter) start = 0;
-		while (iter != str.npos) {
-			auto const substr = str.substr(start, iter - start);
-			if (substr.size() > 0) {
-				tags.insert(substr);
-			}
-
-			start = iter + 2;
-			iter = str.find("; ", start);
-		}
-		auto const substr = str.substr(start, iter - start);
-		if (substr.size() > 0)
-			tags.insert(substr);
-	}
-		
-	void Manga::set_series_synopsis(const std::string& str)
-	{
-		series_synopsis = str;
-	}
-
-	void Manga::set_scan_group(const std::string& str)
-	{
-		scan_group = str;
-	}
-
-	void Manga::set_comments(const std::string& str)
-	{
-		comments = str;
 	}
 
 	void Manga::set_retail_volumes(const std::string& str)
 	{
 		retail_volumes = std::stoi(str);
 	}
-
-	void Manga::set_downloaded_chapters(const std::string& str)
-	{
-		downloaded_chapters = std::stoi(str);
-	}
-
-	void Manga::set_times_reread(const std::string& str)
-	{
-		times_reread = std::stoi(str);
-	}
-
-	void Manga::set_reread_value(const std::string& str)
-	{
-		reread_value = std::stoi(str);
-	}
-
-	void Manga::set_priority(const std::string& str)
-	{
-		priority = std::stoi(str);
-	}
-
-	void Manga::set_enable_discussion(const std::string& str)
-	{
-		enable_discussion = str.compare("0")==0?false:true;
-	}
-
-
 }
