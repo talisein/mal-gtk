@@ -1,16 +1,18 @@
 #pragma once
 #include <memory>
-#include <giomm/memoryinputstream.h>
 #include <glibmm/dispatcher.h>
+#include <giomm/memoryinputstream.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/comboboxtext.h>
 #include <gtkmm/treeview.h>
-#include <sigc++/slot.h>
+#include <gtkmm/sizegroup.h>
 #include <gtkmm/treemodel.h>
 #include <gtkmm/cellrenderercombo.h>
+#include <sigc++/slot.h>
 #include "manga.hpp"
 #include "mal.hpp"
+#include "malitem_list_view.hpp"
 
 namespace MAL {
 
@@ -36,123 +38,203 @@ namespace MAL {
 		MangaStatus get_manga_status() const;
 	};
 
-    class MangaModelColumns : public Gtk::TreeModel::ColumnRecord
+    class MangaModelColumnsBase : public virtual MALItemModelColumns
     {
     public:
-        Gtk::TreeModelColumn<Glib::ustring> series_title;
-        Gtk::TreeModelColumn<Glib::ustring> series_status;
-        Gtk::TreeModelColumn<float> score;
-        Gtk::TreeModelColumn<Glib::ustring> type;
-        Gtk::TreeModelColumn<gint> chapters;
-        Gtk::TreeModelColumn<gint> volumes;
-        Gtk::TreeModelColumn<gint> series_chapters;
-        Gtk::TreeModelColumn<gint> series_volumes;
-        Gtk::TreeModelColumn<Glib::ustring> status;
-        Gtk::TreeModelColumn<Manga> manga;
-        Gtk::TreeModelColumn<Glib::ustring> series_season;
-        Gtk::TreeModelColumn<Glib::ustring> series_start_date;
+        Gtk::TreeModelColumn<Glib::ustring>           series_type;
+        Gtk::TreeModelColumn<Glib::ustring>           series_status;
+        Gtk::TreeModelColumn<gint>                    series_chapters;
+        Gtk::TreeModelColumn<gint>                    series_volumes;
+        Gtk::TreeModelColumn<std::shared_ptr<Manga> > manga;
 
-        MangaModelColumns() { add(series_title);
+        MangaModelColumnsBase() {
+            add(series_type);
             add(series_status);
-            add(score);
-            add(type);
-            add(chapters);
-            add(volumes);
             add(series_chapters);
             add(series_volumes);
-            add(status);
-            add(series_season);
-            add(series_start_date);
             add(manga);
-        } 
+        }
     };
 
-	class MangaListView : public Gtk::Grid {
-	public:
-		MangaListView(const std::shared_ptr<MAL>&,
-		              const MangaStatus filter = MANGASTATUS_INVALID,
-		              const bool do_updates = true);
+    class MangaModelColumnsEditable : public MangaModelColumnsBase, public MALItemModelColumnsEditable
+    {
+    public:
+        Gtk::TreeModelColumn<Glib::ustring> status;
+        Gtk::TreeModelColumn<gint>          chapters;
+        Gtk::TreeModelColumn<gint>          volumes;
 
-		void set_status_filter(const MangaStatus status);
-		void set_manga_list(std::list<Manga>& manga);
+        MangaModelColumnsEditable() {
+            add(status);
+            add(chapters);
+            add(volumes);
+        }
+    };
 
-		void do_model_foreach(const Gtk::TreeModel::SlotForeachPathAndIter& slot) {model->foreach(slot);};
-		void set_row_activated_cb(sigc::slot<void, const Manga&> slot) { row_activated_cb = slot;} ;
+    class MangaModelColumnsStatic : public MangaModelColumnsBase, public MALItemModelColumnsStatic
+    {
+    public:
+        Gtk::TreeModelColumn<Glib::ustring> status;
 
-        std::shared_ptr<MangaModelColumns> columns_p;
-	private:
-		std::shared_ptr<MAL> mal;
+        MangaModelColumnsStatic() {
+            add(status);
+        }
+    };
 
-		bool do_updates;
-		MangaStatus status_filter;
-		MangaStatusCellRendererCombo *status_cellrenderer;
-		void on_status_cr_changed(const Glib::ustring& text, const Glib::ustring& iter);
+    class MangaListViewBase : public virtual MALItemListViewBase
+    {
+    public:
+        MangaListViewBase(const std::shared_ptr<MAL>&,
+                          const std::shared_ptr<MangaModelColumnsBase>&);
 
-		std::list<Manga> manga_list;
-        Manga detailed_manga;
-		Glib::Dispatcher signal_refreshed;
-		void refresh_cb();
-		
-		const sigc::slot<void, const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator&> model_changed_functor;
-		sigc::connection model_changed_connection;
-		void on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator&);
-		void send_manga_update(Manga manga);
-		void send_manga_add(Manga manga);
+    protected:
+        Gtk::TreeViewColumn *m_series_type_column;
+        Gtk::TreeViewColumn *m_series_status_column;
+        Gtk::TreeViewColumn *m_series_chapters_column;
+        Gtk::TreeViewColumn *m_series_volumes_column;
 
-		Glib::RefPtr<Gtk::ListStore> model;
-		Gtk::TreeView *treeview;
-		void on_my_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
-		sigc::slot<void, const Manga&> row_activated_cb;
-		
-	};
+        /* Chain up!
+         * Called when m_items has changed (We have fetched a new manga list from MAL)
+         * This method should take data from the item and put it on the row
+         */
+        virtual void refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row);
+    };
 
-	class MangaDetailView : public Gtk::Grid {
-	public:
-		MangaDetailView(const std::shared_ptr<MAL>&);
+    class MangaListViewStatic : public MALItemListViewStatic, public MangaListViewBase
+    {
+    public:
+        MangaListViewStatic(const std::shared_ptr<MAL>&,
+                            const std::shared_ptr<MangaModelColumnsStatic>&);
 
-		void display_manga(const Manga& manga);
-		void set_model_cb(sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&> slot, const std::shared_ptr<MangaModelColumns> &c) {model_cb = slot; columns = c;};
-	private:
-		std::shared_ptr<MAL> mal;
-		Manga manga;
-		sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&> model_cb;
-		bool on_foreach(const Gtk::TreeModel::Path& path, const Gtk::TreeModel::iterator& iter);
-        void on_increment_chap_clicked();
-        void on_increment_vol_clicked();
-        void update_list_model();
+    protected:
+        Gtk::TreeViewColumn *m_status_column;
 
-		Gtk::Image                          *image;
-		Gtk::Label                          *title;
-		Gtk::Button                         *increment_chap_button;
-		Gtk::Button                         *increment_vol_button;
-		Gtk::Entry                          *chapters;
-		Gtk::Entry                          *volumes;
-		Gtk::Label                          *series_chapters;
-		Gtk::Label                          *series_volumes;
-        Gtk::Entry                          *score;
-		MangaStatusComboBox                 *manga_status;
-        std::shared_ptr<MangaModelColumns>   columns;
-		Glib::Dispatcher                     signal_image_available;
-		Glib::RefPtr<Gio::MemoryInputStream> image_stream;
-		void on_image_available();
-		void do_fetch_image();
-
-	};
-
-	class MangaListPage : public Gtk::Grid {
-	public:
-		MangaListPage(const std::shared_ptr<MAL>&);
-		void refresh_async();
+        /* Chain up!
+         * Called when m_items has changed (We have fetched a new manga list from MAL)
+         * This method should take data from the item and put it on the row
+         */
+        virtual void refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row);
 
     private:
-		std::shared_ptr<MAL> mal;
-		MangaStatus status_filter;
-		MangaDetailView* detail_view;
-		MangaListView* list_view;
-		MangaStatusComboBox *status_combo_box;
-		void on_filter_changed();
-		void refresh();
-	};
+        void on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text);
+    };
 
+    class MangaListViewEditable : public MALItemListViewEditable, public MangaListViewBase
+    {
+    public:
+        MangaListViewEditable(const std::shared_ptr<MAL>&,
+                              const std::shared_ptr<MangaModelColumnsEditable>&);
 
+    protected:
+        Gtk::TreeViewColumn *m_status_column;
+        Gtk::TreeViewColumn *m_chapters_column;
+        Gtk::TreeViewColumn *m_volumes_column;
+
+        /* Chain up!
+         * Called when m_items has changed (We have fetched a new manga list from MAL)
+         * This method should take data from the item and put it on the row
+         */
+        virtual void refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row);
+
+        /* Chain up!
+         * Called when the tree model was changed due to editing.
+         * This method should set the appropriate field in item from
+         * the tree row, then set the item back into the model as
+         * well. 
+         * Return true when the item value is different from the model value.
+         */
+        virtual bool model_changed_cb(std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row);
+
+        /* Called on main thread. Item should be transmitted back to MAL.net.
+         */
+        virtual void send_item_update(const std::shared_ptr<MALItem>& item);
+
+    private:
+        void on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text);
+        void send_manga_update(const std::shared_ptr<Manga>& manga);
+    };
+
+    class MangaDetailViewBase: public virtual MALItemDetailViewBase {
+    public:
+        MangaDetailViewBase(const std::shared_ptr<MAL>&);
+
+        /* You must chain up */
+        virtual void display_item(const std::shared_ptr<MALItem>& item);
+        
+    protected:
+        Gtk::Grid                    *m_status_type_grid;
+        Glib::RefPtr<Gtk::SizeGroup>  m_status_type_sizegroup;
+        Gtk::Label                   *m_series_status_label;
+        Gtk::Label                   *m_series_type_label;
+    };
+
+    class MangaDetailViewStatic: public MALItemDetailViewStatic, public MangaDetailViewBase {
+    public:
+        MangaDetailViewStatic(const std::shared_ptr<MAL>&);
+
+        /* You must chain up */
+        virtual void display_item(const std::shared_ptr<MALItem>& item);
+        
+    protected:
+        Gtk::Grid                    *m_chapters_grid;
+        Gtk::Grid                    *m_volumes_grid;
+        Gtk::Label                   *m_series_chapters_label;
+        Gtk::Label                   *m_series_volumes_label;
+    };
+
+    class MangaDetailViewEditable : public MALItemDetailViewEditable, public MangaDetailViewBase {
+    public:
+        MangaDetailViewEditable(const std::shared_ptr<MAL>&,
+                                const std::shared_ptr<MangaModelColumnsEditable>&,
+                                const sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&>&);
+        
+        /* You must chain up */
+        virtual void display_item(const std::shared_ptr<MALItem>& item);
+        
+    protected:
+        Gtk::Grid           *m_chapters_grid;
+        Gtk::Grid           *m_volumes_grid;
+        Gtk::Label          *m_series_chapters_label;
+        Gtk::Label          *m_series_volumes_label;
+        Gtk::Entry          *m_chapters_entry;
+        Gtk::Entry          *m_volumes_entry;
+        Gtk::Button         *m_chapters_button;
+        Gtk::Button         *m_volumes_button;
+		MangaStatusComboBox *m_manga_status_combo;
+
+        /* Chain up */
+        virtual bool update_list_model(const Gtk::TreeRow &row);
+
+    private:
+        void increment_chapters_button_cb();
+        void increment_volumes_button_cb();
+    };
+
+    class MangaSearchListPage : public MALItemListPage {
+    public:
+		MangaSearchListPage(const std::shared_ptr<MAL>&,
+                            MangaListViewStatic*   list_view,
+                            MangaDetailViewStatic* detail_view);
+
+    protected:
+        Gtk::Entry *m_search_entry;
+		virtual void refresh();
+
+    };
+
+    class MangaFilteredListPage : public MALItemListPage {
+    public:
+		MangaFilteredListPage(const std::shared_ptr<MAL>& mal,
+                              MangaListViewEditable*      list_view,
+                              MangaDetailViewEditable*    detail_view);
+
+    protected:
+		virtual void refresh();
+
+    private:
+        MangaListViewEditable* m_list_view;
+        MangaDetailViewEditable* m_detail_view;
+        MangaStatusComboBox *m_status_combo;
+
+        bool m_filter_func(const std::shared_ptr<MALItem>&) const;
+    };
 }

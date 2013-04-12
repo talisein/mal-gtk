@@ -46,23 +46,23 @@ namespace MAL {
 		 * internet.
 		 * Safe to call from multiple threads.
 		 */
-		std::list<Anime> get_anime_list_sync();
+		std::list<std::shared_ptr<Anime>> get_anime_list_sync();
 
 		/** Returns the manga list for username. As slow as the
 		 * internet.
 		 * Safe to call from multiple threads.
 		 */
-		std::list<Manga> get_manga_list_sync();
+		std::list<std::shared_ptr<Manga> > get_manga_list_sync();
 
 		/** Searches MAL.net. Slow as the Internet.
 		 * Safe to call from multiple threads.
 		 */
-		std::list<Anime> search_anime_sync(const std::string& terms);
+		std::list<std::shared_ptr<Anime> > search_anime_sync(const std::string& terms);
 
 		/** Searches MAL.net. Slow as the Internet.
 		 * Safe to call from multiple threads.
 		 */
-		std::list<Manga> search_manga_sync(const std::string& terms);
+		std::list<std::shared_ptr<Manga> > search_manga_sync(const std::string& terms);
 
 		/** Updates MAL.net with the new anime details. As slow as the
 		 * Internet.
@@ -96,13 +96,13 @@ namespace MAL {
 
 		typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
 	private:
-		const std::string LIST_BASE_URL = "http://myanimelist.net/malappinfo.php?u=";
-		const std::string SEARCH_BASE_URL = "http://myanimelist.net/api/anime/search.xml?q=";
-		const std::string UPDATED_BASE_URL = "http://myanimelist.net/api/animelist/update/";
-		const std::string ADD_BASE_URL = "http://myanimelist.net/api/animelist/add/";
-		const std::string MANGA_SEARCH_BASE_URL = "http://myanimelist.net/api/manga/search.xml?q=";
+		const std::string LIST_BASE_URL          = "http://myanimelist.net/malappinfo.php?u=";
+		const std::string SEARCH_BASE_URL        = "http://myanimelist.net/api/anime/search.xml?q=";
+		const std::string UPDATED_BASE_URL       = "http://myanimelist.net/api/animelist/update/";
+		const std::string ADD_BASE_URL           = "http://myanimelist.net/api/animelist/add/";
+		const std::string MANGA_SEARCH_BASE_URL  = "http://myanimelist.net/api/manga/search.xml?q=";
 		const std::string MANGA_UPDATED_BASE_URL = "http://myanimelist.net/api/mangalist/update/";
-		const std::string MANGA_ADD_BASE_URL = "http://myanimelist.net/api/mangalist/add/";
+		const std::string MANGA_ADD_BASE_URL     = "http://myanimelist.net/api/mangalist/add/";
 
 		std::unique_ptr<UserInfo> user_info;
 		Glib::Dispatcher signal_run_password_dialog;

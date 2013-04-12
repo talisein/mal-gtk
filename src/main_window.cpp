@@ -2,104 +2,55 @@
 #include <gtkmm/notebook.h>
 #include <gtkmm/stock.h>
 #include "main_window.hpp"
+#include "malitem_list_view.hpp"
 
 namespace MAL {
 
-	AnimeSearchPage::AnimeSearchPage(const std::shared_ptr<MAL>& mal_p) :
-		mal(mal_p),
-		entry(Gtk::manage(new Gtk::Entry())),
-		list_view(Gtk::manage(new AnimeListView(mal_p, ANIMESTATUS_INVALID, false)))
-	{
-		set_orientation(Gtk::ORIENTATION_VERTICAL);
-		entry->set_hexpand(true);
-		entry->set_activates_default(true);
-		entry->show();
-		add(*entry);
-		auto action = Gtk::Action::create();
-		action->signal_activate().connect(sigc::mem_fun(*this, &AnimeSearchPage::do_search_async));
-		auto button = Gtk::manage(new Gtk::Button("Search"));
-		button->set_always_show_image(true);
-		auto icon = button->render_icon_pixbuf(Gtk::Stock::FIND, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
-		auto image = Gtk::manage(new Gtk::Image(icon));
-		button->set_image(*image);
-		button->set_tooltip_text("Search myanimelist.net for anime that maches the entered terms.");
-
-		button->set_related_action(action);
-		attach_next_to(*button, *entry, Gtk::POS_RIGHT, 1, 1);
-		button->show();
-		show();
-		button->set_can_default(true);
-		button->set_receives_default(true);
-		attach_next_to(*list_view, *entry, Gtk::POS_BOTTOM, 2, 1);
-		show_all();
-	}
-
-	void AnimeSearchPage::do_search_async() {
-		auto t = std::thread(std::bind(&AnimeSearchPage::do_search, this));
-		t.detach();
-	}
-
-	void AnimeSearchPage::do_search() {
-		auto list = mal->search_anime_sync(entry->get_text());
-        list_view->set_anime_list(list);
-	}
-
-	MangaSearchPage::MangaSearchPage(const std::shared_ptr<MAL>& mal_p) :
-		mal(mal_p),
-		entry(Gtk::manage(new Gtk::Entry())),
-		list_view(Gtk::manage(new MangaListView(mal_p, MANGASTATUS_INVALID, false)))
-	{
-		set_orientation(Gtk::ORIENTATION_VERTICAL);
-		entry->set_hexpand(true);
-		entry->set_activates_default(true);
-		entry->show();
-		add(*entry);
-		auto action = Gtk::Action::create();
-		action->signal_activate().connect(sigc::mem_fun(*this, &MangaSearchPage::do_search_async));
-		auto button = Gtk::manage(new Gtk::Button("Search"));
-		button->set_always_show_image(true);
-		auto icon = button->render_icon_pixbuf(Gtk::Stock::FIND, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
-		auto image = Gtk::manage(new Gtk::Image(icon));
-		button->set_image(*image);
-		button->set_tooltip_text("Search myanimelist.net for anime that maches the entered terms.");
-
-		button->set_related_action(action);
-		attach_next_to(*button, *entry, Gtk::POS_RIGHT, 1, 1);
-		button->show();
-		show();
-		button->set_can_default(true);
-		button->set_receives_default(true);
-		attach_next_to(*list_view, *entry, Gtk::POS_BOTTOM, 2, 1);
-		show_all();
-	}
-
-	void MangaSearchPage::do_search_async() {
-		auto t = std::thread(std::bind(&MangaSearchPage::do_search, this));
-		t.detach();
-	}
-
-	void MangaSearchPage::do_search() {
-		auto list = mal->search_manga_sync(entry->get_text());
-        list_view->set_manga_list(list);
-	}
-
 	MainWindow::MainWindow(const std::shared_ptr<MAL>& mal) :
-		Gtk::ApplicationWindow(),
-		anime_list_view(Gtk::manage(new AnimeListPage(mal))),
-		manga_list_view(Gtk::manage(new MangaListPage(mal))),
-		anime_search_view(Gtk::manage(new AnimeSearchPage(mal))),
-		manga_search_view(Gtk::manage(new MangaSearchPage(mal)))
+		Gtk::ApplicationWindow()
 	{
 		auto book = Gtk::manage(new Gtk::Notebook());
 		book->set_show_border(false);
-		book->append_page(*anime_list_view, "My Anime List");
-		book->append_page(*anime_search_view, "Anime Search");
-		book->append_page(*manga_list_view, "My Manga List");
-		book->append_page(*manga_search_view, "Manga Search");
+
+        {
+        auto itemcolumns = std::make_shared<AnimeModelColumnsEditable>();
+        auto itemlistview = Gtk::manage(new AnimeListViewEditable(mal, itemcolumns));
+        auto itemdetailview = Gtk::manage(new AnimeDetailViewEditable(mal,
+                                                                      itemcolumns,
+                                                                      sigc::mem_fun(*itemlistview, &AnimeListViewEditable::do_model_foreach)));
+        auto itempage = Gtk::manage(new AnimeFilteredListPage(mal, itemlistview, itemdetailview));
+        book->append_page(*itempage, "My Anime List");
+        }
+
+        {
+        auto itemcolumns = std::make_shared<AnimeModelColumnsStatic>();
+        auto itemlistview = Gtk::manage(new AnimeListViewStatic(mal, itemcolumns));
+        auto itemdetailview = Gtk::manage(new AnimeDetailViewStatic(mal));
+        auto itempage = Gtk::manage(new AnimeSearchListPage(mal, itemlistview, itemdetailview));
+        book->append_page(*itempage, "Anime Search");
+        }
+
+        {
+        auto itemcolumns = std::make_shared<MangaModelColumnsEditable>();
+        auto itemlistview = Gtk::manage(new MangaListViewEditable(mal, itemcolumns));
+        auto itemdetailview = Gtk::manage(new MangaDetailViewEditable(mal,
+                                                                      itemcolumns,
+                                                                      sigc::mem_fun(*itemlistview, &MangaListViewEditable::do_model_foreach)));
+        auto itempage = Gtk::manage(new MangaFilteredListPage(mal, itemlistview, itemdetailview));
+        book->append_page(*itempage, "My Manga List");
+        }
+
+        {
+        auto itemcolumns = std::make_shared<MangaModelColumnsStatic>();
+        auto itemlistview = Gtk::manage(new MangaListViewStatic(mal, itemcolumns));
+        auto itemdetailview = Gtk::manage(new MangaDetailViewStatic(mal));
+        auto itempage = Gtk::manage(new MangaSearchListPage(mal, itemlistview, itemdetailview));
+        book->append_page(*itempage, "Manga Search");
+        }
+
 		book->show();
-		anime_search_view->show_all();
 		add(*book);
-		resize(1200,600);
+		resize(1000,800);
 	}
 
 

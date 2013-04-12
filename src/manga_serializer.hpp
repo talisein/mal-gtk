@@ -15,7 +15,7 @@ namespace MAL {
 		void operator=(const MangaSerializer&) = delete;
 		MangaSerializer(const MangaSerializer&) = delete;
 
-		std::list<Manga> deserialize(const std::string& xml) const;
+		std::list<std::shared_ptr<Manga> > deserialize(const std::string& xml) const;
 		std::string serialize(const Manga& anime) const;
 
 	private:

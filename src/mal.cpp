@@ -107,8 +107,8 @@ namespace MAL {
 		}
 	}
 	
-	std::list<Anime> MAL::get_anime_list_sync() {
-		std::list<Anime> out;
+	std::list<std::shared_ptr<Anime> > MAL::get_anime_list_sync() {
+		std::list<std::shared_ptr<Anime> > out;
 		if (!user_info->get_username()) {
 			std::cerr << "Error: No username provided." << std::endl;
 			return out;
@@ -132,8 +132,8 @@ namespace MAL {
 		return out;
 	}
 
-	std::list<Manga> MAL::get_manga_list_sync() {
-		std::list<Manga> out;
+	std::list<std::shared_ptr<Manga> > MAL::get_manga_list_sync() {
+		std::list<std::shared_ptr<Manga> > out;
 		if (!user_info->get_username()) {
 			std::cerr << "Error: No username provided." << std::endl;
 			return out;
@@ -197,8 +197,8 @@ namespace MAL {
         }
 	}
 
-	std::list<Anime> MAL::search_anime_sync(const std::string& terms) {
-		std::list<Anime> res;
+	std::list<std::shared_ptr<Anime> > MAL::search_anime_sync(const std::string& terms) {
+		std::list<std::shared_ptr<Anime> > res;
 		
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());
@@ -241,8 +241,8 @@ namespace MAL {
 		return res;
 	}
 
-	std::list<Manga> MAL::search_manga_sync(const std::string& terms) {
-		std::list<Manga> res;
+	std::list<std::shared_ptr<Manga> > MAL::search_manga_sync(const std::string& terms) {
+		std::list<std::shared_ptr<Manga> > res;
 
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());

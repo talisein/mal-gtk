@@ -17,7 +17,7 @@ namespace MAL {
 		case 6:
 			return MUSIC;
 		default:
-			std::cerr << "Error: Unknown anime series type " << i << std::endl;
+			std::cerr << "Error: Unknown Anime Series Type (" << i << ")" << std::endl;
 			return SERIESTYPE_INVALID;
 		}
 	}
@@ -36,7 +36,7 @@ namespace MAL {
 		else if (s.compare(to_string(MUSIC)) == 0)
 			return MUSIC;
 		else {
-			std::cerr << "Error: Unknown series type '" << s << "'" << std::endl;
+			std::cerr << "Error: Unknown Anime Series Type (" << s << ")" << std::endl;
 			return SERIESTYPE_INVALID;
 		}
 	}
@@ -50,7 +50,7 @@ namespace MAL {
 		case 3:
 			return NOTYETAIRED;
 		default:
-			std::cerr << "Error: Unknown series status " << i << std::endl;
+			std::cerr << "Error: Unknown Anime Series Status (" << i << ")" << std::endl;
 			return SERIESSTATUS_INVALID;
 		}
 	}
@@ -66,7 +66,7 @@ namespace MAL {
 		    s.compare("Not yet aired") == 0)
 			return FINISHED;
 		else {
-			std::cerr << "Error: Unknown series status '" << s << "'" << std::endl;
+			std::cerr << "Error: Unknown Anime Series Status (" << s << ")" << std::endl;
 			return SERIESSTATUS_INVALID;
 		}
 	}
@@ -84,7 +84,7 @@ namespace MAL {
 		case 6:
 			return PLANTOWATCH;
 		default:
-			std::cerr << "Error: Unknown anime status " << i << std::endl;
+			std::cerr << "Error: Unknown Anime Status (" << i << ")" << std::endl;
 			return ANIMESTATUS_INVALID;
 		}
 	}
@@ -120,6 +120,7 @@ namespace MAL {
 		case MUSIC:
 			return "Music";
 		default:
+            std::cerr << "Error: Invalid Anime Type (" << s << ")" << std::endl;
 			return "Invalid Type";
 		}
 	}
@@ -133,6 +134,7 @@ namespace MAL {
 		case NOTYETAIRED:
 			return "Not Yet Aired";
 		default:
+            std::cerr << "Error: Invalid Anime Series Status (" << s << ")" << std::endl;
 			return "Invalid Status";
 		}
 	}
@@ -150,6 +152,7 @@ namespace MAL {
 		case PLANTOWATCH:
 			return "Plan To Watch";
 		default:
+            std::cerr << "Error: Invalid Anime Status (" << s << ")" << std::endl;
 			return "Invalid Status";
 		}
 	}

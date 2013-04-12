@@ -125,8 +125,8 @@ namespace MAL {
 	 * Search results are      <manga><entry></entry><entry></entry></manga>
 	 * myanimelist results are <entry><manga></manga><manga></manga></entry>
 	 */
-	std::list<Manga> MangaSerializer::deserialize(const std::string& xml) const {
-		std::list<Manga> res;
+	std::list<std::shared_ptr<Manga> > MangaSerializer::deserialize(const std::string& xml) const {
+		std::list<std::shared_ptr<Manga> > res;
 		std::unique_ptr<char[]> cstr(new char[xml.size()]);
 		std::memcpy(cstr.get(), xml.c_str(), xml.size());
 		std::unique_ptr<xmlTextReader, xmlTextReaderDeleter> reader(xmlReaderForMemory(
@@ -168,7 +168,7 @@ namespace MAL {
                     case XML_READER_TYPE_END_ELEMENT:
                         if ( ( entry_after_manga && field == ENTRY) ||
                              (!entry_after_manga && field == FIELDMANGA)) {
-                            res.push_back(manga);
+                            res.push_back(std::make_shared<Manga>(manga));
                             manga = Manga();
                         }
                         field = FIELDNONE;

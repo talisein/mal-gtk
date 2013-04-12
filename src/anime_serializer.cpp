@@ -119,8 +119,8 @@ namespace MAL {
 	 * Search results are      <anime><entry></entry><entry></entry></anime>
 	 * myanimelist results are <entry><anime></anime><anime></anime></entry>
 	 */
-	std::list<Anime> AnimeSerializer::deserialize(const std::string& xml) const {
-		std::list<Anime> res;
+	std::list<std::shared_ptr<Anime> > AnimeSerializer::deserialize(const std::string& xml) const {
+		std::list<std::shared_ptr<Anime> > res;
 		std::unique_ptr<char[]> cstr(new char[xml.size()]);
 		std::memcpy(cstr.get(), xml.c_str(), xml.size());
 		std::unique_ptr<xmlTextReader, xmlTextReaderDeleter> reader(xmlReaderForMemory(
@@ -162,7 +162,7 @@ namespace MAL {
 				case XML_READER_TYPE_END_ELEMENT:
 					if ( ( entry_after_anime && field == ENTRY) ||
 					     (!entry_after_anime && field == ANIME)) {
-						res.push_back(anime);
+						res.push_back(std::make_shared<Anime>(anime));
 						anime = Anime();
 					}
 					field = FIELDNONE;
