@@ -22,6 +22,9 @@ PKG_CHECK_MODULES([CURL], [libcurl >= 7.24.0])
 PKG_CHECK_MODULES([LIBXML], [libxml-2.0 >= 2.7.8])
 PKG_CHECK_MODULES([LIBSECRET], [libsecret-1 >= 0.12])
 
+# To use C++11 lambdas with sigc++:
+PKG_CHECK_MODULES([SIGCPP], [sigc++-2.0 >= 2.2.11])
+
 AC_SUBST([GLIBMM_LIBS])
 AC_SUBST([GLIBMM_CFLAGS])
 AC_SUBST([GTKMM_LIBS])
