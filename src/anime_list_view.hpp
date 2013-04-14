@@ -16,14 +16,14 @@
 
 namespace MAL {
 
-	class AnimeStatusColumns : public Gtk::TreeModel::ColumnRecord {
+	class AnimeStatusColumns final : public Gtk::TreeModel::ColumnRecord {
 	public:
         Gtk::TreeModelColumn<Glib::ustring> text;
         Gtk::TreeModelColumn<AnimeStatus> status;
 		AnimeStatusColumns() { add(text); add(status); };
 	};
 
-	class AnimeStatusCellRendererCombo : public Gtk::CellRendererCombo {
+	class AnimeStatusCellRendererCombo final : public Gtk::CellRendererCombo {
 	public:
 		AnimeStatusCellRendererCombo();
 
@@ -32,7 +32,7 @@ namespace MAL {
 		Glib::RefPtr<Gtk::ListStore> model;
 	};
 
-	class AnimeStatusComboBox : public Gtk::ComboBoxText {
+	class AnimeStatusComboBox final : public Gtk::ComboBoxText {
 	public:
 		AnimeStatusComboBox();
 		AnimeStatus get_anime_status() const;
@@ -54,7 +54,7 @@ namespace MAL {
         }
     };
 
-    class AnimeModelColumnsEditable : public AnimeModelColumnsBase, public MALItemModelColumnsEditable
+    class AnimeModelColumnsEditable final : public AnimeModelColumnsBase, public MALItemModelColumnsEditable
     {
     public:
         Gtk::TreeModelColumn<Glib::ustring> status;
@@ -66,7 +66,7 @@ namespace MAL {
         }
     };
 
-    class AnimeModelColumnsStatic : public AnimeModelColumnsBase, public MALItemModelColumnsStatic
+    class AnimeModelColumnsStatic final : public AnimeModelColumnsBase, public MALItemModelColumnsStatic
     {
     public:
         Gtk::TreeModelColumn<Glib::ustring> status;
@@ -91,10 +91,10 @@ namespace MAL {
          * Called when m_items has changed (We have fetched a new anime list from MAL)
          * This method should take data from the item and put it on the row
          */
-        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
+        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) override;
     };
 
-    class AnimeListViewStatic : public MALItemListViewStatic, public AnimeListViewBase
+    class AnimeListViewStatic final : public MALItemListViewStatic, public AnimeListViewBase
     {
     public:
         AnimeListViewStatic(const std::shared_ptr<MAL>&,
@@ -107,13 +107,13 @@ namespace MAL {
          * Called when m_items has changed (We have fetched a new anime list from MAL)
          * This method should take data from the item and put it on the row
          */
-        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
+        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) override;
 
     private:
         void on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text);
     };
 
-    class AnimeListViewEditable : public MALItemListViewEditable, public AnimeListViewBase
+    class AnimeListViewEditable final : public MALItemListViewEditable, public AnimeListViewBase
     {
     public:
         AnimeListViewEditable(const std::shared_ptr<MAL>&,
@@ -127,7 +127,7 @@ namespace MAL {
          * Called when m_items has changed (We have fetched a new anime list from MAL)
          * This method should take data from the item and put it on the row
          */
-        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
+        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) override;
 
         /* Chain up!
          * Called when the tree model was changed due to editing.
@@ -136,11 +136,11 @@ namespace MAL {
          * well. 
          * Return true when the item value is different from the model value.
          */
-        virtual bool model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
+        virtual bool model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) override;
 
         /* Called on main thread. Item should be transmitted back to MAL.net.
          */
-        virtual void send_item_update(const std::shared_ptr<const MALItem>& item);
+        virtual void send_item_update(const std::shared_ptr<const MALItem>& item) override;
 
     private:
         void on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text);
@@ -152,7 +152,7 @@ namespace MAL {
         AnimeDetailViewBase(const std::shared_ptr<MAL>&);
 
         /* You must chain up */
-        virtual void display_item(const std::shared_ptr<const MALItem>& item);
+        virtual void display_item(const std::shared_ptr<const MALItem>& item) override;
         
     protected:
         Gtk::Grid                    *m_status_type_grid;
@@ -161,26 +161,26 @@ namespace MAL {
         Gtk::Label                   *m_series_type_label;
     };
 
-    class AnimeDetailViewStatic: public MALItemDetailViewStatic, public AnimeDetailViewBase {
+    class AnimeDetailViewStatic final : public MALItemDetailViewStatic, public AnimeDetailViewBase {
     public:
         AnimeDetailViewStatic(const std::shared_ptr<MAL>&);
 
         /* You must chain up */
-        virtual void display_item(const std::shared_ptr<const MALItem>& item);
+        virtual void display_item(const std::shared_ptr<const MALItem>& item) override;
         
     protected:
         Gtk::Grid                    *m_episodes_grid;
         Gtk::Label                   *m_series_episodes_label;
     };
 
-    class AnimeDetailViewEditable : public MALItemDetailViewEditable, public AnimeDetailViewBase {
+    class AnimeDetailViewEditable final : public MALItemDetailViewEditable, public AnimeDetailViewBase {
     public:
         AnimeDetailViewEditable(const std::shared_ptr<MAL>&,
                                 const std::shared_ptr<AnimeModelColumnsEditable>&,
                                 const sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&>&);
         
         /* You must chain up */
-        virtual void display_item(const std::shared_ptr<const MALItem>& item);
+        virtual void display_item(const std::shared_ptr<const MALItem>& item) override;
         
     protected:
         Gtk::Grid           *m_episodes_grid;
@@ -190,13 +190,13 @@ namespace MAL {
 		AnimeStatusComboBox *m_anime_status_combo;
 
         /* Chain up */
-        virtual bool update_list_model(const Gtk::TreeRow &row);
+        virtual bool update_list_model(const Gtk::TreeRow &row) override;
 
     private:
         void increment_button_cb();
     };
 
-    class AnimeSearchListPage : public MALItemListPage {
+    class AnimeSearchListPage final : public MALItemListPage {
     public:
 		AnimeSearchListPage(const std::shared_ptr<MAL>&,
                             AnimeListViewStatic*   list_view,
@@ -204,18 +204,18 @@ namespace MAL {
 
     protected:
         Gtk::Entry *m_search_entry;
-		virtual void refresh();
+		virtual void refresh() override;
 
     };
 
-    class AnimeFilteredListPage : public MALItemListPage {
+    class AnimeFilteredListPage final : public MALItemListPage {
     public:
 		AnimeFilteredListPage(const std::shared_ptr<MAL>& mal,
                               AnimeListViewEditable*      list_view,
                               AnimeDetailViewEditable*    detail_view);
 
     protected:
-		virtual void refresh();
+		virtual void refresh() override;
 
     private:
         AnimeListViewEditable* m_list_view;

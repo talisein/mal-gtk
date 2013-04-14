@@ -16,14 +16,14 @@
 
 namespace MAL {
 
-	class MangaStatusColumns : public Gtk::TreeModel::ColumnRecord {
+	class MangaStatusColumns final : public Gtk::TreeModel::ColumnRecord {
 	public:
         Gtk::TreeModelColumn<Glib::ustring> text;
         Gtk::TreeModelColumn<MangaStatus> status;
 		MangaStatusColumns() { add(text); add(status); };
 	};
 
-	class MangaStatusCellRendererCombo : public Gtk::CellRendererCombo {
+	class MangaStatusCellRendererCombo final : public Gtk::CellRendererCombo {
 	public:
 		MangaStatusCellRendererCombo();
 
@@ -32,7 +32,7 @@ namespace MAL {
 		Glib::RefPtr<Gtk::ListStore> model;
 	};
 
-	class MangaStatusComboBox : public Gtk::ComboBoxText {
+	class MangaStatusComboBox final : public Gtk::ComboBoxText {
 	public:
 		MangaStatusComboBox();
 		MangaStatus get_manga_status() const;
@@ -56,7 +56,7 @@ namespace MAL {
         }
     };
 
-    class MangaModelColumnsEditable : public MangaModelColumnsBase, public MALItemModelColumnsEditable
+    class MangaModelColumnsEditable final : public MangaModelColumnsBase, public MALItemModelColumnsEditable
     {
     public:
         Gtk::TreeModelColumn<Glib::ustring> status;
@@ -70,7 +70,7 @@ namespace MAL {
         }
     };
 
-    class MangaModelColumnsStatic : public MangaModelColumnsBase, public MALItemModelColumnsStatic
+    class MangaModelColumnsStatic final : public MangaModelColumnsBase, public MALItemModelColumnsStatic
     {
     public:
         Gtk::TreeModelColumn<Glib::ustring> status;
@@ -96,10 +96,10 @@ namespace MAL {
          * Called when m_items has changed (We have fetched a new manga list from MAL)
          * This method should take data from the item and put it on the row
          */
-        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
+        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) override;
     };
 
-    class MangaListViewStatic : public MALItemListViewStatic, public MangaListViewBase
+    class MangaListViewStatic final : public MALItemListViewStatic, public MangaListViewBase
     {
     public:
         MangaListViewStatic(const std::shared_ptr<MAL>&,
@@ -112,13 +112,13 @@ namespace MAL {
          * Called when m_items has changed (We have fetched a new manga list from MAL)
          * This method should take data from the item and put it on the row
          */
-        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
+        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) override;
 
     private:
         void on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text);
     };
 
-    class MangaListViewEditable : public MALItemListViewEditable, public MangaListViewBase
+    class MangaListViewEditable final : public MALItemListViewEditable, public MangaListViewBase
     {
     public:
         MangaListViewEditable(const std::shared_ptr<MAL>&,
@@ -133,7 +133,7 @@ namespace MAL {
          * Called when m_items has changed (We have fetched a new manga list from MAL)
          * This method should take data from the item and put it on the row
          */
-        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
+        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) override;
 
         /* Chain up!
          * Called when the tree model was changed due to editing.
@@ -142,11 +142,11 @@ namespace MAL {
          * well. 
          * Return true when the item value is different from the model value.
          */
-        virtual bool model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
+        virtual bool model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) override;
 
         /* Called on main thread. Item should be transmitted back to MAL.net.
          */
-        virtual void send_item_update(const std::shared_ptr<const MALItem>& item);
+        virtual void send_item_update(const std::shared_ptr<const MALItem>& item) override;
 
     private:
         void on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text);
@@ -158,7 +158,7 @@ namespace MAL {
         MangaDetailViewBase(const std::shared_ptr<MAL>&);
 
         /* You must chain up */
-        virtual void display_item(const std::shared_ptr<const MALItem>& item);
+        virtual void display_item(const std::shared_ptr<const MALItem>& item) override;
         
     protected:
         Gtk::Grid                    *m_status_type_grid;
@@ -167,12 +167,12 @@ namespace MAL {
         Gtk::Label                   *m_series_type_label;
     };
 
-    class MangaDetailViewStatic: public MALItemDetailViewStatic, public MangaDetailViewBase {
+    class MangaDetailViewStatic final : public MALItemDetailViewStatic, public MangaDetailViewBase {
     public:
         MangaDetailViewStatic(const std::shared_ptr<MAL>&);
 
         /* You must chain up */
-        virtual void display_item(const std::shared_ptr<const MALItem>& item);
+        virtual void display_item(const std::shared_ptr<const MALItem>& item) override;
         
     protected:
         Gtk::Grid                    *m_chapters_grid;
@@ -181,14 +181,14 @@ namespace MAL {
         Gtk::Label                   *m_series_volumes_label;
     };
 
-    class MangaDetailViewEditable : public MALItemDetailViewEditable, public MangaDetailViewBase {
+    class MangaDetailViewEditable final : public MALItemDetailViewEditable, public MangaDetailViewBase {
     public:
         MangaDetailViewEditable(const std::shared_ptr<MAL>&,
                                 const std::shared_ptr<MangaModelColumnsEditable>&,
                                 const sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&>&);
         
         /* You must chain up */
-        virtual void display_item(const std::shared_ptr<const MALItem>& item);
+        virtual void display_item(const std::shared_ptr<const MALItem>& item) override;
         
     protected:
         Gtk::Grid           *m_chapters_grid;
@@ -202,14 +202,14 @@ namespace MAL {
 		MangaStatusComboBox *m_manga_status_combo;
 
         /* Chain up */
-        virtual bool update_list_model(const Gtk::TreeRow &row);
+        virtual bool update_list_model(const Gtk::TreeRow &row) override;
 
     private:
         void increment_chapters_button_cb();
         void increment_volumes_button_cb();
     };
 
-    class MangaSearchListPage : public MALItemListPage {
+    class MangaSearchListPage final : public MALItemListPage {
     public:
 		MangaSearchListPage(const std::shared_ptr<MAL>&,
                             MangaListViewStatic*   list_view,
@@ -217,18 +217,18 @@ namespace MAL {
 
     protected:
         Gtk::Entry *m_search_entry;
-		virtual void refresh();
+		virtual void refresh() override;
 
     };
 
-    class MangaFilteredListPage : public MALItemListPage {
+    class MangaFilteredListPage final : public MALItemListPage {
     public:
 		MangaFilteredListPage(const std::shared_ptr<MAL>& mal,
                               MangaListViewEditable*      list_view,
                               MangaDetailViewEditable*    detail_view);
 
     protected:
-		virtual void refresh();
+		virtual void refresh() override;
 
     private:
         MangaListViewEditable* m_list_view;

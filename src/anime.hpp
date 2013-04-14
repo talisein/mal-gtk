@@ -43,7 +43,7 @@ namespace MAL {
 	AnimeStatus anime_status_from_string(const std::string& s);
 
 
-	class Anime : public MALItem {
+	class Anime final : public MALItem {
 	public:
 		Anime() = default;
         virtual std::shared_ptr<MALItem> clone() const override;

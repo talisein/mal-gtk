@@ -44,7 +44,7 @@ namespace MAL {
 	MangaStatus manga_status_from_string(const std::string& s);
 
 
-	class Manga : public MALItem {
+	class Manga final : public MALItem {
 	public:
 		Manga() = default;
         virtual std::shared_ptr<MALItem> clone() const override;
