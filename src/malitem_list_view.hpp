@@ -19,7 +19,7 @@ namespace MAL {
     {
     public:
         Gtk::TreeModelColumn<Glib::ustring> series_title;
-        Gtk::TreeModelColumn<std::shared_ptr<MALItem> > item;
+        Gtk::TreeModelColumn<std::shared_ptr<const MALItem> > item;
         Gtk::TreeModelColumn<Glib::ustring> series_season;
         Gtk::TreeModelColumn<Glib::ustring> series_start_date;
 
@@ -74,11 +74,11 @@ namespace MAL {
         virtual ~MALItemDetailViewBase() = default;
 
         /* You must chain up */
-		virtual void display_item(const std::shared_ptr<MALItem>& item);
+		virtual void display_item(const std::shared_ptr<const MALItem>& item);
 
 	protected:
 		std::shared_ptr<MAL>                 m_mal;
-        std::shared_ptr<MALItem>             m_item;
+        std::shared_ptr<const MALItem>       m_item;
 		Gtk::Image                          *m_image;
 		Gtk::Label                          *m_title;
         Gtk::Grid                           *m_grid;
@@ -95,7 +95,7 @@ namespace MAL {
         MALItemDetailViewStatic(const std::shared_ptr<MAL>&);
 
         /* You must chain up */
-        virtual void display_item(const std::shared_ptr<MALItem>& item);
+        virtual void display_item(const std::shared_ptr<const MALItem>& item);
         
     protected:
         Gtk::Label *m_score;
@@ -108,7 +108,7 @@ namespace MAL {
                                   const sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&>&);
         
         /* You must chain up */
-        virtual void display_item(const std::shared_ptr<MALItem>& item);
+        virtual void display_item(const std::shared_ptr<const MALItem>& item);
         
     protected:
         /* Chain up */
@@ -128,37 +128,40 @@ namespace MAL {
         MALItemListViewBase(const MALItemListViewBase&) = delete;
         virtual ~MALItemListViewBase() = default;
 
-		void set_item_list(std::list<std::shared_ptr<MALItem>>&& items);
-        void set_filter_func(const sigc::slot<bool, const std::shared_ptr<MALItem>&>& slot);
+		void set_item_list(std::list<std::shared_ptr<const MALItem>>&& items);
+        void set_filter_func(const sigc::slot<bool, const std::shared_ptr<const MALItem>&>& slot);
         void refilter();
+
 		void do_model_foreach(const Gtk::TreeModel::SlotForeachPathAndIter& slot) {m_model->foreach(slot);};
-		void set_row_activated_cb(sigc::slot<void, const std::shared_ptr<MALItem>&> slot) { m_row_activated_cb = slot;} ;
+		void set_row_activated_cb(sigc::slot<void, const std::shared_ptr<const MALItem>&> slot) { m_row_activated_cb = slot;} ;
         std::shared_ptr<MALItemModelColumns> m_columns;
 
 	protected:
-		std::shared_ptr<MAL>                m_mal;
-		Glib::RefPtr<Gtk::ListStore>        m_model;
-		Gtk::TreeView                      *m_treeview;
-		std::list<std::shared_ptr<MALItem>> m_items;
-        std::shared_ptr<MALItem>            m_detailed_item;
-        Gtk::TreeViewColumn                *m_title_column;
-        Gtk::TreeViewColumn                *m_season_column;
+		std::shared_ptr<MAL>                       m_mal;
+		Glib::RefPtr<Gtk::ListStore>               m_model;
+		Gtk::TreeView                              *m_treeview;
+		std::list<std::shared_ptr<const MALItem> > m_items;
+        std::shared_ptr<const MALItem>             m_detailed_item;
+        Gtk::TreeViewColumn                        *m_title_column;
+        Gtk::TreeViewColumn                        *m_season_column;
 
-        sigc::connection                    m_model_changed_connection; // Use if you connect to signal_row_changed
-		sigc::slot<void, const std::shared_ptr<MALItem>&>    m_row_activated_cb;
+        // Use if you connect to signal_row_changed
+        sigc::connection                          m_model_changed_connection;
+
 
         /* Chain up!
          * Called when m_items has changed (We have fetched a new anime list from MAL)
          * This method should take data from the item and put it on the row
          */
-        virtual void                     refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row);
+        virtual void                     refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
+		sigc::slot<void, const std::shared_ptr<const MALItem>&> m_row_activated_cb;
 
     private:
 		Glib::Dispatcher                 m_signal_refreshed;
 
 		void                             refresh_cb();
 		void on_my_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
-        sigc::slot<bool, const std::shared_ptr<MALItem>&> m_filter_func;
+        sigc::slot<bool, const std::shared_ptr<const MALItem>&> m_filter_func;
 	};
 
     class MALItemListViewStatic : public virtual MALItemListViewBase {
@@ -173,7 +176,7 @@ namespace MAL {
          * Called when m_items has changed (We have fetched a new anime list from MAL)
          * This method should take data from the item and put it on the row
          */
-        virtual void refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row);
+        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
     };
 
     class MALItemListViewEditable : public virtual MALItemListViewBase {
@@ -190,7 +193,7 @@ namespace MAL {
          * Called when m_items has changed (We have fetched a new anime list from MAL)
          * This method should take data from the item and put it on the row
          */
-        virtual void refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row);
+        virtual void refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
 
         /* Chain up!
          * Called when the tree model was changed due to editing.
@@ -199,11 +202,11 @@ namespace MAL {
          * well. 
          * Return true when the item value is different from the model value.
          */
-        virtual bool model_changed_cb(std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row);
+        virtual bool model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row);
 
         /* Called on main thread. Item should be transmitted back to MAL.net.
          */
-        virtual void send_item_update(const std::shared_ptr<MALItem>& item) = 0;
+        virtual void send_item_update(const std::shared_ptr<const MALItem>& item) = 0;
 
     private:
         void on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator&);

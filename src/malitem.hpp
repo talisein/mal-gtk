@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <string>
 #include <ctime>
 #include <set>
@@ -9,8 +10,12 @@ namespace MAL {
 	class MALItem {
 	public:
 		MALItem();
-		~MALItem() = default;
-		
+		virtual ~MALItem() = default;
+        virtual std::shared_ptr<MALItem> clone() const;
+        MALItem& operator=(const MALItem&) = default;
+        MALItem(const MALItem&) = default;
+    public:
+
 		int_fast64_t          series_itemdb_id;
 		std::string           series_title;
 		std::string           series_date_begin;

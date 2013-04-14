@@ -160,6 +160,10 @@ namespace MAL {
 		}
 	}
 
+    std::shared_ptr<MALItem> Manga::clone() const {
+        return std::make_shared<Manga>(*this);
+    }
+
 	void Manga::set_series_type(const std::string& str)
 	{
 		if (str.size() == 1)

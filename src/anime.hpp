@@ -46,7 +46,7 @@ namespace MAL {
 	class Anime : public MALItem {
 	public:
 		Anime() = default;
-		~Anime() = default;
+        virtual std::shared_ptr<MALItem> clone() const override;
 		
 		SeriesType            series_type;
 		SeriesStatus          series_status;

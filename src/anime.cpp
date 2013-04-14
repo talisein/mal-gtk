@@ -157,6 +157,10 @@ namespace MAL {
 		}
 	}
 
+    std::shared_ptr<MALItem> Anime::clone() const {
+        return std::make_shared<Anime>(*this);
+    }
+
 	void Anime::set_series_type(const std::string& str)
 	{
 		if (str.size() == 1)

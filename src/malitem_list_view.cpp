@@ -48,7 +48,7 @@ namespace MAL {
 		m_signal_image_available.connect(sigc::mem_fun(*this, &MALItemDetailViewBase::on_image_available));
 	}
 
-	void MALItemDetailViewBase::display_item(const std::shared_ptr<MALItem>& item) {
+	void MALItemDetailViewBase::display_item(const std::shared_ptr<const MALItem>& item) {
         decltype(item->series_itemdb_id) oldid = 0;
         if (m_item)
             oldid = m_item->series_itemdb_id;
@@ -96,7 +96,7 @@ namespace MAL {
         m_grid->attach(*m_score, 0, 0, 1, 1);
     }
 
-    void MALItemDetailViewStatic::display_item(const std::shared_ptr<MALItem>& item)
+    void MALItemDetailViewStatic::display_item(const std::shared_ptr<const MALItem>& item)
     {
         MALItemDetailViewBase::display_item(item);
         std::stringstream ss;
@@ -123,7 +123,7 @@ namespace MAL {
         m_score->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
     }
 
-    void MALItemDetailViewEditable::display_item(const std::shared_ptr<MALItem>& item)
+    void MALItemDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
     {
         MALItemDetailViewBase::display_item(item);
 
@@ -188,12 +188,12 @@ namespace MAL {
 #endif
 	}
 
-	void MALItemListViewBase::set_item_list(std::list<std::shared_ptr<MALItem> >&& items) {
+	void MALItemListViewBase::set_item_list(std::list<std::shared_ptr<const MALItem> >&& items) {
 		m_items = std::move(items);
 		m_signal_refreshed();
 	}
 
-    void MALItemListViewBase::set_filter_func(const sigc::slot<bool, const std::shared_ptr<MALItem>&>& slot)
+    void MALItemListViewBase::set_filter_func(const sigc::slot<bool, const std::shared_ptr<const MALItem>&>& slot)
     {
         m_filter_func = slot;
     }
@@ -202,7 +202,7 @@ namespace MAL {
         m_signal_refreshed();
     }
 
-    void MALItemListViewBase::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row) {
+    void MALItemListViewBase::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) {
         row.set_value(m_columns->series_title, Glib::ustring(item->series_title));
         row.set_value(m_columns->series_season, Glib::ustring(item->get_season_began()));
         auto sort_text = item->series_date_begin.substr(0,7);
@@ -215,7 +215,7 @@ namespace MAL {
         m_model_changed_connection.block();
 		m_model->clear();
 
-		std::vector<std::shared_ptr<MALItem> > items;
+		std::vector<std::shared_ptr<const MALItem> > items;
 		items.reserve(m_items.size());
 		std::copy(std::begin(m_items),
                   std::end(m_items),
@@ -223,7 +223,7 @@ namespace MAL {
 			
 		std::sort(std::begin(items),
 		          std::end(items),
-		          [](const std::shared_ptr<MALItem>& lhs, const std::shared_ptr<MALItem>& rhs) {
+		          [](const std::shared_ptr<const MALItem>& lhs, const std::shared_ptr<const MALItem>& rhs) {
 			          auto season = lhs->series_date_begin.substr(0,7).compare(rhs->series_date_begin.substr(0,7));
 			          if (season == 0)
 				          return lhs->series_title.compare(rhs->series_title) < 0;
@@ -233,7 +233,7 @@ namespace MAL {
 
 		std::for_each(std::begin(items),
 		              std::end(items),
-		              [&](const std::shared_ptr<MALItem>& item) {
+		              [&](const std::shared_ptr<const MALItem>& item) {
                           if (m_filter_func) {
                               if (m_filter_func(item)) {
                                   auto iter = m_model->append();
@@ -262,7 +262,7 @@ namespace MAL {
         m_score_column = m_treeview->get_column(num - 1);
     }
 
-    void MALItemListViewStatic::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
+    void MALItemListViewStatic::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
     {
         MALItemListViewBase::refresh_item_cb(item, row);
         auto columns = std::dynamic_pointer_cast<MALItemModelColumnsStatic>(m_columns);
@@ -278,7 +278,7 @@ namespace MAL {
 		m_model_changed_connection = m_model->signal_row_changed().connect(sigc::mem_fun(*this, &MALItemListViewEditable::on_model_changed));
     }
 
-    void MALItemListViewEditable::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
+    void MALItemListViewEditable::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
     {
         MALItemListViewBase::refresh_item_cb(item, row);
         auto columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_columns);
@@ -287,7 +287,8 @@ namespace MAL {
 
     void MALItemListViewEditable::on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter)
     {
-        auto item = iter->get_value(m_columns->item);
+        auto original_item = iter->get_value(m_columns->item);
+        auto item = original_item;
         bool is_changed = false;
         is_changed = model_changed_cb(item, *iter); // May change item!
 
@@ -298,7 +299,7 @@ namespace MAL {
         }
     }
 
-    bool MALItemListViewEditable::model_changed_cb(std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
+    bool MALItemListViewEditable::model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
     {
         bool is_changed = false;
         auto const columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_columns);
@@ -306,7 +307,9 @@ namespace MAL {
         auto const score = row.get_value(columns->score);
         if (score != static_cast<int>(item->score)) {
             is_changed = true;
-            item->score = score;
+            auto new_item = item->clone();
+            new_item->score = score;
+            item = new_item;
             row.set_value(columns->item, item);
         }
 

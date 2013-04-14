@@ -16,6 +16,10 @@ namespace MAL {
     {
     }
 
+    std::shared_ptr<MALItem> MALItem::clone() const {
+        return std::make_shared<MALItem>(*this);
+    }
+
 	void MALItem::set_series_itemdb_id(const std::string& id)
 	{
 		series_itemdb_id = std::stoll(id);

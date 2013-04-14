@@ -61,10 +61,10 @@ namespace MAL {
         m_status_type_grid->set_column_spacing(10);
     }
 
-    void MangaDetailViewBase::display_item(const std::shared_ptr<MALItem>& item)
+    void MangaDetailViewBase::display_item(const std::shared_ptr<const MALItem>& item)
     {
         MALItemDetailViewBase::display_item(item);
-        auto manga = std::static_pointer_cast<Manga>(item);
+        auto manga = std::static_pointer_cast<const Manga>(item);
 
         m_series_status_label->set_text(to_string(manga->series_status));
         m_series_type_label->set_text(to_string(manga->series_type));
@@ -87,12 +87,12 @@ namespace MAL {
         m_chapters_grid->attach(*m_series_chapters_label, 0, 0, 1, 1);
     }
 
-    void MangaDetailViewStatic::display_item(const std::shared_ptr<MALItem>& item)
+    void MangaDetailViewStatic::display_item(const std::shared_ptr<const MALItem>& item)
     {
         MALItemDetailViewStatic::display_item(item);
         MangaDetailViewBase::display_item(item);
 
-        auto manga = std::static_pointer_cast<Manga>(item);
+        auto manga = std::static_pointer_cast<const Manga>(item);
 
         if (manga->series_chapters > 0) {
             m_series_chapters_label->set_text(std::to_string(manga->series_chapters) + ((manga->series_chapters>1)?" Chapters":" Chapter"));
@@ -166,7 +166,7 @@ namespace MAL {
             m_chapters_entry->set_text(std::to_string(chapters));
             m_chapters_entry->activate();
         } catch (std::exception e) {
-            auto manga = std::static_pointer_cast<Manga>(m_item);
+            auto manga = std::static_pointer_cast<const Manga>(m_item);
             m_chapters_entry->set_text(std::to_string(manga->chapters));
         }
     }
@@ -179,16 +179,16 @@ namespace MAL {
             m_volumes_entry->set_text(std::to_string(volumes));
             m_volumes_entry->activate();
         } catch (std::exception e) {
-            auto manga = std::static_pointer_cast<Manga>(m_item);
+            auto manga = std::static_pointer_cast<const Manga>(m_item);
             m_volumes_entry->set_text(std::to_string(manga->volumes));
         }
     }
 
-    void MangaDetailViewEditable::display_item(const std::shared_ptr<MALItem>& item)
+    void MangaDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
     {
         MALItemDetailViewEditable::display_item(item);
         MangaDetailViewBase::display_item(item);
-        auto manga = std::static_pointer_cast<Manga>(item);
+        auto manga = std::static_pointer_cast<const Manga>(item);
         m_series_chapters_label->set_text("/ " + std::to_string(manga->series_chapters) + ((manga->series_chapters!=1)?" Chapters":" Chapter"));
         m_series_volumes_label->set_text("/ " + std::to_string(manga->series_volumes) + ((manga->series_volumes!=1)?" Volumes":" Volume"));
         m_chapters_entry->set_text(std::to_string(manga->chapters));
@@ -208,7 +208,7 @@ namespace MAL {
             if (chapters != row.get_value(columns->chapters))
                 row.set_value(columns->chapters, chapters);
         } catch (std::exception e) {
-            auto manga = std::static_pointer_cast<Manga>(m_item);
+            auto manga = std::static_pointer_cast<const Manga>(m_item);
             m_chapters_entry->set_text(std::to_string(manga->chapters));
         }
 
@@ -217,7 +217,7 @@ namespace MAL {
             if (volumes != row.get_value(columns->volumes))
                 row.set_value(columns->volumes, volumes);
         } catch (std::exception e) {
-            auto manga = std::static_pointer_cast<Manga>(m_item);
+            auto manga = std::static_pointer_cast<const Manga>(m_item);
             m_volumes_entry->set_text(std::to_string(manga->volumes));
         }
 
@@ -247,11 +247,11 @@ namespace MAL {
      * Called when m_items has changed (We have fetched a new manga list from MAL)
      * This method should take data from the item and put it on the row
      */
-    void MangaListViewBase::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
+    void MangaListViewBase::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
     {
         MALItemListViewBase::refresh_item_cb(item, row);
         auto columns = std::dynamic_pointer_cast<MangaModelColumnsBase>(m_columns);
-        auto manga = std::static_pointer_cast<Manga>(item);
+        auto manga = std::static_pointer_cast<const Manga>(item);
 
         row.set_value(columns->series_type, Glib::ustring(to_string(manga->series_type)));
         row.set_value(columns->series_status, Glib::ustring(to_string(manga->series_status)));
@@ -279,13 +279,13 @@ namespace MAL {
      * Called when m_items has changed (We have fetched a new manga list from MAL)
      * This method should take data from the item and put it on the row
      */
-    void MangaListViewStatic::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
+    void MangaListViewStatic::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
     {
         MangaListViewBase::refresh_item_cb(item, row);
         MALItemListViewStatic::refresh_item_cb(item, row);
 
         auto columns = std::dynamic_pointer_cast<MangaModelColumnsStatic>(m_columns);
-        auto manga = std::static_pointer_cast<Manga>(item);
+        auto manga = std::static_pointer_cast<const Manga>(item);
         auto status = manga->status;
         if (status == MANGASTATUS_INVALID || status == 0)
             row.set_value(columns->status, Glib::ustring("Add To My Manga List..."));
@@ -305,18 +305,21 @@ namespace MAL {
 
 			if (status != manga->status) {
 				iter->set_value(columns->status, Glib::ustring(to_string(status)));
-				manga->status = status;
+                auto new_manga = std::static_pointer_cast<Manga>(manga->clone());
+				new_manga->status = status;
+                manga = new_manga;
 				iter->set_value(columns->manga, manga);
-                manga->score = 0.0f;
-                if (manga->status == MANGACOMPLETED) {
-                    manga->chapters = manga->series_chapters;
-                    manga->volumes = manga->series_volumes;
+
+                new_manga->score = 0.0f;
+                if (new_manga->status == MANGACOMPLETED) {
+                    new_manga->chapters = manga->series_chapters;
+                    new_manga->volumes = manga->series_volumes;
                 } else {
-                    manga->chapters = 0;
-                    manga->volumes = 0;
+                    new_manga->chapters = 0;
+                    new_manga->volumes = 0;
                 }
-                if (manga->status != MANGASTATUS_INVALID) {
-                    std::thread t(std::bind(&MAL::add_manga_sync, m_mal, *manga));
+                if (new_manga->status != MANGASTATUS_INVALID) {
+                    std::thread t(std::bind(&MAL::add_manga_sync, std::ref(m_mal), std::ref(*new_manga)));
                     t.detach();
                 }
             }
@@ -348,13 +351,13 @@ namespace MAL {
      * Called when m_items has changed (We have fetched a new manga list from MAL)
      * This method should take data from the item and put it on the row
      */
-    void MangaListViewEditable::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
+    void MangaListViewEditable::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
     {
         MangaListViewBase::refresh_item_cb(item, row);
         MALItemListViewEditable::refresh_item_cb(item, row);
 
         auto columns = std::dynamic_pointer_cast<MangaModelColumnsEditable>(m_columns);
-        auto manga = std::static_pointer_cast<Manga>(item);
+        auto manga = std::static_pointer_cast<const Manga>(item);
 
         row.set_value(columns->status, Glib::ustring(to_string(manga->status)));
         row.set_value(columns->chapters, static_cast<int>(manga->chapters));
@@ -368,18 +371,20 @@ namespace MAL {
      * well. 
      * Return true when the item value is different from the model value.
      */
-    bool MangaListViewEditable::model_changed_cb(std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
+    bool MangaListViewEditable::model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
     {
         bool is_changed = false;
         auto mal_changed = MALItemListViewEditable::model_changed_cb(item, row);
         
         auto const columns = std::dynamic_pointer_cast<MangaModelColumnsEditable>(m_columns);
-        auto manga = std::static_pointer_cast<Manga>(item);
+        auto manga = std::static_pointer_cast<const Manga>(item);
+        auto new_manga = std::static_pointer_cast<Manga>(manga->clone());
 
         auto const chapters = row.get_value(columns->chapters);
         if (chapters != manga->chapters) {
             is_changed = true;
-            manga->chapters = chapters;
+            new_manga->chapters = chapters;
+            item = manga = new_manga;
             row.set_value(columns->item, item);
             row.set_value(columns->manga, manga);
         }
@@ -387,7 +392,8 @@ namespace MAL {
         auto const volumes = row.get_value(columns->volumes);
         if (volumes != manga->volumes) {
             is_changed = true;
-            manga->volumes = volumes;
+            new_manga->volumes = volumes;
+            item = manga = new_manga;
             row.set_value(columns->item, item);
             row.set_value(columns->manga, manga);
         }
@@ -395,7 +401,8 @@ namespace MAL {
         auto const status = manga_status_from_string(row.get_value(columns->status));
         if (status != manga->status) {
             is_changed = true;
-            manga->status = status;
+            new_manga->status = status;
+            item = manga = new_manga;
             row.set_value(columns->item, item);
             row.set_value(columns->manga, manga);
         }
@@ -405,25 +412,25 @@ namespace MAL {
 
     /* Called on main thread. Item should be transmitted back to MAL.net.
      */
-    void MangaListViewEditable::send_item_update(const std::shared_ptr<MALItem>& item)
+    void MangaListViewEditable::send_item_update(const std::shared_ptr<const MALItem>& item)
     {
-        auto manga = std::static_pointer_cast<Manga>(item);
+        auto manga = std::static_pointer_cast<const Manga>(item);
         std::thread t(std::bind(&MangaListViewEditable::send_manga_update, this, manga));
         t.detach();
     }
 
-    void MangaListViewEditable::send_manga_update(const std::shared_ptr<Manga>& manga)
+    void MangaListViewEditable::send_manga_update(const std::shared_ptr<const Manga>& manga)
     {
         auto success = m_mal->update_manga_sync(*manga);
         if (success) {
             auto iter = std::find_if(std::begin(m_items),
                                      std::end(m_items),
-                                     [&manga](const std::shared_ptr<MALItem>& a) {
+                                     [&manga](const std::shared_ptr<const MALItem>& a) {
                                          return manga->series_itemdb_id == a->series_itemdb_id;
                                      });
             if (iter != std::end(m_items)) {
                 // Since we're off the main thread, do a threadsafe iter_swap
-                std::list<std::shared_ptr<MALItem>> l(1, manga);
+                std::list<std::shared_ptr<const MALItem>> l(1, manga);
                 std::iter_swap(iter, std::begin(l));
             }
         }
@@ -437,16 +444,20 @@ namespace MAL {
 		if (iter) {
 			auto status = manga_status_from_string(new_text);
             auto manga = iter->get_value(columns->manga);
+            auto new_manga = std::static_pointer_cast<Manga>(manga->clone());
 
 			if (status != manga->status) {
 				iter->set_value(columns->status, Glib::ustring(to_string(status)));
-				manga->status = status;
+				new_manga->status = status;
+                manga = new_manga;
 				iter->set_value(columns->manga, manga);
 
-                std::thread t(std::bind(&MangaListViewEditable::send_item_update,
-                                        this,
-                                        manga));
-                t.detach();
+                if (status != MANGASTATUS_INVALID) {
+                    std::thread t(std::bind(&MangaListViewEditable::send_item_update,
+                                            this,
+                                            manga));
+                    t.detach();
+                }
             }
 		}
     }
@@ -471,7 +482,7 @@ namespace MAL {
     void MangaSearchListPage::refresh()
     {
         auto list = m_mal->search_manga_sync(m_search_entry->get_text());
-        std::list<std::shared_ptr<MALItem> > item_list;
+        std::list<std::shared_ptr<const MALItem> > item_list;
         std::move(std::begin(list), std::end(list), std::back_inserter(item_list));
 		m_list_view->set_item_list(std::move(item_list));
     }
@@ -496,16 +507,16 @@ namespace MAL {
         refresh_async();
     }
 
-    bool MangaFilteredListPage::m_filter_func(const std::shared_ptr<MALItem>& item) const
+    bool MangaFilteredListPage::m_filter_func(const std::shared_ptr<const MALItem>& item) const
     {
-        auto manga = std::static_pointer_cast<Manga>(item);
+        auto manga = std::static_pointer_cast<const Manga>(item);
         return manga->status == m_status_combo->get_manga_status();
     }
 
     void MangaFilteredListPage::refresh()
     {
 		auto list = m_mal->get_manga_list_sync();
-        std::list<std::shared_ptr<MALItem> > item_list;
+        std::list<std::shared_ptr<const MALItem> > item_list;
         std::move(std::begin(list), std::end(list), std::back_inserter(item_list));
 		m_list_view->set_item_list(std::move(item_list));
     }

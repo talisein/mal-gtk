@@ -47,7 +47,7 @@ namespace MAL {
 	class Manga : public MALItem {
 	public:
 		Manga() = default;
-		~Manga() = default;
+        virtual std::shared_ptr<MALItem> clone() const override;
 		
 		MangaSeriesType       series_type;
 		MangaSeriesStatus     series_status;
