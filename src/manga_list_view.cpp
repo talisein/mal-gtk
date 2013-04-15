@@ -115,73 +115,19 @@ namespace MAL {
         MALItemDetailViewBase(mal),
         MALItemDetailViewEditable(mal, columns, slot),
         MangaDetailViewBase(mal),
-        m_chapters_grid(Gtk::manage(new Gtk::Grid())),
-        m_volumes_grid(Gtk::manage(new Gtk::Grid())),
-        m_series_chapters_label(Gtk::manage(new Gtk::Label())),
-        m_series_volumes_label(Gtk::manage(new Gtk::Label())),
-        m_chapters_entry(Gtk::manage(new Gtk::Entry())),
-        m_volumes_entry(Gtk::manage(new Gtk::Entry())),
-        m_chapters_button(Gtk::manage(new Gtk::Button())),
-        m_volumes_button(Gtk::manage(new Gtk::Button())),
+        m_chapters_entry(Gtk::manage(new IncrementEntry())),
+        m_volumes_entry(Gtk::manage(new IncrementEntry())),
         m_manga_status_combo(Gtk::manage(new MangaStatusComboBox()))
     {
         m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_chapters_grid, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->attach_next_to(*m_chapters_entry, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
         m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_volumes_grid, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->attach_next_to(*m_volumes_entry, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
         m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
         m_grid->attach_next_to(*m_manga_status_combo, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
-        m_chapters_grid->attach(*m_chapters_button, 0, 0, 1, 1);
-        m_volumes_grid->attach(*m_volumes_button, 0, 0, 1, 1);
-        m_chapters_grid->attach(*m_chapters_entry, 1, 0, 1, 1);
-        m_volumes_grid->attach(*m_volumes_entry, 1, 0, 1, 1);
-        m_chapters_grid->attach(*m_series_chapters_label, 2, 0, 1, 1);
-        m_volumes_grid->attach(*m_series_volumes_label, 2, 0, 1, 1);
         m_chapters_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_volumes_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
-        m_chapters_button->signal_clicked().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::increment_chapters_button_cb));
-        m_volumes_button->signal_clicked().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::increment_volumes_button_cb));
-		m_chapters_button->set_always_show_image(true);
-		m_volumes_button->set_always_show_image(true);
-		auto icon = m_chapters_button->render_icon_pixbuf(Gtk::Stock::ADD, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
-		auto image = Gtk::manage(new Gtk::Image(icon));
-		m_chapters_button->set_image(*image);
-		icon = m_volumes_button->render_icon_pixbuf(Gtk::Stock::ADD, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
-		image = Gtk::manage(new Gtk::Image(icon));
-		m_volumes_button->set_image(*image);
-		m_chapters_entry->set_width_chars(4);
-		m_volumes_entry->set_width_chars(4);
-        m_chapters_entry->set_alignment(Gtk::ALIGN_END);
-        m_volumes_entry->set_alignment(Gtk::ALIGN_END);
         m_manga_status_combo->signal_changed().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
-        m_chapters_grid->set_column_spacing(5);
-        m_volumes_grid->set_column_spacing(5);
-    }
-
-    void MangaDetailViewEditable::increment_chapters_button_cb()
-    {
-        try {
-            auto chapters = std::stoi(m_chapters_entry->get_text());
-            ++chapters;
-            m_chapters_entry->set_text(std::to_string(chapters));
-            m_chapters_entry->activate();
-        } catch (std::exception e) {
-            auto manga = std::static_pointer_cast<const Manga>(m_item);
-            m_chapters_entry->set_text(std::to_string(manga->chapters));
-        }
-    }
-
-    void MangaDetailViewEditable::increment_volumes_button_cb()
-    {
-        try {
-            auto volumes = std::stoi(m_volumes_entry->get_text());
-            ++volumes;
-            m_volumes_entry->set_text(std::to_string(volumes));
-            m_volumes_entry->activate();
-        } catch (std::exception e) {
-            auto manga = std::static_pointer_cast<const Manga>(m_item);
-            m_volumes_entry->set_text(std::to_string(manga->volumes));
-        }
     }
 
     void MangaDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
@@ -189,10 +135,10 @@ namespace MAL {
         MALItemDetailViewEditable::display_item(item);
         MangaDetailViewBase::display_item(item);
         auto manga = std::static_pointer_cast<const Manga>(item);
-        m_series_chapters_label->set_text("/ " + std::to_string(manga->series_chapters) + ((manga->series_chapters!=1)?" Chapters":" Chapter"));
-        m_series_volumes_label->set_text("/ " + std::to_string(manga->series_volumes) + ((manga->series_volumes!=1)?" Volumes":" Volume"));
-        m_chapters_entry->set_text(std::to_string(manga->chapters));
-        m_volumes_entry->set_text(std::to_string(manga->volumes));
+        m_chapters_entry->set_label("/ " + std::to_string(manga->series_chapters) + ((manga->series_chapters!=1)?" Chapters":" Chapter"));
+        m_volumes_entry->set_label("/ " + std::to_string(manga->series_volumes) + ((manga->series_volumes!=1)?" Volumes":" Volume"));
+        m_chapters_entry->set_entry_text(std::to_string(manga->chapters));
+        m_volumes_entry->set_entry_text(std::to_string(manga->volumes));
 		m_manga_status_combo->set_active_text(to_string(manga->status));
     }
 
@@ -204,21 +150,21 @@ namespace MAL {
         auto columns = std::dynamic_pointer_cast<MangaModelColumnsEditable>(m_notify_columns);
 
         try {
-            auto chapters = std::stoi(m_chapters_entry->get_text());
+            auto chapters = std::stoi(m_chapters_entry->get_entry_text());
             if (chapters != row.get_value(columns->chapters))
                 row.set_value(columns->chapters, chapters);
         } catch (std::exception e) {
             auto manga = std::static_pointer_cast<const Manga>(m_item);
-            m_chapters_entry->set_text(std::to_string(manga->chapters));
+            m_chapters_entry->set_entry_text(std::to_string(manga->chapters));
         }
 
         try {
-            auto volumes = std::stoi(m_volumes_entry->get_text());
+            auto volumes = std::stoi(m_volumes_entry->get_entry_text());
             if (volumes != row.get_value(columns->volumes))
                 row.set_value(columns->volumes, volumes);
         } catch (std::exception e) {
             auto manga = std::static_pointer_cast<const Manga>(m_item);
-            m_volumes_entry->set_text(std::to_string(manga->volumes));
+            m_volumes_entry->set_entry_text(std::to_string(manga->volumes));
         }
 
         auto status = m_manga_status_combo->get_manga_status();

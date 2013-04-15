@@ -13,6 +13,7 @@
 #include "manga.hpp"
 #include "mal.hpp"
 #include "malitem_list_view.hpp"
+#include "increment_entry.hpp"
 
 namespace MAL {
 
@@ -191,22 +192,12 @@ namespace MAL {
         virtual void display_item(const std::shared_ptr<const MALItem>& item) override;
         
     protected:
-        Gtk::Grid           *m_chapters_grid;
-        Gtk::Grid           *m_volumes_grid;
-        Gtk::Label          *m_series_chapters_label;
-        Gtk::Label          *m_series_volumes_label;
-        Gtk::Entry          *m_chapters_entry;
-        Gtk::Entry          *m_volumes_entry;
-        Gtk::Button         *m_chapters_button;
-        Gtk::Button         *m_volumes_button;
+        IncrementEntry      *m_chapters_entry;
+        IncrementEntry      *m_volumes_entry;
 		MangaStatusComboBox *m_manga_status_combo;
 
         /* Chain up */
         virtual bool update_list_model(const Gtk::TreeRow &row) override;
-
-    private:
-        void increment_chapters_button_cb();
-        void increment_volumes_button_cb();
     };
 
     class MangaSearchListPage final : public MALItemListPage {

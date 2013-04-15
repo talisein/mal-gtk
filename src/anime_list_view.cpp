@@ -97,42 +97,15 @@ namespace MAL {
         MALItemDetailViewBase(mal),
         MALItemDetailViewEditable(mal, columns, slot),
         AnimeDetailViewBase(mal),
-        m_episodes_grid(Gtk::manage(new Gtk::Grid())),
-        m_series_episodes_label(Gtk::manage(new Gtk::Label())),
-        m_episodes_entry(Gtk::manage(new Gtk::Entry())),
-        m_episodes_button(Gtk::manage(new Gtk::Button())),
+        m_episodes_entry(Gtk::manage(new IncrementEntry())),
         m_anime_status_combo(Gtk::manage(new AnimeStatusComboBox()))
     {
         m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_episodes_grid, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->attach_next_to(*m_episodes_entry, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
         m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
         m_grid->attach_next_to(*m_anime_status_combo, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
-        m_episodes_grid->attach(*m_episodes_button, 0, 0, 1, 1);
-        m_episodes_grid->attach(*m_episodes_entry,1, 0, 1, 1);
-        m_episodes_grid->attach(*m_series_episodes_label, 2, 0, 1, 1);
         m_episodes_entry->signal_activate().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
-        m_episodes_button->signal_clicked().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::increment_button_cb));
-		m_episodes_button->set_always_show_image(true);
-		auto icon = m_episodes_button->render_icon_pixbuf(Gtk::Stock::ADD, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
-		auto image = Gtk::manage(new Gtk::Image(icon));
-		m_episodes_button->set_image(*image);
-		m_episodes_entry->set_width_chars(4);
-        m_episodes_entry->set_alignment(Gtk::ALIGN_END);
         m_anime_status_combo->signal_changed().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
-        m_episodes_grid->set_column_spacing(5);
-    }
-
-    void AnimeDetailViewEditable::increment_button_cb()
-    {
-        try {
-            auto episodes = std::stoi(m_episodes_entry->get_text());
-            ++episodes;
-            m_episodes_entry->set_text(std::to_string(episodes));
-            m_episodes_entry->activate();
-        } catch (std::exception e) {
-            auto anime = std::static_pointer_cast<const Anime>(m_item);
-            m_episodes_entry->set_text(std::to_string(anime->episodes));
-        }
     }
 
     void AnimeDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
@@ -140,9 +113,8 @@ namespace MAL {
         MALItemDetailViewEditable::display_item(item);
         AnimeDetailViewBase::display_item(item);
         auto anime = std::static_pointer_cast<const Anime>(item);
-
-        m_series_episodes_label->set_text("/ " + std::to_string(anime->series_episodes) + " Episodes");
-        m_episodes_entry->set_text(std::to_string(anime->episodes));
+        m_episodes_entry->set_label("/ " + std::to_string(anime->series_episodes) + " Episodes");
+        m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
 		m_anime_status_combo->set_active_text(to_string(anime->status));
     }
 
@@ -154,12 +126,12 @@ namespace MAL {
         auto columns = std::dynamic_pointer_cast<AnimeModelColumnsEditable>(m_notify_columns);
 
         try {
-            auto episodes = std::stoi(m_episodes_entry->get_text());
+            auto episodes = std::stoi(m_episodes_entry->get_entry_text());
             if (episodes != row.get_value(columns->episodes))
                 row.set_value(columns->episodes, episodes);
         } catch (std::exception e) {
             auto anime = std::static_pointer_cast<const Anime>(m_item);
-            m_episodes_entry->set_text(std::to_string(anime->episodes));
+            m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
         }
 
         auto status = m_anime_status_combo->get_anime_status();

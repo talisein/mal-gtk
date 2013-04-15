@@ -13,6 +13,7 @@
 #include "anime.hpp"
 #include "mal.hpp"
 #include "malitem_list_view.hpp"
+#include "increment_entry.hpp"
 
 namespace MAL {
 
@@ -183,17 +184,11 @@ namespace MAL {
         virtual void display_item(const std::shared_ptr<const MALItem>& item) override;
         
     protected:
-        Gtk::Grid           *m_episodes_grid;
-        Gtk::Label          *m_series_episodes_label;
-        Gtk::Entry          *m_episodes_entry;
-        Gtk::Button         *m_episodes_button;
+        IncrementEntry      *m_episodes_entry;
 		AnimeStatusComboBox *m_anime_status_combo;
 
         /* Chain up */
         virtual bool update_list_model(const Gtk::TreeRow &row) override;
-
-    private:
-        void increment_button_cb();
     };
 
     class AnimeSearchListPage final : public MALItemListPage {

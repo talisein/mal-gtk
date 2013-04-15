@@ -9,7 +9,6 @@ namespace MAL {
 		mal(std::make_shared<MAL>(std::unique_ptr<UserInfo>(new UserInfo()))),
 		window(mal)
 	{
-
 	}
 
 	int Application::run() {
