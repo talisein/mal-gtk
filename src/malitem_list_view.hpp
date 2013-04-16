@@ -14,6 +14,27 @@
 #include "mal.hpp"
 
 namespace MAL {
+	class ScoreColumns final : public Gtk::TreeModel::ColumnRecord {
+	public:
+        Gtk::TreeModelColumn<Glib::ustring> text;
+        Gtk::TreeModelColumn<int> score;
+		ScoreColumns() { add(text); add(score); };
+	};
+
+	class ScoreComboBox final : public Gtk::ComboBox {
+	public:
+		ScoreComboBox();
+		int get_score() const;
+        void set_score(const int score);
+        
+    private:
+         ScoreColumns                       m_columns;
+         Glib::RefPtr<Gtk::ListStore>       m_model;
+         const std::list<std::pair<const int, const Glib::ustring> > m_score_list;
+         
+         void append_model(const std::pair<const int, const Glib::ustring>& pair);
+	};
+
 
     class MALItemModelColumns : public Gtk::TreeModel::ColumnRecord
     {
@@ -115,8 +136,8 @@ namespace MAL {
         virtual bool update_list_model(const Gtk::TreeRow &row);
         std::shared_ptr<MALItemModelColumns> m_columns;
 
-        Gtk::Grid  *m_score_grid;
-        Gtk::Entry *m_score;
+        Gtk::Grid     *m_score_grid;
+        ScoreComboBox *m_score;
     };
 
 	class MALItemListViewBase : public Gtk::Grid {

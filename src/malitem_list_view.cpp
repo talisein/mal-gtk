@@ -2,12 +2,74 @@
 #include <iostream>
 #include <thread>
 #include <cstring>
+#include <functional>
 #include <glibmm/markup.h>
 #include <gtkmm/label.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/stock.h>
 
+namespace {
+    static std::list<std::pair<const int, const Glib::ustring> > initialize_score_combo_map()
+    {
+        return {
+            {0,  "Select Score"},
+            {10, "(10) Masterpiece"},
+            {9,  "(9) Great"},
+            {8,  "(8) Very Good"},
+            {7,  "(7) Good"},
+            {6,  "(6) Fine"},
+            {5,  "(5) Average"},
+            {4,  "(4) Bad "},
+            {3,  "(3) Very Bad"},
+            {2,  "(2) Horrible"},
+            {1,  "(1) Appalling"},
+        };
+    }
+}
+
+namespace sigc {
+    SIGC_FUNCTORS_DEDUCE_RESULT_TYPE_WITH_DECLTYPE
+}
+
 namespace MAL {
+
+    ScoreComboBox::ScoreComboBox() :
+        Gtk::ComboBox(false),
+        m_columns(),
+        m_model(Gtk::ListStore::create(m_columns)),
+        m_score_list(initialize_score_combo_map())
+    {
+        std::for_each(std::begin(m_score_list), std::end(m_score_list),
+                      std::bind(&ScoreComboBox::append_model,
+                                this,
+                                std::placeholders::_1));
+        set_model(m_model);
+        pack_start(m_columns.text);
+    }
+
+    void ScoreComboBox::append_model(const std::pair<const int, const Glib::ustring>& pair)
+    {
+        auto iter = m_model->append();
+        iter->set_value(m_columns.score, pair.first);
+        iter->set_value(m_columns.text, pair.second);
+    }
+
+    int ScoreComboBox::get_score() const
+    {
+        auto iter = get_active();
+        return iter->get_value(m_columns.score);
+    }
+
+    void ScoreComboBox::set_score(const int score)
+    {
+        m_model->foreach_iter([&](const Gtk::TreeModel::iterator& iter)->bool {
+                if (iter->get_value(m_columns.score) == score) {
+                    set_active(iter);
+                    return true;
+                }
+                return false;
+            });
+    }
 
     MALItemListViewNotifier::MALItemListViewNotifier(const std::shared_ptr<MALItemModelColumns> &columns,
                                                      const sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&> &cb) :
@@ -114,13 +176,13 @@ namespace MAL {
         MALItemListViewNotifier(columns, slot),
         m_columns(columns),
         m_score_grid(Gtk::manage(new Gtk::Grid())),
-        m_score(Gtk::manage(new Gtk::Entry()))
+        m_score(Gtk::manage(new ScoreComboBox()))
     {
         auto label = Gtk::manage(new Gtk::Label("Score: "));
         m_score_grid->attach(*label, 0, 0, 1, 1);
         m_score_grid->attach(*m_score, 1, 0, 1, 1);
         m_grid->attach(*m_score_grid, 0, 0, 1, 1);
-        m_score->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+        m_score->signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
     }
 
     void MALItemDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
@@ -128,7 +190,7 @@ namespace MAL {
         MALItemDetailViewBase::display_item(item);
 
         auto score = static_cast<int>(item->score);
-        m_score->set_text(std::to_string(score));
+        m_score->set_score(score);
         m_score_grid->show_all();
     }
 
@@ -138,11 +200,8 @@ namespace MAL {
             return false;
 
         int score;
-        try {
-            score = std::stoi(m_score->get_text());
-        } catch (std::exception e) {
-            return true;
-        }
+        score = m_score->get_score();
+
         auto columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_notify_columns);
         if (score != row.get_value(columns->score))
             row.set_value(columns->score, score);
