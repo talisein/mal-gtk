@@ -1,21 +1,76 @@
 #pragma once
 #include <memory>
-#include <giomm/memoryinputstream.h>
+#include <algorithm>
+#include <sigc++/slot.h>
 #include <glibmm/dispatcher.h>
+#include <giomm/memoryinputstream.h>
 #include <gtkmm/grid.h>
+#include <gtkmm/label.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/comboboxtext.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/sizegroup.h>
-#include <sigc++/slot.h>
 #include <gtkmm/treemodel.h>
 #include <gtkmm/cellrenderercombo.h>
+#include <gtkmm/cssprovider.h>
 #include "anime.hpp"
 #include "mal.hpp"
 #include "malitem_list_view.hpp"
 #include "increment_entry.hpp"
 
 namespace MAL {
+    class FancyLabel  : public Gtk::Label {
+    public:
+        FancyLabel() :
+            Gtk::Label() {
+            set_padding(5, 1);
+            auto provider = Gtk::CssProvider::create();
+            provider->load_from_data(
+                "GtkLabel {"
+                "  border-radius: 5px;"
+                "}"
+                "GtkLabel#TV {"
+                "  background-color: #5992D5;"
+                "}"
+                "GtkLabel#OVA {"
+                "  background-color: #67BF00;"
+                "}"
+                "GtkLabel#Movie {"
+                "  background-color: #BB544D;"
+                "}"
+                "GtkLabel#Special {"
+                "  background-color: #FA9630;"
+                "}"
+                "GtkLabel#ONA {"
+                "  background-color: #AF742F;"
+                "}"
+                "GtkLabel#Music {"
+                "  background-color: #AC57FF;"
+                "}"
+                "GtkLabel#Invalid-Type, GtkLabel#Invalid-Status {"
+                "  background-color: #FF0000;"
+                "}"
+                "GtkLabel#Airing {"
+                "  background-color: #00CC00;"
+                "}"
+                "GtkLabel#Finished {"
+                "  background-color: #009999;"
+                "}"
+                "GtkLabel#Not-Yet-Aired {"
+                "  background-color: #FF7400;"
+                "}"
+                );
+            auto style = get_style_context();
+            style->add_provider(provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        };
+
+        void set_label(const Glib::ustring& label) {
+            set_text(label);
+            std::string str = label;
+            std::replace(std::begin(str), std::end(str), ' ', '-');
+            set_name(str);
+        }
+    };
 
 	class AnimeStatusColumns final : public Gtk::TreeModel::ColumnRecord {
 	public:
@@ -158,8 +213,8 @@ namespace MAL {
     protected:
         Gtk::Grid                    *m_status_type_grid;
         Glib::RefPtr<Gtk::SizeGroup>  m_status_type_sizegroup;
-        Gtk::Label                   *m_series_status_label;
-        Gtk::Label                   *m_series_type_label;
+        FancyLabel                   *m_series_status_label;
+        FancyLabel                   *m_series_type_label;
     };
 
     class AnimeDetailViewStatic final : public MALItemDetailViewStatic, public AnimeDetailViewBase {

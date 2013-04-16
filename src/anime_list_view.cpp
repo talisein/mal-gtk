@@ -6,6 +6,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/stock.h>
+#include <gtkmm/eventbox.h>
 
 namespace MAL {
 
@@ -50,14 +51,20 @@ namespace MAL {
         MALItemDetailViewBase(mal),
         m_status_type_grid(Gtk::manage(new Gtk::Grid())),
         m_status_type_sizegroup(Gtk::SizeGroup::create(Gtk::SIZE_GROUP_BOTH)),
-        m_series_status_label(Gtk::manage(new Gtk::Label())),
-        m_series_type_label(Gtk::manage(new Gtk::Label()))
+        m_series_status_label(Gtk::manage(new FancyLabel())),
+        m_series_type_label(Gtk::manage(new FancyLabel()))
     {
         m_grid->attach(*m_status_type_grid, 0, -1, 1, 1);
+        auto type_box = Gtk::manage(new Gtk::EventBox());
+        type_box->add(*m_series_type_label);
+        type_box->set_visible_window(true);
+        auto status_box = Gtk::manage(new Gtk::EventBox());
+        status_box->add(*m_series_status_label);
+        status_box->set_visible_window(true);
         m_status_type_sizegroup->add_widget(*m_series_type_label);
         m_status_type_sizegroup->add_widget(*m_series_status_label);
-        m_status_type_grid->attach(*m_series_type_label, 0, 0, 1, 1);
-        m_status_type_grid->attach(*m_series_status_label, 1, 0, 1, 1);
+        m_status_type_grid->attach(*type_box, 0, 0, 1, 1);
+        m_status_type_grid->attach(*status_box, 1, 0, 1, 1);
         m_status_type_grid->set_column_spacing(10);
     }
 
@@ -66,8 +73,8 @@ namespace MAL {
         MALItemDetailViewBase::display_item(item);
         auto anime = std::static_pointer_cast<const Anime>(item);
 
-        m_series_status_label->set_text(to_string(anime->series_status));
-        m_series_type_label->set_text(to_string(anime->series_type));
+        m_series_status_label->set_label(to_string(anime->series_status));
+        m_series_type_label->set_label(to_string(anime->series_type));
     }
 
     AnimeDetailViewStatic::AnimeDetailViewStatic(const std::shared_ptr<MAL>& mal) :

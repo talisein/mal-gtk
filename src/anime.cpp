@@ -120,7 +120,6 @@ namespace MAL {
 		case MUSIC:
 			return "Music";
 		default:
-            std::cerr << "Error: Invalid Anime Type (" << s << ")" << std::endl;
 			return "Invalid Type";
 		}
 	}
@@ -134,7 +133,6 @@ namespace MAL {
 		case NOTYETAIRED:
 			return "Not Yet Aired";
 		default:
-            std::cerr << "Error: Invalid Anime Series Status (" << s << ")" << std::endl;
 			return "Invalid Status";
 		}
 	}
@@ -152,7 +150,6 @@ namespace MAL {
 		case PLANTOWATCH:
 			return "Plan To Watch";
 		default:
-            std::cerr << "Error: Invalid Anime Status (" << s << ")" << std::endl;
 			return "Invalid Status";
 		}
 	}
