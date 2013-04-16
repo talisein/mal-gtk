@@ -1,4 +1,5 @@
 #include "increment_entry.hpp"
+#include <iostream>
 #include <gtkmm/stock.h>
 
 namespace {
@@ -69,12 +70,33 @@ namespace MAL {
     void IncrementEntry::increment_cb()
     {
         auto const text = m_entry->get_text();
+
         try {
-            auto const field = std::stoi(text) + 1;
+            auto const field = ustring_to_gint(text) + 1;
             m_entry->set_text(std::to_string(field));
             m_entry->activate();
         } catch (std::exception e) {
             m_entry->set_text(text);
+        }
+    }
+
+    /*
+     * throws whatever std::stoi() throws
+     */
+    gint ustring_to_gint(const Glib::ustring& str) {
+        std::vector<gint> digits;
+        if ( std::all_of(std::begin(str), std::end(str), &Glib::Unicode::isdigit) ) {
+            digits.reserve(str.size());
+            std::transform(std::begin(str), std::end(str),
+                           std::back_inserter(digits), &Glib::Unicode::digit_value);
+            std::vector<gint> powers_of_ten(digits.size(), 10);
+            powers_of_ten[0] = 1;
+            std::partial_sum(std::begin(powers_of_ten), std::end(powers_of_ten),
+                             std::begin(powers_of_ten), std::multiplies<gint>());
+            return std::inner_product(std::begin(digits), std::end(digits),
+                                      powers_of_ten.rbegin(), 0);
+        } else {
+            return std::stoi(str);
         }
     }
 }

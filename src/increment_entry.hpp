@@ -30,4 +30,6 @@ namespace MAL {
     private:
         void increment_cb();
     };
+
+    gint ustring_to_gint(const Glib::ustring& str);
 }
