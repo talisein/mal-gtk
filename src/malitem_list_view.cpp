@@ -1,4 +1,5 @@
 #include "malitem_list_view.hpp"
+#include <array>
 #include <iostream>
 #include <thread>
 #include <cstring>
@@ -7,25 +8,6 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/stock.h>
-
-namespace {
-    static std::list<std::pair<const int, const Glib::ustring> > initialize_score_combo_map()
-    {
-        return {
-            {0,  "Select Score"},
-            {10, "(10) Masterpiece"},
-            {9,  "(9) Great"},
-            {8,  "(8) Very Good"},
-            {7,  "(7) Good"},
-            {6,  "(6) Fine"},
-            {5,  "(5) Average"},
-            {4,  "(4) Bad "},
-            {3,  "(3) Very Bad"},
-            {2,  "(2) Horrible"},
-            {1,  "(1) Appalling"},
-        };
-    }
-}
 
 namespace sigc {
     SIGC_FUNCTORS_DEDUCE_RESULT_TYPE_WITH_DECLTYPE
@@ -36,22 +18,30 @@ namespace MAL {
     ScoreComboBox::ScoreComboBox() :
         Gtk::ComboBox(false),
         m_columns(),
-        m_model(Gtk::ListStore::create(m_columns)),
-        m_score_list(initialize_score_combo_map())
+        m_model(Gtk::ListStore::create(m_columns))
     {
-        std::for_each(std::begin(m_score_list), std::end(m_score_list),
-                      std::bind(&ScoreComboBox::append_model,
-                                this,
-                                std::placeholders::_1));
+        const std::array< const std::pair<const int, const Glib::ustring>, 11> score_list = {{
+                {0,  "Select Score"},
+                {10, "(10) Masterpiece"},
+                {9,  "(9) Great"},
+                {8,  "(8) Very Good"},
+                {7,  "(7) Good"},
+                {6,  "(6) Fine"},
+                {5,  "(5) Average"},
+                {4,  "(4) Bad "},
+                {3,  "(3) Very Bad"},
+                {2,  "(2) Horrible"},
+                {1,  "(1) Appalling"},
+            }};
+
+        std::for_each(std::begin(score_list), std::end(score_list),
+                      [&](const std::pair<const int, const Glib::ustring>& pair) {
+                          auto iter = m_model->append();
+                          iter->set_value(m_columns.score, pair.first);
+                          iter->set_value(m_columns.text, pair.second);
+                      });
         set_model(m_model);
         pack_start(m_columns.text);
-    }
-
-    void ScoreComboBox::append_model(const std::pair<const int, const Glib::ustring>& pair)
-    {
-        auto iter = m_model->append();
-        iter->set_value(m_columns.score, pair.first);
-        iter->set_value(m_columns.text, pair.second);
     }
 
     int ScoreComboBox::get_score() const
@@ -69,6 +59,70 @@ namespace MAL {
                 }
                 return false;
             });
+    }
+
+    ScoreCellRendererCombo::ScoreCellRendererCombo() :
+		Glib::ObjectBase( typeid(ScoreCellRendererCombo) ),
+        m_columns(),
+        m_model(Gtk::ListStore::create(m_columns)),
+		m_score_property( *this, "score", 0 )
+    {
+        const std::array< const std::pair<const int, const Glib::ustring>, 11> score_list = {{
+            {0,  "\u2012"},
+            {10, "10"},
+            {9,  "9"},
+            {8,  "8"},
+            {7,  "7"},
+            {6,  "6"},
+            {5,  "5"},
+            {4,  "4"},
+            {3,  "3"},
+            {2,  "2"},
+            {1,  "1"}
+            }};
+        std::for_each(std::begin(score_list), std::end(score_list),
+                      [&](const std::pair<const int, const Glib::ustring>& pair) {
+                          auto iter = m_model->append();
+                          iter->set_value(m_columns.score, pair.first);
+                          iter->set_value(m_columns.text, pair.second);
+                      });
+        property_model() = m_model;
+        property_text_column() = m_columns.text.index();
+        property_has_entry() = false;
+        property_editable() = true;
+        set_alignment(.5, .5);
+        property_score().signal_changed().connect(sigc::mem_fun(*this, &ScoreCellRendererCombo::score_changed_cb));
+    }
+
+    void ScoreCellRendererCombo::score_changed_cb()
+    {
+        auto const score = m_score_property.get_value();
+        m_model->foreach_iter([&](const Gtk::TreeModel::iterator& iter)->bool {
+                if (iter->get_value(m_columns.score) == score) {
+                    property_text() = iter->get_value(m_columns.text);
+                    return true;
+                }
+                return false;
+            });
+    }
+
+    Glib::PropertyProxy<gint> ScoreCellRendererCombo::property_score()
+    {
+        return m_score_property.get_proxy();
+    }
+
+    gint ScoreCellRendererCombo::get_score_from_string(const Glib::ustring& str) const
+    {
+        gint score = -1;
+        m_model->foreach_iter([&](const Gtk::TreeModel::iterator& iter)->bool {
+                if (iter->get_value(m_columns.text) == str) {
+                    score = iter->get_value(m_columns.score);
+                    return true;
+                }
+                return false;
+            });
+
+        return score;
     }
 
     MALItemListViewNotifier::MALItemListViewNotifier(const std::shared_ptr<MALItemModelColumns> &columns,
@@ -330,11 +384,16 @@ namespace MAL {
 
     MALItemListViewEditable::MALItemListViewEditable(const std::shared_ptr<MAL>& mal,
                                                      const std::shared_ptr<MALItemModelColumnsEditable>& columns) :
-        MALItemListViewBase(mal, columns)
+        MALItemListViewBase(mal, columns),
+        m_score_column(Gtk::manage(new Gtk::TreeViewColumn("Score"))),
+        m_score_cellrenderer(Gtk::manage(new ScoreCellRendererCombo()))
     {
-		int num = m_treeview->append_column_numeric_editable("Score", columns->score, "%d");
-        m_score_column = m_treeview->get_column(num - 1);
-		m_model_changed_connection = m_model->signal_row_changed().connect(sigc::mem_fun(*this, &MALItemListViewEditable::on_model_changed));
+        m_score_column->pack_start(*m_score_cellrenderer);
+        m_score_column->add_attribute(m_score_cellrenderer->property_score(), columns->score);
+        //m_score_column->set_alignment(Pango::ALIGN_CENTER);
+        m_score_cellrenderer->signal_edited().connect(sigc::mem_fun(*this, &MALItemListViewEditable::score_edited_cb));
+        m_model_changed_connection = m_model->signal_row_changed().connect(sigc::mem_fun(*this, &MALItemListViewEditable::on_model_changed));
+        m_treeview->append_column(*m_score_column);
     }
 
     void MALItemListViewEditable::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
@@ -373,6 +432,20 @@ namespace MAL {
         }
 
         return is_changed;
+    }
+
+    void MALItemListViewEditable::score_edited_cb(const Glib::ustring& path, const Glib::ustring& text)
+    {
+        auto iter = m_model->get_iter(path);
+        auto columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_columns);
+
+        if (iter) {
+            auto const score = m_score_cellrenderer->get_score_from_string(text);
+            auto item = iter->get_value(columns->item);
+            if ( score != static_cast<int>(item->score) ) {
+                iter->set_value(columns->score, score);
+            }
+        }
     }
 
     void MALItemListViewEditable::do_model_foreach(const Gtk::TreeModel::SlotForeachPathAndIter& slot)

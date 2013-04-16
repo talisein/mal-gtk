@@ -2,6 +2,7 @@
 #include <memory>
 #include <giomm/memoryinputstream.h>
 #include <glibmm/dispatcher.h>
+#include <glibmm/property.h>
 #include <gtkmm/bin.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/liststore.h>
@@ -30,11 +31,21 @@ namespace MAL {
     private:
          ScoreColumns                       m_columns;
          Glib::RefPtr<Gtk::ListStore>       m_model;
-         const std::list<std::pair<const int, const Glib::ustring> > m_score_list;
-         
-         void append_model(const std::pair<const int, const Glib::ustring>& pair);
 	};
 
+    class ScoreCellRendererCombo final : public Gtk::CellRendererCombo {
+    public:
+        ScoreCellRendererCombo();
+
+        Glib::PropertyProxy<gint> property_score();
+        gint get_score_from_string(const Glib::ustring&) const;
+    private:
+        ScoreColumns m_columns;
+        Glib::RefPtr<Gtk::ListStore> m_model;
+
+        void score_changed_cb();
+        Glib::Property<gint> m_score_property;
+    };
 
     class MALItemModelColumns : public Gtk::TreeModel::ColumnRecord
     {
@@ -209,7 +220,8 @@ namespace MAL {
 
     protected:
         Gtk::TreeViewColumn *m_score_column;
-        
+        ScoreCellRendererCombo *m_score_cellrenderer;
+
         /* Chain up!
          * Called when m_items has changed (We have fetched a new anime list from MAL)
          * This method should take data from the item and put it on the row
@@ -231,6 +243,7 @@ namespace MAL {
 
     private:
         void on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator&);
+        void score_edited_cb(const Glib::ustring& path, const Glib::ustring& text);
     };
 
 	class MALItemListPage : public Gtk::Grid {
