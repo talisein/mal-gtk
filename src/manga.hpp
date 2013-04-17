@@ -30,18 +30,18 @@ namespace MAL {
 	};
 	                  
 	
-	std::string to_string(const MangaSeriesType s);
-	std::string to_string(const MangaSeriesStatus s);
-	std::string to_string(const MangaStatus s);
+    Glib::ustring to_string(const MangaSeriesType s);
+    Glib::ustring to_string(const MangaSeriesStatus s);
+    Glib::ustring to_string(const MangaStatus s);
 
 	MangaSeriesType manga_series_type_from_int(const int i);
-	MangaSeriesType manga_series_type_from_string(const std::string& s);
+	MangaSeriesType manga_series_type_from_string(const Glib::ustring& s);
 
 	MangaSeriesStatus manga_series_status_from_int(const int i);
-	MangaSeriesStatus manga_series_status_from_string(const std::string& s);
+	MangaSeriesStatus manga_series_status_from_string(const Glib::ustring& s);
 
 	MangaStatus manga_status_from_int(const int i);
-	MangaStatus manga_status_from_string(const std::string& s);
+	MangaStatus manga_status_from_string(const Glib::ustring& s);
 
 
 	class Manga final : public MALItem {

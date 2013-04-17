@@ -14,6 +14,7 @@
 #include "mal.hpp"
 #include "malitem_list_view.hpp"
 #include "increment_entry.hpp"
+#include "fancy_label.hpp"
 
 namespace MAL {
 
@@ -88,10 +89,12 @@ namespace MAL {
                           const std::shared_ptr<MangaModelColumnsBase>&);
 
     protected:
-        Gtk::TreeViewColumn *m_series_type_column;
-        Gtk::TreeViewColumn *m_series_status_column;
-        Gtk::TreeViewColumn *m_series_chapters_column;
-        Gtk::TreeViewColumn *m_series_volumes_column;
+        FancyCellRendererText *m_series_type_cellrenderer;
+        FancyCellRendererText *m_series_status_cellrenderer;
+        Gtk::TreeViewColumn   *m_series_type_column;
+        Gtk::TreeViewColumn   *m_series_status_column;
+        Gtk::TreeViewColumn   *m_series_chapters_column;
+        Gtk::TreeViewColumn   *m_series_volumes_column;
 
         /* Chain up!
          * Called when m_items has changed (We have fetched a new manga list from MAL)
@@ -164,8 +167,9 @@ namespace MAL {
     protected:
         Gtk::Grid                    *m_status_type_grid;
         Glib::RefPtr<Gtk::SizeGroup>  m_status_type_sizegroup;
-        Gtk::Label                   *m_series_status_label;
-        Gtk::Label                   *m_series_type_label;
+        FancyLabel                   *m_series_status_label;
+        FancyLabel                   *m_series_type_label;
+        FancyLabel                    m_maximum_length_label;
     };
 
     class MangaDetailViewStatic final : public MALItemDetailViewStatic, public MangaDetailViewBase {

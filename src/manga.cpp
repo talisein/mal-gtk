@@ -24,7 +24,7 @@ namespace MAL {
 		}
 	}
 
-	MangaSeriesType manga_series_type_from_string(const std::string& s) {
+	MangaSeriesType manga_series_type_from_string(const Glib::ustring& s) {
 		if (s.compare(to_string(MANGA)) == 0)
 			return MANGA;
 		else if (s.compare(to_string(NOVEL)) == 0)
@@ -59,7 +59,7 @@ namespace MAL {
 		}
 	}
 
-	MangaSeriesStatus manga_series_status_from_string(const std::string& s) {
+	MangaSeriesStatus manga_series_status_from_string(const Glib::ustring& s) {
 		if (s.compare(to_string(PUBLISHING)) == 0 ||
 		    s.compare("Currently Publishing") == 0)
 			return PUBLISHING;
@@ -93,7 +93,7 @@ namespace MAL {
 		}
 	}
 
-	MangaStatus manga_status_from_string(const std::string& s) {
+	MangaStatus manga_status_from_string(const Glib::ustring& s) {
 		if (s.compare(to_string(READING)) == 0)
 			return READING;
 		else if (s.compare(to_string(MANGACOMPLETED)) == 0)
@@ -109,7 +109,7 @@ namespace MAL {
 	}
 
 
-	std::string to_string(const MangaSeriesType s) {
+    Glib::ustring to_string(const MangaSeriesType s) {
 		switch (s) {
 		case MANGA:
 			return "Manga";
@@ -130,7 +130,7 @@ namespace MAL {
 		}
 	}
 
-	std::string to_string(const MangaSeriesStatus s) {
+    Glib::ustring to_string(const MangaSeriesStatus s) {
 		switch (s) {
 		case PUBLISHING:
 			return "Publishing";
@@ -143,7 +143,7 @@ namespace MAL {
 		}
 	}
 
-	std::string to_string(const MangaStatus s) {
+    Glib::ustring to_string(const MangaStatus s) {
 		switch (s) {
 		case READING:
 			return "Reading";

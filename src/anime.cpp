@@ -22,7 +22,7 @@ namespace MAL {
 		}
 	}
 
-	SeriesType anime_series_type_from_string(const std::string& s) {
+	SeriesType anime_series_type_from_string(const Glib::ustring& s) {
 		if (s.compare(to_string(TV)) == 0)
 			return TV;
 		else if (s.compare(to_string(OVA)) == 0)
@@ -55,7 +55,7 @@ namespace MAL {
 		}
 	}
 
-	SeriesStatus anime_series_status_from_string(const std::string& s) {
+	SeriesStatus anime_series_status_from_string(const Glib::ustring& s) {
 		if (s.compare(to_string(AIRING)) == 0 ||
 		    s.compare("Currently Airing") == 0)
 			return AIRING;
@@ -89,7 +89,7 @@ namespace MAL {
 		}
 	}
 
-	AnimeStatus anime_status_from_string(const std::string& s) {
+	AnimeStatus anime_status_from_string(const Glib::ustring& s) {
 		if (s.compare(to_string(WATCHING)) == 0)
 			return WATCHING;
 		else if (s.compare(to_string(COMPLETED)) == 0)
@@ -105,7 +105,7 @@ namespace MAL {
 	}
 
 
-	std::string to_string(const SeriesType s) {
+    Glib::ustring to_string(const SeriesType s) {
 		switch (s) {
 		case TV:
 			return "TV";
@@ -124,7 +124,7 @@ namespace MAL {
 		}
 	}
 
-	std::string to_string(const SeriesStatus s) {
+	Glib::ustring to_string(const SeriesStatus s) {
 		switch (s) {
 		case AIRING:
 			return "Airing";
@@ -137,7 +137,7 @@ namespace MAL {
 		}
 	}
 
-	std::string to_string(const AnimeStatus s) {
+	Glib::ustring to_string(const AnimeStatus s) {
 		switch (s) {
 		case WATCHING:
 			return "Watching";

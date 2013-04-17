@@ -50,12 +50,14 @@ namespace MAL {
         MALItemDetailViewBase(mal),
         m_status_type_grid(Gtk::manage(new Gtk::Grid())),
         m_status_type_sizegroup(Gtk::SizeGroup::create(Gtk::SIZE_GROUP_BOTH)),
-        m_series_status_label(Gtk::manage(new Gtk::Label())),
-        m_series_type_label(Gtk::manage(new Gtk::Label()))
+        m_series_status_label(Gtk::manage(new FancyLabel())),
+        m_series_type_label(Gtk::manage(new FancyLabel()))
     {
         m_grid->attach(*m_status_type_grid, 0, -1, 1, 1);
         m_status_type_sizegroup->add_widget(*m_series_type_label);
         m_status_type_sizegroup->add_widget(*m_series_status_label);
+        m_status_type_sizegroup->add_widget(m_maximum_length_label);
+        m_maximum_length_label.set_label(to_string(NOTYETPUBLISHED));
         m_status_type_grid->attach(*m_series_type_label, 0, 0, 1, 1);
         m_status_type_grid->attach(*m_series_status_label, 1, 0, 1, 1);
         m_status_type_grid->set_column_spacing(10);
@@ -66,8 +68,8 @@ namespace MAL {
         MALItemDetailViewBase::display_item(item);
         auto manga = std::static_pointer_cast<const Manga>(item);
 
-        m_series_status_label->set_text(to_string(manga->series_status));
-        m_series_type_label->set_text(to_string(manga->series_type));
+        m_series_status_label->set_label(to_string(manga->series_status));
+        m_series_type_label->set_label(to_string(manga->series_type));
     }
 
     MangaDetailViewStatic::MangaDetailViewStatic(const std::shared_ptr<MAL>& mal) :
@@ -177,11 +179,15 @@ namespace MAL {
     MangaListViewBase::MangaListViewBase(const std::shared_ptr<MAL>& mal,
                                          const std::shared_ptr<MangaModelColumnsBase>& columns) :
         MALItemListViewBase(mal, columns),
-        m_series_type_column(Gtk::manage(new Gtk::TreeViewColumn("Type", columns->series_type))),
-        m_series_status_column(Gtk::manage(new Gtk::TreeViewColumn("Pub. Status", columns->series_status))),
+        m_series_type_cellrenderer(Gtk::manage(new FancyCellRendererText())),
+        m_series_status_cellrenderer(Gtk::manage(new FancyCellRendererText())),
+        m_series_type_column(Gtk::manage(new Gtk::TreeViewColumn("Type", *m_series_type_cellrenderer))),
+        m_series_status_column(Gtk::manage(new Gtk::TreeViewColumn("Pub. Status", *m_series_status_cellrenderer))),
         m_series_chapters_column(Gtk::manage(new Gtk::TreeViewColumn("Chs.", columns->series_chapters))),
         m_series_volumes_column(Gtk::manage(new Gtk::TreeViewColumn("Vols.", columns->series_volumes)))
     {
+        m_series_type_column->add_attribute(m_series_type_cellrenderer->property_text(), columns->series_type);
+        m_series_status_column->add_attribute(m_series_status_cellrenderer->property_text(), columns->series_status);
         m_treeview->append_column(*m_series_type_column);
         m_treeview->append_column(*m_series_chapters_column);
         m_treeview->append_column(*m_series_volumes_column);

@@ -61,11 +61,13 @@ namespace MAL {
         auto status_box = Gtk::manage(new Gtk::EventBox());
         status_box->add(*m_series_status_label);
         status_box->set_visible_window(true);
+        m_status_type_sizegroup->add_widget(m_maximum_length_label);
+        m_maximum_length_label.set_label(to_string(NOTYETAIRED));
         m_status_type_sizegroup->add_widget(*m_series_type_label);
         m_status_type_sizegroup->add_widget(*m_series_status_label);
         m_status_type_grid->attach(*type_box, 0, 0, 1, 1);
         m_status_type_grid->attach(*status_box, 1, 0, 1, 1);
-        m_status_type_grid->set_column_spacing(10);
+        m_status_type_grid->set_column_spacing(5);
     }
 
     void AnimeDetailViewBase::display_item(const std::shared_ptr<const MALItem>& item)
@@ -151,10 +153,14 @@ namespace MAL {
     AnimeListViewBase::AnimeListViewBase(const std::shared_ptr<MAL>& mal,
                                          const std::shared_ptr<AnimeModelColumnsBase>& columns) :
         MALItemListViewBase(mal, columns),
-        m_series_type_column(Gtk::manage(new Gtk::TreeViewColumn("Type", columns->series_type))),
-        m_series_status_column(Gtk::manage(new Gtk::TreeViewColumn("Airing Status", columns->series_status))),
+        m_series_type_cellrenderer(Gtk::manage(new FancyCellRendererText())),
+        m_series_status_cellrenderer(Gtk::manage(new FancyCellRendererText())),
+        m_series_type_column(Gtk::manage(new Gtk::TreeViewColumn("Type", *m_series_type_cellrenderer))),
+        m_series_status_column(Gtk::manage(new Gtk::TreeViewColumn("Airing Status", *m_series_status_cellrenderer))),
         m_series_episodes_column(Gtk::manage(new Gtk::TreeViewColumn("Eps.", columns->series_episodes)))
     {
+        m_series_type_column->add_attribute(m_series_type_cellrenderer->property_text(), columns->series_type);
+        m_series_status_column->add_attribute(m_series_status_cellrenderer->property_text(), columns->series_status);
         m_treeview->append_column(*m_series_type_column);
         m_treeview->append_column(*m_series_episodes_column);
         m_treeview->append_column(*m_series_status_column);

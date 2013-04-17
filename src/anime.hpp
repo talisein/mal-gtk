@@ -2,6 +2,7 @@
 #include <string>
 #include <ctime>
 #include <set>
+#include <glibmm/ustring.h>
 #include "malitem.hpp"
 
 namespace MAL {
@@ -29,18 +30,18 @@ namespace MAL {
 	};
 	                  
 	
-	std::string to_string(const SeriesType s);
-	std::string to_string(const SeriesStatus s);
-	std::string to_string(const AnimeStatus s);
+    Glib::ustring to_string(const SeriesType s);
+    Glib::ustring to_string(const SeriesStatus s);
+    Glib::ustring to_string(const AnimeStatus s);
 
 	SeriesType anime_series_type_from_int(const int i);
-	SeriesType anime_series_type_from_string(const std::string& s);
+	SeriesType anime_series_type_from_string(const Glib::ustring& s);
 
 	SeriesStatus anime_series_status_from_int(const int i);
-	SeriesStatus anime_series_status_from_string(const std::string& s);
+	SeriesStatus anime_series_status_from_string(const Glib::ustring& s);
 
 	AnimeStatus anime_status_from_int(const int i);
-	AnimeStatus anime_status_from_string(const std::string& s);
+	AnimeStatus anime_status_from_string(const Glib::ustring& s);
 
 
 	class Anime final : public MALItem {

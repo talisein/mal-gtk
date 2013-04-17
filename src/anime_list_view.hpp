@@ -17,61 +17,9 @@
 #include "mal.hpp"
 #include "malitem_list_view.hpp"
 #include "increment_entry.hpp"
+#include "fancy_label.hpp"
 
 namespace MAL {
-    class FancyLabel  : public Gtk::Label {
-    public:
-        FancyLabel() :
-            Gtk::Label() {
-            set_padding(5, 1);
-            auto provider = Gtk::CssProvider::create();
-            provider->load_from_data(
-                "GtkLabel {"
-                "  border-radius: 5px;"
-                "}"
-                "GtkLabel#TV {"
-                "  background-color: #5992D5;"
-                "}"
-                "GtkLabel#OVA {"
-                "  background-color: #67BF00;"
-                "}"
-                "GtkLabel#Movie {"
-                "  background-color: #BB544D;"
-                "}"
-                "GtkLabel#Special {"
-                "  background-color: #FA9630;"
-                "}"
-                "GtkLabel#ONA {"
-                "  background-color: #AF742F;"
-                "}"
-                "GtkLabel#Music {"
-                "  background-color: #AC57FF;"
-                "}"
-                "GtkLabel#Invalid-Type, GtkLabel#Invalid-Status {"
-                "  background-color: #FF0000;"
-                "}"
-                "GtkLabel#Airing {"
-                "  background-color: #00CC00;"
-                "}"
-                "GtkLabel#Finished {"
-                "  background-color: #009999;"
-                "}"
-                "GtkLabel#Not-Yet-Aired {"
-                "  background-color: #FF7400;"
-                "}"
-                );
-            auto style = get_style_context();
-            style->add_provider(provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-        };
-
-        void set_label(const Glib::ustring& label) {
-            set_text(label);
-            std::string str = label;
-            std::replace(std::begin(str), std::end(str), ' ', '-');
-            set_name(str);
-        }
-    };
-
 	class AnimeStatusColumns final : public Gtk::TreeModel::ColumnRecord {
 	public:
         Gtk::TreeModelColumn<Glib::ustring> text;
@@ -139,9 +87,11 @@ namespace MAL {
                           const std::shared_ptr<AnimeModelColumnsBase>&);
 
     protected:
-        Gtk::TreeViewColumn *m_series_type_column;
-        Gtk::TreeViewColumn *m_series_status_column;
-        Gtk::TreeViewColumn *m_series_episodes_column;
+        FancyCellRendererText *m_series_type_cellrenderer;
+        FancyCellRendererText *m_series_status_cellrenderer;
+        Gtk::TreeViewColumn   *m_series_type_column;
+        Gtk::TreeViewColumn   *m_series_status_column;
+        Gtk::TreeViewColumn   *m_series_episodes_column;
 
         /* Chain up!
          * Called when m_items has changed (We have fetched a new anime list from MAL)
@@ -215,6 +165,7 @@ namespace MAL {
         Glib::RefPtr<Gtk::SizeGroup>  m_status_type_sizegroup;
         FancyLabel                   *m_series_status_label;
         FancyLabel                   *m_series_type_label;
+        FancyLabel                    m_maximum_length_label;
     };
 
     class AnimeDetailViewStatic final : public MALItemDetailViewStatic, public AnimeDetailViewBase {
