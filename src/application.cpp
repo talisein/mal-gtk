@@ -11,9 +11,7 @@ namespace MAL {
 		window(mal)
 	{
         auto action = Gio::SimpleAction::create("quit");
-        action->signal_activate().connect([&](const Glib::VariantBase&) {
-                app->quit();
-            });
+        action->signal_activate().connect(sigc::hide(sigc::mem_fun(app.operator->(), &Gtk::Application::quit)));
         app->add_action(action);
         app->add_accelerator("<Control>q", "app.quit", nullptr);
 	}
