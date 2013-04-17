@@ -11,6 +11,8 @@ namespace MAL {
 		username(Gtk::manage(new Gtk::Entry())),
 		password(Gtk::manage(new Gtk::Entry()))
 	{
+        password->set_visibility(false);
+        password->set_input_purpose(Gtk::INPUT_PURPOSE_PASSWORD);
 		add_button(Gtk::Stock::APPLY, 1);
 		auto box = get_content_area();
 		auto grid = Gtk::manage(new Gtk::Grid());
