@@ -158,7 +158,7 @@ namespace MAL {
         return std::make_shared<Anime>(*this);
     }
 
-	void Anime::set_series_type(const std::string& str)
+	void Anime::set_series_type(std::string&& str)
 	{
 		if (str.size() == 1)
 			series_type = anime_series_type_from_int(std::stoi(str));
@@ -166,7 +166,7 @@ namespace MAL {
 			series_type = anime_series_type_from_string(str);
 	}
 
-	void Anime::set_series_status(const std::string& str)
+	void Anime::set_series_status(std::string&& str)
 	{
 		if (str.size() == 1)
 			series_status = anime_series_status_from_int(std::stoi(str));
@@ -174,32 +174,32 @@ namespace MAL {
 			series_status = anime_series_status_from_string(str);
 	}
 
-	void Anime::set_series_episodes(const std::string& str)
+	void Anime::set_series_episodes(std::string&& str)
 	{
 		series_episodes = std::stoi(str);
 	}
 
-	void Anime::set_status(const std::string& str)
+	void Anime::set_status(std::string&& str)
 	{
 		status = anime_status_from_int(std::stoi(str));
 	}
 
-	void Anime::set_episodes(const std::string& str)
+	void Anime::set_episodes(std::string&& str)
 	{
 		episodes = std::stoi(str);
 	}
 
-	void Anime::set_rewatch_episode(const std::string& str)
+	void Anime::set_rewatch_episode(std::string&& str)
 	{
 		rewatch_episode = std::stoi(str);
 	}
 
-	void Anime::set_storage_type(const std::string& str)
+	void Anime::set_storage_type(std::string&& str)
 	{
 		storage_type = std::stoi(str);
 	}
 
-	void Anime::set_storage_value(const std::string& str)
+	void Anime::set_storage_value(std::string&& str)
 	{
 		storage_value = std::stof(str);
 	}

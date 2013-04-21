@@ -1,5 +1,41 @@
 #include "malitem.hpp"
 #include <iostream>
+#include <map>
+
+namespace {
+    std::string convert_html(std::string&& in) {
+        static std::map<std::string, std::string> html_map = {
+            {"br />", "\n"}, { "br/>", "\n" }
+        };
+
+        auto pos = in.find("<");
+        decltype(pos) start = 0;
+        while ( pos != std::string::npos ) {
+            auto end_pos = in.find(">", pos);
+            if (end_pos == std::string::npos)
+                break;
+
+            auto iter = html_map.find(in.substr(pos+1, end_pos - pos));
+            if (iter != std::end(html_map)) {
+                in.replace(pos, end_pos - pos + 1, iter->second);
+            }
+            start = pos + 1;
+            pos = in.find("<", start);
+        }
+
+        return in;
+    }
+
+    std::string strip_excessive_newlines(std::string&& in) {
+        auto pos = in.find("\n\n\n");
+        while ( pos != std::string::npos ) {
+            in.erase(pos, 1);
+            pos = in.find("\n\n\n");
+        }
+
+        return in;
+    }
+}
 
 namespace MAL {
 
@@ -20,32 +56,32 @@ namespace MAL {
         return std::make_shared<MALItem>(*this);
     }
 
-	void MALItem::set_series_itemdb_id(const std::string& id)
+	void MALItem::set_series_itemdb_id(std::string&& id)
 	{
 		series_itemdb_id = std::stoll(id);
 	}
 
-	void MALItem::set_series_title(const std::string& title)
+	void MALItem::set_series_title(std::string&& title)
 	{
 		series_title = title;
 	}
 
-	void MALItem::set_series_date_begin(const std::string& str)
+	void MALItem::set_series_date_begin(std::string&& str)
 	{
 		series_date_begin = str;
 	}
 
-	void MALItem::set_series_date_end(const std::string& str)
+	void MALItem::set_series_date_end(std::string&& str)
 	{
 		series_date_end = str;
 	}
 
-	void MALItem::set_image_url(const std::string& str)
+	void MALItem::set_image_url(std::string&& str)
 	{
 		image_url = str;
 	}
 
-	void MALItem::set_series_synonyms(const std::string& str)
+	void MALItem::set_series_synonyms(std::string&& str)
 	{
 		auto iter = str.find("; ");
 		decltype(iter) start = 0;
@@ -63,14 +99,14 @@ namespace MAL {
 			series_synonyms.insert(substr);
 	}
 
-	void MALItem::set_series_synopsis(const std::string& str)
+	void MALItem::set_series_synopsis(std::string&& str)
 	{
-		series_synopsis = str;
+		series_synopsis = strip_excessive_newlines(convert_html(std::move(str)));
 	}
 
     /* Non-Series Info */
 
-	void MALItem::set_tags(const std::string& str)
+	void MALItem::set_tags(std::string&& str)
 	{
 		auto iter = str.find("; ");
 		decltype(iter) start = 0;
@@ -88,67 +124,67 @@ namespace MAL {
 			tags.insert(substr);
 	}
 		
-	void MALItem::set_date_start(const std::string& str)
+	void MALItem::set_date_start(std::string&& str)
 	{
 		date_start = str;
 	}
 
-	void MALItem::set_date_finish(const std::string& str)
+	void MALItem::set_date_finish(std::string&& str)
 	{
 		date_finish = str;
 	}
 
-	void MALItem::set_id(const std::string& str)
+	void MALItem::set_id(std::string&& str)
 	{
 		id = std::stoll(str);
 	}
 
-	void MALItem::set_last_updated(const std::string& str)
+	void MALItem::set_last_updated(std::string&& str)
 	{
 		last_updated = std::stoull(str);
 	}
 
-	void MALItem::set_score(const std::string& str)
+	void MALItem::set_score(std::string&& str)
 	{
 		score = std::stof(str);
 	}
 
-	void MALItem::set_enable_reconsuming(const std::string& str)
+	void MALItem::set_enable_reconsuming(std::string&& str)
 	{
 		enable_reconsuming = (str.size()==0||str.compare("0")==0)?false:true;
 	}
 
-	void MALItem::set_fansub_group(const std::string& str)
+	void MALItem::set_fansub_group(std::string&& str)
 	{
 		fansub_group = str;
 	}
 
-	void MALItem::set_comments(const std::string& str)
+	void MALItem::set_comments(std::string&& str)
 	{
 		comments = str;
 	}
 
-	void MALItem::set_downloaded_items(const std::string& str)
+	void MALItem::set_downloaded_items(std::string&& str)
 	{
 		downloaded_items = std::stoi(str);
 	}
 
-	void MALItem::set_times_consumed(const std::string& str)
+	void MALItem::set_times_consumed(std::string&& str)
 	{
 		times_consumed = std::stoi(str);
 	}
 
-	void MALItem::set_reconsume_value(const std::string& str)
+	void MALItem::set_reconsume_value(std::string&& str)
 	{
 		reconsume_value = std::stoi(str);
 	}
 
-	void MALItem::set_priority(const std::string& str)
+	void MALItem::set_priority(std::string&& str)
 	{
 		priority = std::stoi(str);
 	}
 
-	void MALItem::set_enable_discussion(const std::string& str)
+	void MALItem::set_enable_discussion(std::string&& str)
 	{
 		enable_discussion = (str.size()==0||str.compare("0")==0)?false:true;
 	}

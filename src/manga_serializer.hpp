@@ -3,6 +3,7 @@
 #include <list>
 #include <map>
 #include "manga.hpp"
+#include "text_util.hpp"
 
 namespace MAL {
 
@@ -10,7 +11,7 @@ namespace MAL {
 
 	class MangaSerializer {
 	public:
-		MangaSerializer();
+		MangaSerializer(const std::shared_ptr<TextUtility>&);
 		~MangaSerializer() = default;
 		void operator=(const MangaSerializer&) = delete;
 		MangaSerializer(const MangaSerializer&) = delete;
@@ -20,7 +21,9 @@ namespace MAL {
 
 	private:
 		const std::map<const std::string, const MANGA_FIELDS> field_map;
-		const std::map<const MANGA_FIELDS, std::function<void (MAL::Manga&, const std::string&)> > member_map;
+		const std::map<const MANGA_FIELDS, std::function<void (MAL::Manga&, std::string&&)> > member_map;
+
+        std::shared_ptr<TextUtility> m_text_util;
 	};
 
 }

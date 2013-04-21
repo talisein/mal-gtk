@@ -61,15 +61,15 @@ namespace MAL {
 		float                 storage_value;   // these fields, but not
                                                // deserialize
 
-		void set_series_type         (const std::string&);
-		void set_series_status       (const std::string&);
-		void set_series_episodes     (const std::string&);
+		void set_series_type         (std::string&&);
+		void set_series_status       (std::string&&);
+		void set_series_episodes     (std::string&&);
 
-		void set_status              (const std::string&);
-		void set_episodes            (const std::string&);
-        void set_rewatch_episode     (const std::string&);
+		void set_status              (std::string&&);
+		void set_episodes            (std::string&&);
+        void set_rewatch_episode     (std::string&&);
 
-		void set_storage_type        (const std::string&);
-		void set_storage_value       (const std::string&);
+		void set_storage_type        (std::string&&);
+		void set_storage_value       (std::string&&);
 	};
 }

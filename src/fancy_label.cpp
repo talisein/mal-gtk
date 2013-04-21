@@ -10,7 +10,7 @@
 #define MUSIC_COLOR "#AC57FF"
 #define OEL_COLOR "#D4FF4A"
 #define INVALID_COLOR "#FF0000"
-#define AIRING_COLOR "#00CC00"
+#define AIRING_COLOR "#008500"
 #define FINISHED_COLOR "#009999"
 #define NOTYETAIRED_COLOR "#FF7400"
 
@@ -119,6 +119,8 @@ namespace MAL {
             auto rgba = iter->second;
             //rgba.set_alpha(0.5);
             property_background_rgba() = rgba;
+            //property_foreground_rgba() = rgba;
+            //property_weight() = Pango::WEIGHT_HEAVY;
         }
         set_padding(6, 2);
     }
@@ -145,6 +147,5 @@ namespace MAL {
         cr->close_path();
         cr->clip();
         Gtk::CellRendererText::render_vfunc(cr, widget, background_area, cell_area, flags);
-
     }
 }

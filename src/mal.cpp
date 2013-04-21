@@ -1,6 +1,7 @@
 #include "mal.hpp"
 #include "password_dialog.hpp"
 #include <curl/curl.h>
+
 namespace {
 	extern "C" {
 		static size_t curl_write_function(void *buffer, size_t size, size_t nmemb, void *userp) {
@@ -26,11 +27,13 @@ namespace {
 namespace MAL {
 	MAL::MAL(std::unique_ptr<UserInfo>&& info) :
 		user_info(std::move(info)),
+        text_util(std::make_shared<TextUtility>()),
+        serializer(text_util),
+        manga_serializer(text_util),
 		curl_ebuffer(new char[CURL_ERROR_SIZE]),
 		share_lock_functors(new pair_lock_functor_t(std::bind(&MAL::involke_lock_function, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
 		                                            std::bind(&MAL::involke_unlock_function, this, std::placeholders::_1, std::placeholders::_2))),
-		curl_share(curl_share_init()),
-		html_entities(initialize_entities())
+		curl_share(curl_share_init())
 	{
 		signal_run_password_dialog.connect(sigc::mem_fun(*this, &MAL::run_password_dialog));
 		CURLSHcode code;
@@ -114,7 +117,7 @@ namespace MAL {
 			return out;
 		}
 
-		const std::string url = LIST_BASE_URL + user_info->get_username().get() + "&status=all";
+		const std::string url = LIST_BASE_URL + user_info->get_username().get() + "&status=all&type=anime";
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());
 
@@ -126,7 +129,7 @@ namespace MAL {
 			return out;
 		}
 
-		parse_entities(*buf);
+		text_util->parse_html_entities(*buf);
 		out = serializer.deserialize(*buf);
 
 		return out;
@@ -151,7 +154,7 @@ namespace MAL {
 			return out;
 		}
 
-		parse_entities(*buf);
+		text_util->parse_html_entities(*buf);
 		out = manga_serializer.deserialize(*buf);
 
 		return out;
@@ -231,7 +234,7 @@ namespace MAL {
 			}
 		}
 
-		parse_entities(*buf);
+		text_util->parse_html_entities(*buf);
         if (buf->size() > 0)
             res = serializer.deserialize(*buf);
         else
@@ -275,7 +278,7 @@ namespace MAL {
 			}
 		}
 
-		parse_entities(*buf);
+		text_util->parse_html_entities(*buf);
         if (buf->size() > 0)
             res = manga_serializer.deserialize(*buf);
         else
@@ -508,95 +511,5 @@ namespace MAL {
 		}
 
 		iter->second->unlock();
-	}
-
-	void MAL::parse_entities(std::string& str) const {
-		auto pos = str.find("&");
-		decltype(pos) start = 0;
-		while (pos != std::string::npos) {
-			auto end_pos = str.find(";", pos);
-			if (end_pos == std::string::npos)
-				break;
-
-			auto iter = html_entities.find(str.substr(pos+1, end_pos - pos));
-			if (iter == std::end(html_entities)) {
-				start = pos + 1;
-			} else {
-				str.erase(pos, end_pos - pos + 1);
-				str.insert(pos, iter->second);
-				start = pos + 1;
-			}
-
-			pos = str.find("&", start);
-		}
-	}
-
-	std::map<const std::string, const std::string> MAL::initialize_entities() const {
-		return {
-			{ "AElig;", "Æ" }, { "Aacute;", "Á" }, { "Acirc;", "Â" }, { "Agrave;", "À" },
-			{ "Alpha;", "Α" }, { "Aring;", "Å" }, { "Atilde;", "Ã" }, { "Auml;", "Ä" },
-			{ "Beta;", "Β" }, { "Ccedil;", "Ç" }, { "Chi;", "Χ" }, { "Dagger;", "‡" },
-			{ "Delta;", "Δ" }, { "ETH;", "Ð" }, { "Eacute;", "É" }, { "Ecirc;", "Ê" },
-			{ "Egrave;", "È" }, { "Epsilon;", "Ε" }, { "Eta;", "Η" }, { "Euml;", "Ë" },
-			{ "Gamma;", "Γ" }, { "Iacute;", "Í" }, { "Icirc;", "Î" }, { "Igrave;", "Ì" },
-			{ "Iota;", "Ι" }, { "Iuml;", "Ï" }, { "Kappa;", "Κ" }, { "Lambda;", "Λ" },
-			{ "Mu;", "Μ" }, { "Ntilde;", "Ñ" }, { "Nu;", "Ν" }, { "OElig;", "Œ" },
-			{ "Oacute;", "Ó" }, { "Ocirc;", "Ô" }, { "Ograve;", "Ò" }, { "Omega;", "Ω" },
-			{ "Omicron;", "Ο" }, { "Oslash;", "Ø" }, { "Otilde;", "Õ" }, { "Ouml;", "Ö" },
-			{ "Phi;", "Φ" }, { "Pi;", "Π" }, { "Prime;", "″" }, { "Psi;", "Ψ" },
-			{ "Rho;", "Ρ" }, { "Scaron;", "Š" }, { "Sigma;", "Σ" }, { "THORN;", "Þ" },
-			{ "Tau;", "Τ" }, { "Theta;", "Θ" }, { "Uacute;", "Ú" }, { "Ucirc;", "Û" },
-			{ "Ugrave;", "Ù" }, { "Upsilon;", "Υ" }, { "Uuml;", "Ü" }, { "Xi;", "Ξ" },
-			{ "Yacute;", "Ý" }, { "Yuml;", "Ÿ" }, { "Zeta;", "Ζ" }, { "aacute;", "á" },
-			{ "acirc;", "â" }, { "acute;", "´" }, { "aelig;", "æ" }, { "agrave;", "à" },
-			{ "alefsym;", "ℵ" }, { "alpha;", "α" }, { "and;", "∧" },
-			{ "ang;", "∠" }, { "aring;", "å" }, { "asymp;", "≈" },
-			{ "atilde;", "ã" }, { "auml;", "ä" }, { "bdquo;", "„" }, { "beta;", "β" },
-			{ "brvbar;", "¦" }, { "bull;", "•" }, { "cap;", "∩" }, { "ccedil;", "ç" },
-			{ "cedil;", "¸" }, { "cent;", "¢" }, { "chi;", "χ" }, { "circ;", "ˆ" },
-			{ "clubs;", "♣" }, { "cong;", "≅" }, { "copy;", "©" }, { "crarr;", "↵" },
-			{ "cup;", "∪" }, { "curren;", "¤" }, { "dArr;", "⇓" }, { "dagger;", "†" },
-			{ "darr;", "↓" }, { "deg;", "°" }, { "delta;", "δ" }, { "diams;", "♦" },
-			{ "divide;", "÷" }, { "eacute;", "é" }, { "ecirc;", "ê" }, { "egrave;", "è" },
-			{ "empty;", "∅" }, { "emsp;", " " }, { "ensp;", " " }, { "epsilon;", "ε" },
-			{ "equiv;", "≡" }, { "eta;", "η" }, { "eth;", "ð" }, { "euml;", "ë" },
-			{ "euro;", "€" }, { "exist;", "∃" }, { "fnof;", "ƒ" }, { "forall;", "∀" },
-			{ "frac12;", "½" }, { "frac14;", "¼" }, { "frac34;", "¾" }, { "frasl;", "⁄" },
-			{ "gamma;", "γ" }, { "ge;", "≥" }, { "hArr;", "⇔" },
-			{ "harr;", "↔" }, { "hearts;", "♥" }, { "hellip;", "…" }, { "iacute;", "í" },
-			{ "icirc;", "î" }, { "iexcl;", "¡" }, { "igrave;", "ì" }, { "image;", "ℑ" },
-			{ "infin;", "∞" }, { "int;", "∫" }, { "iota;", "ι" }, { "iquest;", "¿" },
-			{ "isin;", "∈" }, { "iuml;", "ï" }, { "kappa;", "κ" }, { "lArr;", "⇐" },
-			{ "lambda;", "λ" }, { "lang;", "〈" }, { "laquo;", "«" }, { "larr;", "←" },
-			{ "lceil;", "⌈" }, { "ldquo;", "“" }, { "le;", "≤" }, { "lfloor;", "⌊" },
-			{ "lowast;", "∗" }, { "loz;", "◊" }, { "lrm;", "\xE2\x80\x8E" }, { "lsaquo;", "‹" },
-			{ "lsquo;", "‘" }, { "macr;", "¯" }, { "mdash;", "—" },
-			{ "micro;", "µ" }, { "middot;", "·" }, { "minus;", "−" }, { "mu;", "μ" },
-			{ "nabla;", "∇" }, { "nbsp;", " " }, { "ndash;", "–" }, { "ne;", "≠" },
-			{ "ni;", "∋" }, { "not;", "¬" }, { "notin;", "∉" }, { "nsub;", "⊄" },
-			{ "ntilde;", "ñ" }, { "nu;", "ν" }, { "oacute;", "ó" }, { "ocirc;", "ô" },
-			{ "oelig;", "œ" }, { "ograve;", "ò" }, { "oline;", "‾" }, { "omega;", "ω" },
-			{ "omicron;", "ο" }, { "oplus;", "⊕" }, { "or;", "∨" }, { "ordf;", "ª" },
-			{ "ordm;", "º" }, { "oslash;", "ø" }, { "otilde;", "õ" }, { "otimes;", "⊗" },
-			{ "ouml;", "ö" }, { "para;", "¶" }, { "part;", "∂" }, { "permil;", "‰" },
-			{ "perp;", "⊥" }, { "phi;", "φ" }, { "pi;", "π" }, { "piv;", "ϖ" },
-			{ "plusmn;", "±" }, { "pound;", "£" }, { "prime;", "′" }, { "prod;", "∏" },
-			{ "prop;", "∝" }, { "psi;", "ψ" }, { "rArr;", "⇒" },
-			{ "radic;", "√" }, { "rang;", "〉" }, { "raquo;", "»" }, { "rarr;", "→" },
-			{ "rceil;", "⌉" }, { "rdquo;", "”" }, { "real;", "ℜ" }, { "reg;", "®" },
-			{ "rfloor;", "⌋" }, { "rho;", "ρ" }, { "rlm;", "\xE2\x80\x8F" }, { "rsaquo;", "›" },
-			{ "rsquo;", "’" }, { "sbquo;", "‚" }, { "scaron;", "š" }, { "sdot;", "⋅" },
-			{ "sect;", "§" }, { "shy;", "\xC2\xAD" }, { "sigma;", "σ" }, { "sigmaf;", "ς" },
-			{ "sim;", "∼" }, { "spades;", "♠" }, { "sub;", "⊂" }, { "sube;", "⊆" },
-			{ "sum;", "∑" }, { "sup;", "⊃" }, { "sup1;", "¹" }, { "sup2;", "²" },
-			{ "sup3;", "³" }, { "supe;", "⊇" }, { "szlig;", "ß" }, { "tau;", "τ" },
-			{ "there4;", "∴" }, { "theta;", "θ" }, { "thetasym;", "ϑ" }, { "thinsp;", " " },
-			{ "thorn;", "þ" }, { "tilde;", "˜" }, { "times;", "×" }, { "trade;", "™" },
-			{ "uArr;", "⇑" }, { "uacute;", "ú" }, { "uarr;", "↑" }, { "ucirc;", "û" },
-			{ "ugrave;", "ù" }, { "uml;", "¨" }, { "upsih;", "ϒ" }, { "upsilon;", "υ" },
-			{ "uuml;", "ü" }, { "weierp;", "℘" }, { "xi;", "ξ" }, { "yacute;", "ý" },
-			{ "yen;", "¥" }, { "yuml;", "ÿ" }, { "zeta;", "ζ" }, { "zwj;", "\xE2\x80\x8D" },
-			{ "zwnj;", "\xE2\x80\x8C" }
-		};
 	}
 }

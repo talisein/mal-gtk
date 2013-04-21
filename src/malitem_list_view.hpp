@@ -5,12 +5,13 @@
 #include <glibmm/property.h>
 #include <gtkmm/bin.h>
 #include <gtkmm/grid.h>
+#include <gtkmm/treeview.h>
+#include <gtkmm/frame.h>
+#include <gtkmm/treemodel.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/comboboxtext.h>
-#include <gtkmm/treeview.h>
-#include <sigc++/slot.h>
-#include <gtkmm/treemodel.h>
 #include <gtkmm/cellrenderercombo.h>
+#include <sigc++/slot.h>
 #include "malitem.hpp"
 #include "mal.hpp"
 
@@ -114,7 +115,9 @@ namespace MAL {
 		Gtk::Image                          *m_image;
 		Gtk::Label                          *m_title;
         Gtk::Grid                           *m_grid;
-
+        Gtk::Grid                           *m_alt_title_grid;
+        Gtk::Frame                          *m_synopsis_frame;
+        Gtk::Label                          *m_synopsis_label;
     private:
 		Glib::Dispatcher                     m_signal_image_available;
 		Glib::RefPtr<Gio::MemoryInputStream> image_stream;

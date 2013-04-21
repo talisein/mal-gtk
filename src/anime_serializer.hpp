@@ -3,6 +3,7 @@
 #include <list>
 #include <map>
 #include "anime.hpp"
+#include "text_util.hpp"
 
 namespace MAL {
 
@@ -10,7 +11,7 @@ namespace MAL {
 
 	class AnimeSerializer {
 	public:
-		AnimeSerializer();
+		AnimeSerializer(const std::shared_ptr<TextUtility>&);
 		~AnimeSerializer() = default;
 		void operator=(const AnimeSerializer&) = delete;
 		AnimeSerializer(const AnimeSerializer&) = delete;
@@ -20,7 +21,9 @@ namespace MAL {
 
 	private:
 		const std::map<const std::string, const FIELDS> field_map;
-		const std::map<const FIELDS, std::function<void (Anime&, const std::string&)> > member_map;
+		const std::map<const FIELDS, std::function<void (Anime&, std::string&&)> > member_map;
+
+        std::shared_ptr<TextUtility> m_text_util;
 	};
 
 }

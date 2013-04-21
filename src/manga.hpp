@@ -62,16 +62,16 @@ namespace MAL {
 		int_fast16_t          retail_volumes;    // We know how to serialize
                                                  // but not deserialize
 
-		void set_series_type         (const std::string&);
-		void set_series_chapters     (const std::string&);
-		void set_series_volumes      (const std::string&);
-		void set_series_status       (const std::string&);
+		void set_series_type         (std::string&&);
+		void set_series_chapters     (std::string&&);
+		void set_series_volumes      (std::string&&);
+		void set_series_status       (std::string&&);
 
-        void set_status              (const std::string&);
-		void set_chapters            (const std::string&);
-		void set_volumes             (const std::string&);
-		void set_rereading_chapter   (const std::string&);
+        void set_status              (std::string&&);
+		void set_chapters            (std::string&&);
+		void set_volumes             (std::string&&);
+		void set_rereading_chapter   (std::string&&);
 
-		void set_retail_volumes      (const std::string&);
+		void set_retail_volumes      (std::string&&);
 	};
 }

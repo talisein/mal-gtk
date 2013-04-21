@@ -164,7 +164,7 @@ namespace MAL {
         return std::make_shared<Manga>(*this);
     }
 
-	void Manga::set_series_type(const std::string& str)
+	void Manga::set_series_type(std::string&& str)
 	{
 		if (str.size() == 1)
 			series_type = manga_series_type_from_int(std::stoi(str));
@@ -172,17 +172,17 @@ namespace MAL {
 			series_type = manga_series_type_from_string(str);
 	}
 
-	void Manga::set_series_chapters(const std::string& str)
+	void Manga::set_series_chapters(std::string&& str)
 	{
 		series_chapters = std::stoi(str);
 	}
 
-	void Manga::set_series_volumes(const std::string& str)
+	void Manga::set_series_volumes(std::string&& str)
 	{
 		series_volumes = std::stoi(str);
 	}
 
-	void Manga::set_series_status(const std::string& str)
+	void Manga::set_series_status(std::string&& str)
 	{
 		if (str.size() == 1)
 			series_status = manga_series_status_from_int(std::stoi(str));
@@ -190,27 +190,27 @@ namespace MAL {
 			series_status = manga_series_status_from_string(str);
 	}
 
-	void Manga::set_status(const std::string& str)
+	void Manga::set_status(std::string&& str)
 	{
 		status = manga_status_from_int(std::stoi(str));
 	}
 
-	void Manga::set_chapters(const std::string& str)
+	void Manga::set_chapters(std::string&& str)
 	{
 		chapters = std::stoi(str);
 	}
 
-	void Manga::set_volumes(const std::string& str)
+	void Manga::set_volumes(std::string&& str)
 	{
 		volumes = std::stoi(str);
 	}
 
-	void Manga::set_rereading_chapter(const std::string& str)
+	void Manga::set_rereading_chapter(std::string&& str)
 	{
 		rereading_chapter = std::stoi(str);
 	}
 
-	void Manga::set_retail_volumes(const std::string& str)
+	void Manga::set_retail_volumes(std::string&& str)
 	{
 		retail_volumes = std::stoi(str);
 	}

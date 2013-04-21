@@ -64,7 +64,7 @@ namespace {
 		};
 	}
 
-	static std::map<const MAL::FIELDS, std::function<void (MAL::Anime&, const std::string&)> > initialize_member_map() {
+	static std::map<const MAL::FIELDS, std::function<void (MAL::Anime&, std::string&&)> > initialize_member_map() {
 		return {
 			{ MAL::ANIMEDBID,         std::mem_fn(&MAL::Anime::set_series_itemdb_id) },
 			{ MAL::SERIESTITLE,       std::mem_fn(&MAL::Anime::set_series_title) },
@@ -108,9 +108,10 @@ namespace {
 
 namespace MAL {
 
-	AnimeSerializer::AnimeSerializer() :
+	AnimeSerializer::AnimeSerializer(const std::shared_ptr<TextUtility>& text_util) :
 		field_map(initialize_field_map()),
-		member_map(initialize_member_map())
+		member_map(initialize_member_map()),
+        m_text_util(text_util)
 	{
 	}
 
@@ -142,7 +143,8 @@ namespace MAL {
 		for( ret = xmlTextReaderRead(reader.get()); ret == 1;
 		     ret = xmlTextReaderRead(reader.get()) ) {
 			const std::string name  = xmlchar_to_str(xmlTextReaderConstName (reader.get()));
-			const std::string value = xmlchar_to_str(xmlTextReaderConstValue(reader.get()));
+			std::string value = xmlchar_to_str(xmlTextReaderConstValue(reader.get()));
+            m_text_util->parse_html_entities(value);
 
 			if (name.size() > 0) {
 				auto field_iter = field_map.find(name);
@@ -174,7 +176,7 @@ namespace MAL {
 					if (value.size() > 0) {
 						auto member_iter = member_map.find(prev_field);
 						if ( member_iter != member_map.end() ) {
-							member_iter->second(anime, value);
+							member_iter->second(anime, std::move(value));
 						}
 					} else {
 						std::cerr << "Error: Unexpected " << name << " = " 

@@ -10,6 +10,7 @@
 #include "anime_serializer.hpp"
 #include "manga_serializer.hpp"
 #include "user_info.hpp"
+#include "text_util.hpp"
 
 namespace MAL {
 
@@ -95,6 +96,7 @@ namespace MAL {
 		std::string get_manga_image_sync(const Manga& manga);
 
 		typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
+
 	private:
 		const std::string LIST_BASE_URL          = "http://myanimelist.net/malappinfo.php?u=";
 		const std::string SEARCH_BASE_URL        = "http://myanimelist.net/api/anime/search.xml?q=";
@@ -115,16 +117,14 @@ namespace MAL {
 		void print_curl_share_error(CURLSHcode code);
 		void setup_curl_easy(CURL* easy, const std::string& url, std::string*);
 
+        std::shared_ptr<TextUtility> text_util;
 		AnimeSerializer serializer;
 		MangaSerializer manga_serializer;
 		std::unique_ptr<char[]> curl_ebuffer;
 		std::unique_ptr<pair_lock_functor_t> share_lock_functors;
 		std::map<curl_lock_data, std::unique_ptr<std::mutex>> map_mutex;
 		std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
-		const std::map<const std::string, const std::string> html_entities;
 		
-		void parse_entities(std::string& s) const;
-		std::map<const std::string, const std::string> initialize_entities() const;
         std::map<std::string, std::unique_ptr<std::string> > image_cache;
         std::map<int_fast64_t, std::unique_ptr<std::string> > manga_image_cache;
 	};

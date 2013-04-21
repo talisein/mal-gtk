@@ -146,23 +146,102 @@ namespace MAL {
 		m_mal  (mal),
 		m_image(Gtk::manage(new Gtk::Image())),
 		m_title(Gtk::manage(new Gtk::Label())),
-        m_grid (Gtk::manage(new Gtk::Grid()))
+        m_grid (Gtk::manage(new Gtk::Grid())),
+        m_alt_title_grid(Gtk::manage(new Gtk::Grid())),
+        m_synopsis_frame(Gtk::manage(new Gtk::Frame("Synopsis"))),
+        m_synopsis_label(Gtk::manage(new Gtk::Label()))
 	{
 		set_vexpand(false);
         set_column_spacing(5);
         m_grid->set_row_spacing(5);
-		//               left, top, width, height
-		attach(*m_image,      0,   0,     1,      2);
-		attach(*m_title,      1,   0,     2,      1);
-        attach(*m_grid,       1,   1,     1,      1);
-
+		//                       left, top, width, height
+		attach(*m_image,            0,   0,     1,      4);
+		attach(*m_title,            1,   0,     2,      1);
+		attach(*m_alt_title_grid,   1,   1,     2,      1);
+        attach(*m_grid,             1,   2,     1,      1);
+        attach(*m_synopsis_frame,   2,   2,     1,      1);
+        
         m_title->set_alignment(Gtk::ALIGN_CENTER);
         m_title->set_hexpand(true);
         m_title->set_vexpand(false);
+        m_alt_title_grid->set_hexpand(true);
+        m_alt_title_grid->set_vexpand(false);
+        //m_alt_title_grid->set_column_homogeneous(true);
+        m_alt_title_grid->set_column_spacing(15);
+        m_alt_title_grid->set_halign(Gtk::ALIGN_CENTER);
+        m_alt_title_grid->set_column_homogeneous(true);
+        //m_alt_title_grid->set_alignment(Gtk::ALIGN_CENTER);
         m_grid->set_vexpand(true);
-
+        //m_alt_title_grid->set_hfill(true);
+        auto sw = Gtk::manage(new Gtk::ScrolledWindow());
+        sw->add(*m_synopsis_label);
+        sw->set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
+        m_synopsis_frame->add(*sw);
+        m_synopsis_frame->set_shadow_type(Gtk::SHADOW_IN);
+        m_synopsis_frame->set_margin_left(10);
+        m_synopsis_frame->set_margin_right(10);
+        m_synopsis_frame->set_margin_bottom(10);
+        m_synopsis_label->set_justify(Gtk::JUSTIFY_FILL);
+        m_synopsis_label->set_line_wrap(true);
+        m_synopsis_label->set_line_wrap_mode(Pango::WRAP_WORD_CHAR);
+        m_synopsis_label->set_padding(5,5);
+        m_synopsis_label->set_line_wrap(true);
+        m_synopsis_label->set_line_wrap(true);
+        m_synopsis_label->set_valign(Gtk::ALIGN_START);
 		m_signal_image_available.connect(sigc::mem_fun(*this, &MALItemDetailViewBase::on_image_available));
 	}
+
+    namespace {
+        static Gtk::Label* make_alt_label(const std::string& alt_title) {
+            auto label = Gtk::manage(new Gtk::Label());
+            auto str = Glib::Markup::escape_text(alt_title);
+            str.insert(0, "<small><small>").append("</small></small>");
+            label->set_markup(str);
+            label->set_ellipsize(Pango::ELLIPSIZE_END);
+            label->set_alignment(Gtk::ALIGN_CENTER);
+            label->set_hexpand(true);
+            return label;
+        }
+
+        static void add_alt_titles(Gtk::Grid *grid, const std::shared_ptr<const MALItem>& item) {
+            grid->foreach(sigc::mem_fun(grid, &Gtk::Grid::remove));
+
+            const int rows = item->series_synonyms.size() / 3 + 1;
+            const int top_row_elems = item->series_synonyms.size() % 3;
+            std::vector<std::pair<int, int>> coords;
+            coords.reserve(item->series_synonyms.size());
+            for (int i = 0; i < rows; ++i) {
+                for (int j = 0; j < 3; ++j) {
+                    coords.push_back(std::make_pair(j, i));
+                }
+            }
+
+            auto alt_title_iter = std::begin(item->series_synonyms);
+
+            auto top_row = Gtk::manage(new Gtk::Grid());
+            top_row->set_hexpand(true);
+            top_row->set_halign(Gtk::ALIGN_CENTER);
+            top_row->set_column_spacing(15);
+            top_row->set_column_homogeneous(true);
+            for (int i = 0; i < top_row_elems; ++i, ++alt_title_iter) {
+                auto label = make_alt_label(*alt_title_iter);
+                top_row->attach(*label, i, 0, 1, 1);
+            }
+            grid->attach(*top_row, 0, -1, 3, 1);
+
+            auto coord_iter = std::begin(coords);
+            std::for_each(alt_title_iter,
+                          std::end(item->series_synonyms),
+                          [&](const std::string& alt_title) {
+                              auto label = make_alt_label(alt_title);
+                              grid->attach(*label,
+                                           coord_iter->first,
+                                           coord_iter->second,
+                                           1, 1);
+                              ++coord_iter;
+                          });
+        }
+    }
 
 	void MALItemDetailViewBase::display_item(const std::shared_ptr<const MALItem>& item) {
         decltype(item->series_itemdb_id) oldid = 0;
@@ -171,18 +250,14 @@ namespace MAL {
         m_item = item;
 
 		auto title_str = Glib::Markup::escape_text(item->series_title);
-		title_str.insert(0, "<big><big><big>").append("</big></big></big><small><small>");
-		std::for_each(std::begin(item->series_synonyms),
-		              std::end(item->series_synonyms),
-		              [&title_str](const std::string& alt){
-			              title_str.append("\n")
-                              .append(Glib::Markup::escape_text(alt));
-		              });
-
-		title_str.append("</small></small>");
+		title_str.insert(0, "<big><big><big>").append("</big></big></big>");
 		m_title->set_markup(title_str);
         m_title->set_ellipsize(Pango::ELLIPSIZE_END);
+
+        add_alt_titles(m_alt_title_grid, item);
+        m_synopsis_label->set_markup(Glib::Markup::escape_text(item->series_synopsis));
 		show_all();
+        if (item->series_synopsis.size() == 0) m_synopsis_frame->hide();
 
         if (oldid == 0 || oldid != m_item->series_itemdb_id) {
             std::thread t(std::bind(&MALItemDetailViewBase::do_fetch_image, this));
@@ -245,7 +320,7 @@ namespace MAL {
 
         auto score = static_cast<int>(item->score);
         m_score->set_score(score);
-        m_score_grid->show_all();
+        m_score->show_all();
     }
 
     bool MALItemDetailViewEditable::update_list_model(const Gtk::TreeRow &row)
@@ -486,7 +561,7 @@ namespace MAL {
         m_refresh_button->set_can_default(true);
         m_refresh_button->set_receives_default(true);
 
-		if (m_detail_view) attach(*m_detail_view, 0, 0, 3, 1);
+		if (m_detail_view) attach(*m_detail_view, 0, 0, 1, 1);
         attach(*m_button_row, 0, 1, 1, 1);
 		m_button_row->attach(*m_refresh_button, 0, 0, 1, 1);
 		attach(*list_view, 0, 2, 1, 1);
