@@ -166,7 +166,10 @@ namespace MAL {
         m_grid (Gtk::manage(new Gtk::Grid())),
         m_alt_title_grid(Gtk::manage(new Gtk::Grid())),
         m_synopsis_frame(Gtk::manage(new Gtk::Frame("Synopsis"))),
-        m_synopsis_label(Gtk::manage(new Gtk::Label()))
+        m_synopsis_label(Gtk::manage(new Gtk::Label())),
+        m_series_date_grid(Gtk::manage(new Gtk::Grid())),
+        m_series_start_date_label(Gtk::manage(new DateLabel(" "))),
+        m_series_end_date_label(Gtk::manage(new DateLabel(" ")))
 	{
 		set_vexpand(false);
         set_column_spacing(5);
@@ -206,7 +209,14 @@ namespace MAL {
         m_synopsis_label->set_line_wrap(true);
         m_synopsis_label->set_valign(Gtk::ALIGN_START);
 		m_signal_image_available.connect(sigc::mem_fun(*this, &MALItemDetailViewBase::on_image_available));
-	}
+        m_grid->attach(*m_series_date_grid, 0, 1, 1, 1);
+        auto label = Gtk::manage(new Gtk::Label("Premi\u00E8re:", Gtk::ALIGN_START));
+        m_series_date_grid->attach(*label, 0, 0, 1, 1);
+        label = Gtk::manage(new Gtk::Label("Finale:", Gtk::ALIGN_START));
+        m_series_date_grid->attach(*label, 0, 1, 1, 1);
+        m_series_date_grid->attach(*m_series_start_date_label, 1, 0, 1, 1);
+        m_series_date_grid->attach(*m_series_end_date_label,   1, 1, 1, 1);
+    }
 
     namespace {
         static Gtk::Label* make_alt_label(const std::string& alt_title) {
@@ -280,6 +290,23 @@ namespace MAL {
             std::thread t(std::bind(&MALItemDetailViewBase::do_fetch_image, this));
             t.detach();
         }
+
+        if (!m_series_start_date_label->set_date(item->series_date_begin)) {
+            m_series_start_date_label->hide();
+            m_series_date_grid->get_child_at(0, 0)->hide();
+        } else {
+            m_series_start_date_label->show();
+            m_series_date_grid->get_child_at(0, 0)->show();
+        }
+
+        if (!m_series_end_date_label->set_date(item->series_date_end) 
+            || item->series_date_end == item->series_date_begin) {
+            m_series_end_date_label->hide();
+            m_series_date_grid->get_child_at(0, 1)->hide();
+        } else {
+            m_series_end_date_label->show();
+            m_series_date_grid->get_child_at(0, 1)->show();
+        }
 	}
 
 	void MALItemDetailViewBase::do_fetch_image() {
@@ -301,7 +328,9 @@ namespace MAL {
         MALItemDetailViewBase(mal),
         m_score(Gtk::manage(new Gtk::Label()))
     {
-        m_grid->attach(*m_score, 0, 0, 1, 1);
+        m_grid->attach_next_to(*m_score, *m_series_date_grid,
+                               Gtk::POS_TOP, 1, 1);
+        m_score->set_alignment(Gtk::ALIGN_START);
     }
 
     void MALItemDetailViewStatic::display_item(const std::shared_ptr<const MALItem>& item)
@@ -327,7 +356,8 @@ namespace MAL {
         auto label = Gtk::manage(new Gtk::Label("Score: "));
         m_score_grid->attach(*label, 0, 0, 1, 1);
         m_score_grid->attach(*m_score, 1, 0, 1, 1);
-        m_grid->attach(*m_score_grid, 0, 0, 1, 1);
+        m_grid->attach_next_to(*m_score_grid, *m_series_date_grid,
+                               Gtk::POS_TOP, 1, 1);
         m_score->signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
     }
 

@@ -31,6 +31,7 @@
 #include <sigc++/slot.h>
 #include "malitem.hpp"
 #include "mal.hpp"
+#include "date_widgets.hpp"
 
 namespace MAL {
 	class ScoreColumns final : public Gtk::TreeModel::ColumnRecord {
@@ -135,6 +136,9 @@ namespace MAL {
         Gtk::Grid                           *m_alt_title_grid;
         Gtk::Frame                          *m_synopsis_frame;
         Gtk::Label                          *m_synopsis_label;
+        Gtk::Grid                           *m_series_date_grid;
+        DateLabel                           *m_series_start_date_label;
+        DateLabel                           *m_series_end_date_label;
     private:
 		Glib::Dispatcher                     m_signal_image_available;
 		Glib::RefPtr<Gio::MemoryInputStream> image_stream;

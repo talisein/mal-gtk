@@ -33,13 +33,13 @@ namespace MAL {
         MALItem(const MALItem&) = default;
     public:
 
-		int_fast64_t          series_itemdb_id;  //N
-		std::string           series_title;      //D
-		std::string           series_date_begin; //
-		std::string           series_date_end;   //
-		std::string           image_url;         //D
-		std::set<std::string> series_synonyms;   //D
-		std::string           series_synopsis;   //D
+		int_fast64_t          series_itemdb_id;   //N
+		std::string           series_title;       //D
+		std::string           series_date_begin;  //D
+		std::string           series_date_end;    //D
+		std::string           image_url;          //D
+		std::set<std::string> series_synonyms;    //D
+		std::string           series_synopsis;    //D
 
 		std::set<std::string> tags;               // We know how to serialize /
 		std::string           date_start;         // deserialize these fields
