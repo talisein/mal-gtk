@@ -16,20 +16,20 @@ namespace MAL {
         MALItem(const MALItem&) = default;
     public:
 
-		int_fast64_t          series_itemdb_id;
-		std::string           series_title;
-		std::string           series_date_begin;
-		std::string           series_date_end;
-		std::string           image_url;
-		std::set<std::string> series_synonyms;
-		std::string           series_synopsis;
+		int_fast64_t          series_itemdb_id;  //N
+		std::string           series_title;      //D
+		std::string           series_date_begin; //
+		std::string           series_date_end;   //
+		std::string           image_url;         //D
+		std::set<std::string> series_synonyms;   //D
+		std::string           series_synopsis;   //D
 
 		std::set<std::string> tags;               // We know how to serialize /
 		std::string           date_start;         // deserialize these fields
 		std::string           date_finish;        //
 		int_fast64_t          id;                 //<-- not serialized
 		std::time_t           last_updated;       //<-- not serialized
-		float                 score;              //
+		float                 score;              //D
 		bool                  enable_reconsuming; //
 
 		std::string           fansub_group;       // We know how to serialize
