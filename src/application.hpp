@@ -16,7 +16,7 @@
  */
 
 #include <gtkmm/application.h>
-#include "main_window.hpp"
+#include "gui/main_window.hpp"
 #include "mal.hpp"
 
 namespace MAL {

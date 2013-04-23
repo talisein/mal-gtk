@@ -16,7 +16,7 @@
  */
 
 #include "mal.hpp"
-#include "password_dialog.hpp"
+#include "gui/password_dialog.hpp"
 #include <curl/curl.h>
 
 namespace {
