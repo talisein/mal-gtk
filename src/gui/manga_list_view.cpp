@@ -161,6 +161,12 @@ namespace MAL {
         m_chapters_entry->set_entry_text(std::to_string(manga->chapters));
         m_volumes_entry->set_entry_text(std::to_string(manga->volumes));
 		m_manga_status_combo->set_active_text(to_string(manga->status));
+
+        if (manga->status == MANGACOMPLETED) {
+            m_date_end_entry->set_sensitive(true);
+        } else {
+            m_date_end_entry->set_sensitive(false);
+        }
     }
 
     bool MangaDetailViewEditable::update_list_model(const Gtk::TreeRow &row)
