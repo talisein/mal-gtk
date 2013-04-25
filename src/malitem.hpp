@@ -42,10 +42,10 @@ namespace MAL {
 		std::string           series_synopsis;    //D
 
 		std::set<std::string> tags;               // We know how to serialize /
-		std::string           date_start;         // deserialize these fields
-		std::string           date_finish;        //
-		int_fast64_t          id;                 //<-- not serialized
-		std::time_t           last_updated;       //<-- not serialized
+		std::string           date_start;         //Ddeserialize these fields
+		std::string           date_finish;        //D
+		int_fast64_t          id;                 //N<-- not serialized
+		std::time_t           last_updated;       //N<-- not serialized
 		float                 score;              //D
 		bool                  enable_reconsuming; //
 
@@ -84,11 +84,10 @@ namespace MAL {
         std::string get_season_began() const;
         Glib::Date get_date_began() const;
         Glib::Date get_date_ended() const;
-
+        Glib::Date get_date(const std::string&) const;
     private:
         std::string get_season(Glib::Date&&) const;
         std::string get_season(const std::string&) const;
-        Glib::Date get_date(const std::string&) const;
 	};
 
 }

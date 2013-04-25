@@ -34,7 +34,7 @@ namespace MAL {
 		case 6:
 			return MUSIC;
 		default:
-			std::cerr << "Error: Unknown Anime Series Type (" << i << ")" << std::endl;
+			//std::cerr << "Error: Unknown Anime Series Type (" << i << ")" << std::endl;
 			return SERIESTYPE_INVALID;
 		}
 	}
@@ -53,7 +53,7 @@ namespace MAL {
 		else if (s.compare(to_string(MUSIC)) == 0)
 			return MUSIC;
 		else {
-			std::cerr << "Error: Unknown Anime Series Type (" << s << ")" << std::endl;
+			//std::cerr << "Error: Unknown Anime Series Type (" << s << ")" << std::endl;
 			return SERIESTYPE_INVALID;
 		}
 	}
@@ -137,7 +137,7 @@ namespace MAL {
 		case MUSIC:
 			return "Music";
 		default:
-			return "Invalid Type";
+			return "Unknown";
 		}
 	}
 
@@ -150,7 +150,7 @@ namespace MAL {
 		case NOTYETAIRED:
 			return "Not Yet Aired";
 		default:
-			return "Invalid Status";
+			return "Unknown";
 		}
 	}
 
@@ -167,7 +167,7 @@ namespace MAL {
 		case PLANTOWATCH:
 			return "Plan To Watch";
 		default:
-			return "Invalid Status";
+			return "Unknown";
 		}
 	}
 

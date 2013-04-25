@@ -71,7 +71,9 @@ namespace MAL {
         m_series_status_label(Gtk::manage(new FancyLabel())),
         m_series_type_label(Gtk::manage(new FancyLabel()))
     {
-        m_grid->attach(*m_status_type_grid, 0, -1, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_TOP);
+        m_grid->attach_next_to(*m_status_type_grid, *m_series_date_grid,
+                               Gtk::POS_TOP, 1, 1);
         auto type_box = Gtk::manage(new Gtk::EventBox());
         type_box->add(*m_series_type_label);
         type_box->set_visible_window(true);
@@ -94,6 +96,7 @@ namespace MAL {
 
         m_series_status_label->set_label(to_string(anime->series_status));
         m_series_type_label->set_label(to_string(anime->series_type));
+
     }
 
     AnimeDetailViewStatic::AnimeDetailViewStatic(const std::shared_ptr<MAL>& mal) :
@@ -103,8 +106,8 @@ namespace MAL {
         m_episodes_grid(Gtk::manage(new Gtk::Grid())),
         m_series_episodes_label(Gtk::manage(new Gtk::Label()))
     {
-        m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_episodes_grid, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*m_episodes_grid, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_episodes_grid->attach(*m_series_episodes_label, 0, 0, 1, 1);
     }
 
@@ -126,10 +129,10 @@ namespace MAL {
         m_episodes_entry(Gtk::manage(new IncrementEntry())),
         m_anime_status_combo(Gtk::manage(new AnimeStatusComboBox()))
     {
-        m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_episodes_entry, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
-        m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_anime_status_combo, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*m_episodes_entry, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*m_anime_status_combo, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_episodes_entry->signal_activate().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
         m_anime_status_combo->signal_changed().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
     }
@@ -142,6 +145,12 @@ namespace MAL {
         m_episodes_entry->set_label("/ " + std::to_string(anime->series_episodes) + " Episodes");
         m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
 		m_anime_status_combo->set_active_text(to_string(anime->status));
+
+        if (anime->status == COMPLETED) {
+            m_date_end_entry->set_sensitive(true);
+        } else {
+            m_date_end_entry->set_sensitive(false);
+        }
     }
 
     bool AnimeDetailViewEditable::update_list_model(const Gtk::TreeRow &row)

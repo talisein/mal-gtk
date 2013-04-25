@@ -94,8 +94,10 @@ namespace MAL {
     {
     public:
         Gtk::TreeModelColumn<int> score;
+        Gtk::TreeModelColumn<Glib::ustring> begin_date;
+        Gtk::TreeModelColumn<Glib::ustring> end_date;
         MALItemModelColumnsEditable() : MALItemModelColumns() {
-            add(score);
+            add(score); add(begin_date); add(end_date);
         }
     };
 
@@ -173,6 +175,10 @@ namespace MAL {
 
         Gtk::Grid     *m_score_grid;
         ScoreComboBox *m_score;
+        Gtk::Label    *m_date_begin_label;
+        DateEntry     *m_date_begin_entry;
+        Gtk::Label    *m_date_end_label;
+        DateEntry     *m_date_end_entry;
     };
 
 	class MALItemListViewBase : public Gtk::Grid {

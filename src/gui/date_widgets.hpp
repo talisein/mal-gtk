@@ -17,6 +17,8 @@
 
 #pragma once
 #include <gtkmm/label.h>
+#include <gtkmm/entry.h>
+#include <glibmm/date.h>
 
 namespace MAL {
 
@@ -30,4 +32,15 @@ namespace MAL {
         Glib::ustring m_prefix;
     };
 
+    class DateEntry final : public Gtk::Entry {
+    public:
+        DateEntry();
+        
+        Glib::Date get_date() const;
+        void set_date(const Glib::Date& date);
+
+    protected:
+        virtual void insert_text_vfunc(Glib::ustring const& text, int &position) override;
+
+    };
 }

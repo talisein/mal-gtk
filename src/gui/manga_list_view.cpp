@@ -70,7 +70,9 @@ namespace MAL {
         m_series_status_label(Gtk::manage(new FancyLabel())),
         m_series_type_label(Gtk::manage(new FancyLabel()))
     {
-        m_grid->attach(*m_status_type_grid, 0, -1, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_TOP);
+        m_grid->attach_next_to(*m_status_type_grid, *m_series_date_grid,
+                               Gtk::POS_TOP, 1, 1);
         m_status_type_sizegroup->add_widget(*m_series_type_label);
         m_status_type_sizegroup->add_widget(*m_series_status_label);
         m_status_type_sizegroup->add_widget(m_maximum_length_label);
@@ -98,11 +100,11 @@ namespace MAL {
         m_series_chapters_label(Gtk::manage(new Gtk::Label())),
         m_series_volumes_label(Gtk::manage(new Gtk::Label()))
     {
-        m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_volumes_grid, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*m_volumes_grid, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_volumes_grid->attach(*m_series_volumes_label, 0, 0, 1, 1);
-        m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_chapters_grid, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*m_chapters_grid, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_chapters_grid->attach(*m_series_chapters_label, 0, 0, 1, 1);
     }
 
@@ -138,12 +140,12 @@ namespace MAL {
         m_volumes_entry(Gtk::manage(new IncrementEntry())),
         m_manga_status_combo(Gtk::manage(new MangaStatusComboBox()))
     {
-        m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_chapters_entry, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
-        m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_volumes_entry, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
-        m_grid->insert_next_to(*m_status_type_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_manga_status_combo, *m_status_type_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*m_chapters_entry, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*m_volumes_entry, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*m_manga_status_combo, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_chapters_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_volumes_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_manga_status_combo->signal_changed().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));

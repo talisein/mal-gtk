@@ -309,10 +309,9 @@ namespace MAL {
             }
         } catch (std::exception e) {
         }
+
         if (Glib::Date::valid_year(year))
             out.set_year(year);
-        else
-            std::cerr << "Warning: " << series_title << " has invalid year '" << in << "'" << std::endl;
         if (Glib::Date::valid_month(month))
             out.set_month(month);
         if (Glib::Date::valid_day(day))

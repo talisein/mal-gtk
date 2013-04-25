@@ -168,8 +168,8 @@ namespace MAL {
         m_synopsis_frame(Gtk::manage(new Gtk::Frame("Synopsis"))),
         m_synopsis_label(Gtk::manage(new Gtk::Label())),
         m_series_date_grid(Gtk::manage(new Gtk::Grid())),
-        m_series_start_date_label(Gtk::manage(new DateLabel(" "))),
-        m_series_end_date_label(Gtk::manage(new DateLabel(" ")))
+        m_series_start_date_label(Gtk::manage(new DateLabel(""))),
+        m_series_end_date_label(Gtk::manage(new DateLabel("")))
 	{
 		set_vexpand(false);
         set_column_spacing(5);
@@ -210,12 +210,12 @@ namespace MAL {
         m_synopsis_label->set_valign(Gtk::ALIGN_START);
 		m_signal_image_available.connect(sigc::mem_fun(*this, &MALItemDetailViewBase::on_image_available));
         m_grid->attach(*m_series_date_grid, 0, 1, 1, 1);
-        auto label = Gtk::manage(new Gtk::Label("Premi\u00E8re:", Gtk::ALIGN_START));
-        m_series_date_grid->attach(*label, 0, 0, 1, 1);
-        label = Gtk::manage(new Gtk::Label("Finale:", Gtk::ALIGN_START));
-        m_series_date_grid->attach(*label, 0, 1, 1, 1);
-        m_series_date_grid->attach(*m_series_start_date_label, 1, 0, 1, 1);
-        m_series_date_grid->attach(*m_series_end_date_label,   1, 1, 1, 1);
+        
+        m_series_date_grid->attach(*m_series_start_date_label, 0, 0, 1, 1);
+        auto label = Gtk::manage(new Gtk::Label("–"));
+        m_series_date_grid->attach(*label, 1, 0, 1, 1);
+        m_series_date_grid->attach(*m_series_end_date_label,   2, 0, 1, 1);
+        m_series_date_grid->set_column_spacing(5);
     }
 
     namespace {
@@ -302,10 +302,8 @@ namespace MAL {
         if (!m_series_end_date_label->set_date(item->series_date_end) 
             || item->series_date_end == item->series_date_begin) {
             m_series_end_date_label->hide();
-            m_series_date_grid->get_child_at(0, 1)->hide();
         } else {
             m_series_end_date_label->show();
-            m_series_date_grid->get_child_at(0, 1)->show();
         }
 	}
 
@@ -329,7 +327,7 @@ namespace MAL {
         m_score(Gtk::manage(new Gtk::Label()))
     {
         m_grid->attach_next_to(*m_score, *m_series_date_grid,
-                               Gtk::POS_TOP, 1, 1);
+                               Gtk::POS_BOTTOM, 1, 1);
         m_score->set_alignment(Gtk::ALIGN_START);
     }
 
@@ -351,14 +349,29 @@ namespace MAL {
         MALItemListViewNotifier(columns, slot),
         m_columns(columns),
         m_score_grid(Gtk::manage(new Gtk::Grid())),
-        m_score(Gtk::manage(new ScoreComboBox()))
+        m_score(Gtk::manage(new ScoreComboBox())),
+        m_date_begin_label(Gtk::manage(new Gtk::Label("Began:", Gtk::ALIGN_START))),
+        m_date_begin_entry(Gtk::manage(new DateEntry())),
+        m_date_end_label(Gtk::manage(new Gtk::Label("Finished:", Gtk::ALIGN_START))),
+        m_date_end_entry(Gtk::manage(new DateEntry()))
     {
         auto label = Gtk::manage(new Gtk::Label("Score: "));
         m_score_grid->attach(*label, 0, 0, 1, 1);
         m_score_grid->attach(*m_score, 1, 0, 1, 1);
         m_grid->attach_next_to(*m_score_grid, *m_series_date_grid,
-                               Gtk::POS_TOP, 1, 1);
+                               Gtk::POS_BOTTOM, 1, 1);
         m_score->signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+        auto grid = Gtk::manage(new Gtk::Grid());
+        grid->attach(*m_date_begin_label, 0, 0, 1, 1);
+        grid->attach(*m_date_begin_entry, 1, 0, 1, 1);
+        grid->attach(*m_date_end_label, 0, 1, 1, 1);
+        grid->attach(*m_date_end_entry, 1, 1, 1, 1);
+        grid->set_column_spacing(5);
+        m_grid->insert_next_to(*m_score_grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*grid, *m_score_grid, Gtk::POS_BOTTOM, 1, 1);
+
+        m_date_begin_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+        m_date_end_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
     }
 
     void MALItemDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
@@ -368,6 +381,20 @@ namespace MAL {
         auto score = static_cast<int>(item->score);
         m_score->set_score(score);
         m_score->show_all();
+
+        auto begin = item->get_date(item->date_start);
+        if (begin.valid()) {
+            m_date_begin_entry->set_date(begin);
+        } else {
+            m_date_begin_entry->set_text("");
+        }
+
+        auto end = item->get_date(item->date_finish);
+        if (end.valid()) {
+            m_date_end_entry->set_date(end);
+        } else {
+            m_date_end_entry->set_text("");
+        }
     }
 
     bool MALItemDetailViewEditable::update_list_model(const Gtk::TreeRow &row)
@@ -375,12 +402,25 @@ namespace MAL {
         if (row.get_value(m_columns->item)->series_itemdb_id != m_item->series_itemdb_id)
             return false;
 
-        int score;
-        score = m_score->get_score();
-
+        auto score = m_score->get_score();
         auto columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_notify_columns);
         if (score != row.get_value(columns->score))
             row.set_value(columns->score, score);
+
+        auto begin = m_date_begin_entry->get_date();
+        if (begin.valid()) {
+            auto str = begin.format_string("%F");
+            if (str != row.get_value(columns->begin_date))
+                row.set_value(columns->begin_date, str);
+        }
+
+        auto end = m_date_end_entry->get_date();
+        if (end.valid()) {
+            auto str = end.format_string("%F");
+            if (str != row.get_value(columns->end_date))
+                row.set_value(columns->end_date, str);
+        }
+
         return true;
     }
     
@@ -523,6 +563,8 @@ namespace MAL {
         MALItemListViewBase::refresh_item_cb(item, row);
         auto columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_columns);
         row.set_value(columns->score, static_cast<int>(item->score));
+        row.set_value(columns->begin_date, Glib::ustring(item->date_start));
+        row.set_value(columns->end_date, Glib::ustring(item->date_finish));
     }
 
     void MALItemListViewEditable::on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter)
@@ -549,6 +591,24 @@ namespace MAL {
             is_changed = true;
             auto new_item = item->clone();
             new_item->score = score;
+            item = new_item;
+            row.set_value(columns->item, item);
+        }
+
+        auto const begin = row.get_value(columns->begin_date);
+        if (begin != item->date_start) {
+            is_changed = true;
+            auto new_item = item->clone();
+            new_item->date_start = begin;
+            item = new_item;
+            row.set_value(columns->item, item);
+        }
+
+        auto const end = row.get_value(columns->end_date);
+        if (end != item->date_finish) {
+            is_changed = true;
+            auto new_item = item->clone();
+            new_item->date_finish = end;
             item = new_item;
             row.set_value(columns->item, item);
         }

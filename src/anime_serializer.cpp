@@ -247,10 +247,18 @@ namespace MAL {
 		//out += std::to_string(anime.reconsume_value);
 		out += "</rewatch_value>";
 		out += "<date_start>";
-		out += anime.date_start;
+        auto start = Glib::Date();
+        start.set_parse(anime.date_start);
+        if (start.valid()) {
+            out += start.format_string("%m%d%Y");
+        }
 		out += "</date_start>";
 		out += "<date_finish>";
-		out += anime.date_finish;
+        auto finish = Glib::Date();
+        finish.set_parse(anime.date_finish);
+        if (finish.valid()) {
+            out += finish.format_string("%m%d%Y");
+        }
 		out += "</date_finish>";
 		out += "<priority>";
 		//out += std::to_string(anime.priority);
