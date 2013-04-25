@@ -47,7 +47,7 @@ namespace MAL {
 		int_fast64_t          id;                 //N<-- not serialized
 		std::time_t           last_updated;       //N<-- not serialized
 		float                 score;              //D
-		bool                  enable_reconsuming; //
+		bool                  enable_reconsuming; //D
 
 		std::string           fansub_group;       // We know how to serialize
 		std::string           comments;           // these fields, but not

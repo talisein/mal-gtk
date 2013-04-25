@@ -353,7 +353,9 @@ namespace MAL {
         m_date_begin_label(Gtk::manage(new Gtk::Label("Began:", Gtk::ALIGN_START))),
         m_date_begin_entry(Gtk::manage(new DateEntry())),
         m_date_end_label(Gtk::manage(new Gtk::Label("Finished:", Gtk::ALIGN_START))),
-        m_date_end_entry(Gtk::manage(new DateEntry()))
+        m_date_end_entry(Gtk::manage(new DateEntry())),
+        m_reconsuming_label(Gtk::manage(new Gtk::Label("Rewatching:", Gtk::ALIGN_START))),
+        m_reconsuming_switch(Gtk::manage(new Gtk::Switch()))
     {
         auto label = Gtk::manage(new Gtk::Label("Score: "));
         m_score_grid->attach(*label, 0, 0, 1, 1);
@@ -372,6 +374,14 @@ namespace MAL {
 
         m_date_begin_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
         m_date_end_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+        
+        auto switchgrid = Gtk::manage(new Gtk::Grid());
+        switchgrid->attach(*m_reconsuming_label, 0, 0, 1, 1);
+        switchgrid->attach(*m_reconsuming_switch, 1, 0, 1, 1);
+        switchgrid->set_column_spacing(5);
+        m_grid->insert_next_to(*grid, Gtk::POS_BOTTOM);
+        m_grid->attach_next_to(*switchgrid, *grid, Gtk::POS_BOTTOM, 1, 1);
+        m_reconsuming_switch->property_active().signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
     }
 
     void MALItemDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
@@ -395,6 +405,8 @@ namespace MAL {
         } else {
             m_date_end_entry->set_text("");
         }
+
+        m_reconsuming_switch->set_active(item->enable_reconsuming);
     }
 
     bool MALItemDetailViewEditable::update_list_model(const Gtk::TreeRow &row)
@@ -420,6 +432,10 @@ namespace MAL {
             if (str != row.get_value(columns->end_date))
                 row.set_value(columns->end_date, str);
         }
+
+        auto reconsuming = m_reconsuming_switch->get_active();
+        if (reconsuming != row.get_value(columns->enable_reconsuming))
+            row.set_value(columns->enable_reconsuming, reconsuming);
 
         return true;
     }
@@ -565,6 +581,7 @@ namespace MAL {
         row.set_value(columns->score, static_cast<int>(item->score));
         row.set_value(columns->begin_date, Glib::ustring(item->date_start));
         row.set_value(columns->end_date, Glib::ustring(item->date_finish));
+        row.set_value(columns->enable_reconsuming, item->enable_reconsuming);
     }
 
     void MALItemListViewEditable::on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter)
@@ -609,6 +626,15 @@ namespace MAL {
             is_changed = true;
             auto new_item = item->clone();
             new_item->date_finish = end;
+            item = new_item;
+            row.set_value(columns->item, item);
+        }
+
+        auto const reconsuming = row.get_value(columns->enable_reconsuming);
+        if (reconsuming != item->enable_reconsuming) {
+            is_changed = true;
+            auto new_item = item->clone();
+            new_item->enable_reconsuming = reconsuming;
             item = new_item;
             row.set_value(columns->item, item);
         }

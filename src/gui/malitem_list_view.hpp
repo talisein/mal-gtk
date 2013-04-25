@@ -22,6 +22,7 @@
 #include <glibmm/property.h>
 #include <gtkmm/bin.h>
 #include <gtkmm/grid.h>
+#include <gtkmm/switch.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/treemodel.h>
@@ -96,8 +97,9 @@ namespace MAL {
         Gtk::TreeModelColumn<int> score;
         Gtk::TreeModelColumn<Glib::ustring> begin_date;
         Gtk::TreeModelColumn<Glib::ustring> end_date;
+        Gtk::TreeModelColumn<bool> enable_reconsuming;
         MALItemModelColumnsEditable() : MALItemModelColumns() {
-            add(score); add(begin_date); add(end_date);
+            add(score); add(begin_date); add(end_date); add(enable_reconsuming);
         }
     };
 
@@ -179,6 +181,8 @@ namespace MAL {
         DateEntry     *m_date_begin_entry;
         Gtk::Label    *m_date_end_label;
         DateEntry     *m_date_end_entry;
+        Gtk::Label    *m_reconsuming_label;
+        Gtk::Switch   *m_reconsuming_switch;
     };
 
 	class MALItemListViewBase : public Gtk::Grid {

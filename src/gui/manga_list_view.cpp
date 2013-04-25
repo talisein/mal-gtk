@@ -149,6 +149,7 @@ namespace MAL {
         m_chapters_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_volumes_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_manga_status_combo->signal_changed().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
+        m_reconsuming_label->set_text("Rereading:");
     }
 
     void MangaDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
