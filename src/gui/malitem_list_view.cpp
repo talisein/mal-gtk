@@ -468,7 +468,6 @@ namespace MAL {
 		season->set_sort_column(m_columns->series_start_date);
 
 		show_all();
-		m_signal_refreshed.connect(sigc::mem_fun(*this, &MALItemListViewBase::refresh_cb));
 		m_treeview->signal_row_activated().connect(sigc::mem_fun(*this, &MALItemListViewBase::on_my_row_activated));
         m_treeview->set_rules_hint(true);
 #if GTK_CHECK_VERSION(3,8,0)
@@ -479,18 +478,9 @@ namespace MAL {
 #endif
 	}
 
-	void MALItemListViewBase::set_item_list(std::list<std::shared_ptr<const MALItem> >&& items) {
-		m_items = std::move(items);
-		m_signal_refreshed();
-	}
-
     void MALItemListViewBase::set_filter_func(const sigc::slot<bool, const std::shared_ptr<const MALItem>&>& slot)
     {
         m_filter_func = slot;
-    }
-
-    void MALItemListViewBase::refilter() {
-        m_signal_refreshed();
     }
 
     void MALItemListViewBase::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) {
@@ -501,42 +491,33 @@ namespace MAL {
         row.set_value(m_columns->item, item);
     }
 
-	// Updates the tree model on the main thread.
-	void MALItemListViewBase::refresh_cb() {
-        m_model_changed_connection.block();
-		m_model->clear();
+    void MALItemListViewBase::clear_items()
+    {
+        m_model->clear();
+    }
 
-		std::vector<std::shared_ptr<const MALItem> > items;
-		items.reserve(m_items.size());
-		std::copy(std::begin(m_items),
-                  std::end(m_items),
-		          std::back_inserter(items));
-			
-		std::sort(std::begin(items),
-		          std::end(items),
-		          [](const std::shared_ptr<const MALItem>& lhs, const std::shared_ptr<const MALItem>& rhs) {
-			          auto season = lhs->series_date_begin.substr(0,7).compare(rhs->series_date_begin.substr(0,7));
-			          if (season == 0)
-				          return lhs->series_title.compare(rhs->series_title) < 0;
-			          else
-				          return season > 0;
-		          });
+    void MALItemListViewBase::block_updates(bool block)
+    {
+        if (block)
+            m_model_changed_connection.block();
+        else
+            m_model_changed_connection.unblock();
+    }
 
-		std::for_each(std::begin(items),
-		              std::end(items),
-		              [&](const std::shared_ptr<const MALItem>& item) {
-                          if (m_filter_func) {
-                              if (m_filter_func(item)) {
-                                  auto iter = m_model->append();
-                                  refresh_item_cb(item, *iter);
-                              }
-                          } else {
-                              auto iter = m_model->append();
-                              refresh_item_cb(item, *iter);
-                          }
-		              });
-        m_model_changed_connection.unblock();
-	}
+    void MALItemListViewBase::append_item(const std::shared_ptr<const MALItem>& item)
+    {
+        //m_model_changed_connection.block();
+        if (m_filter_func) {
+            if (m_filter_func(item)) {
+                auto iter = m_model->append();
+                refresh_item_cb(item, *iter);
+            }
+        } else {
+            auto iter = m_model->append();
+            refresh_item_cb(item, *iter);
+        }
+        //m_model_changed_connection.unblock();
+    }
 
 	void MALItemListViewBase::on_my_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*)
     {
@@ -708,4 +689,5 @@ namespace MAL {
 		std::thread t(std::bind(&MALItemListPage::refresh, this));
 		t.detach();
 	}
+
 }

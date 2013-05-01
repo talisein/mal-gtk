@@ -407,14 +407,20 @@ namespace MAL {
 		auto image = Gtk::manage(new Gtk::Image(icon));
 		m_refresh_button->set_image(*image);
 		m_refresh_button->set_tooltip_text("Search myanimelist.net for anime that maches the entered terms.");
+        mal->signal_anime_search_completed.connect(sigc::mem_fun(*this, &AnimeSearchListPage::on_mal_update));
     }
 
     void AnimeSearchListPage::refresh()
     {
-        auto list = m_mal->search_anime_sync(m_search_entry->get_text());
-        std::list<std::shared_ptr<const MALItem> > item_list;
-        std::move(std::begin(list), std::end(list), std::back_inserter(item_list));
-		m_list_view->set_item_list(std::move(item_list));
+        m_mal->search_anime_sync(m_search_entry->get_text());
+    }
+
+    void AnimeSearchListPage::on_mal_update()
+    {
+        m_list_view->block_updates(true);
+        m_list_view->clear_items();
+        m_mal->for_each_anime_search_result(std::bind(&AnimeListViewStatic::append_item, m_list_view, std::placeholders::_1));
+        m_list_view->block_updates(false);
     }
 
     AnimeFilteredListPage::AnimeFilteredListPage(const std::shared_ptr<MAL>& mal,
@@ -425,7 +431,7 @@ namespace MAL {
         m_detail_view(detail_view),
         m_status_combo(Gtk::manage(new AnimeStatusComboBox()))
     {
-        m_status_combo->signal_changed().connect(sigc::mem_fun(*dynamic_cast<MALItemListViewBase*>(m_list_view), &MALItemListViewBase::refilter));
+        m_status_combo->signal_changed().connect(sigc::mem_fun(this, &AnimeFilteredListPage::on_mal_update));
         auto label = Gtk::manage(new Gtk::Label("Filter: "));
         m_button_row->attach(*m_status_combo, -1, 0, 1, 1);
         m_button_row->attach(*label, -2, 0, 1, 1);
@@ -433,7 +439,7 @@ namespace MAL {
         m_status_combo->set_active_text(to_string(WATCHING));
         m_status_combo->show();
         list_view->set_filter_func(sigc::mem_fun(*this, &AnimeFilteredListPage::m_filter_func));
-
+        mal->signal_anime_added.connect(sigc::mem_fun(*this, &AnimeFilteredListPage::on_mal_update));
         refresh_async();
     }
 
@@ -445,9 +451,14 @@ namespace MAL {
 
     void AnimeFilteredListPage::refresh()
     {
-		auto list = m_mal->get_anime_list_sync();
-        std::list<std::shared_ptr<const MALItem> > item_list;
-        std::move(std::begin(list), std::end(list), std::back_inserter(item_list));
-		m_list_view->set_item_list(std::move(item_list));
+        m_mal->get_anime_list_sync();
+    }
+
+    void AnimeFilteredListPage::on_mal_update()
+    {
+        m_list_view->block_updates(true);
+        m_list_view->clear_items();
+        m_mal->for_each_anime(std::bind(&AnimeListViewEditable::append_item, m_list_view, std::placeholders::_1));
+        m_list_view->block_updates(false);
     }
 }

@@ -126,7 +126,8 @@ namespace MAL {
 			print_curl_error(code);
 		}
 	}
-	
+
+
 	std::list<std::shared_ptr<Anime> > MAL::get_anime_list_sync() {
 		std::list<std::shared_ptr<Anime> > out;
 		if (!user_info->get_username()) {
@@ -148,7 +149,14 @@ namespace MAL {
 
 		text_util->parse_html_entities(*buf);
 		out = serializer.deserialize(*buf);
+        
+        {
+            std::lock_guard<std::mutex> lock(m_anime_list_mutex);
+            m_anime_list.clear();
+            m_anime_list.insert(out.cbegin(), out.cend());
+        }
 
+        signal_anime_added();
 		return out;
 	}
 
@@ -174,6 +182,13 @@ namespace MAL {
 		text_util->parse_html_entities(*buf);
 		out = manga_serializer.deserialize(*buf);
 
+        {
+            std::lock_guard<std::mutex> lock(m_manga_list_mutex);
+            m_manga_list.clear();
+            m_manga_list.insert(out.cbegin(), out.cend());
+        }
+
+        signal_manga_added();
 		return out;
 	}
 
@@ -252,11 +267,17 @@ namespace MAL {
 		}
 
 		text_util->parse_html_entities(*buf);
-        if (buf->size() > 0)
+        if (buf->size() > 0) {
             res = serializer.deserialize(*buf);
+            std::lock_guard<std::mutex> lock(m_anime_search_results_mutex);
+            m_anime_search_results.clear();
+            m_anime_search_results.insert(res.cbegin(), res.cend());
+        }
         else
             std::cerr << "Info: Null response for search terms \"" << terms 
                       << "\"." << std::endl;
+
+        signal_anime_search_completed();
 		
 		return res;
 	}
@@ -296,11 +317,16 @@ namespace MAL {
 		}
 
 		text_util->parse_html_entities(*buf);
-        if (buf->size() > 0)
+        if (buf->size() > 0) {
             res = manga_serializer.deserialize(*buf);
-        else
+            std::lock_guard<std::mutex> lock(m_manga_search_results_mutex);
+            m_manga_search_results.clear();
+            m_manga_search_results.insert(res.cbegin(), res.cend());
+        } else
             std::cerr << "Info: Null response for search terms \"" << terms 
                       << "\"." << std::endl;
+
+        signal_manga_search_completed();
 
 		return res;
 	}
@@ -346,9 +372,14 @@ namespace MAL {
 			}
 		}
 
-		if (buf->compare("Updated") == 0) 
+		if (buf->compare("Updated") == 0) {
+            std::lock_guard<std::mutex> lock(m_anime_list_mutex);
+            auto iter = std::find_if(m_anime_list.begin(), m_anime_list.end(), [&anime](const std::shared_ptr<Anime>& a) {
+                    return a->series_itemdb_id == anime.series_itemdb_id;
+                });
+            **iter = anime;
 			return true;
-		else {
+        } else {
             std::cerr << "myanimelist.net Error: Response: " << *buf << std::endl;
 			return false;
         }
@@ -479,11 +510,12 @@ namespace MAL {
 		}
 
 		code = curl_easy_perform(curl.get());
+        long html_code = 0;
+        curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &html_code);
+
 		if (code != CURLE_OK) {
 			print_curl_error(code);
-			long res = 0;
-			curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
-			if (res == 401) {
+			if (html_code == 401) {
 				signal_run_password_dialog();
 			}
 		}
@@ -509,7 +541,7 @@ namespace MAL {
 	void MAL::involke_lock_function(CURL*, curl_lock_data data, curl_lock_access) {
 		auto iter = map_mutex.find(data);
 		if (iter == map_mutex.end()) {
-			auto res = map_mutex.insert(std::move(std::make_pair(data, std::move(std::unique_ptr<std::mutex>(new std::mutex())))));
+			auto res = map_mutex.insert(std::make_pair(data, std::move(std::unique_ptr<std::mutex>(new std::mutex()))));
 			if (!res.second) {
 				std::cerr << "Error: Trying to lock curl data but we can't create the mutex" << std::endl;
 				return;

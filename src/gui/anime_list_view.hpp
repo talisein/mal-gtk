@@ -223,6 +223,7 @@ namespace MAL {
     protected:
         Gtk::Entry *m_search_entry;
 		virtual void refresh() override;
+        virtual void on_mal_update() override;
 
     };
 
@@ -234,6 +235,7 @@ namespace MAL {
 
     protected:
 		virtual void refresh() override;
+		virtual void on_mal_update() override;
 
     private:
         AnimeListViewEditable* m_list_view;

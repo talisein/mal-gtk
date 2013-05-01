@@ -17,6 +17,7 @@ mal_gtk_SOURCES = main.cpp                                            \
 		  		  anime_serializer.cpp      anime_serializer.hpp      \
 		  		  manga_serializer.cpp      manga_serializer.hpp      \
 		  		  text_util.cpp             text_util.hpp             \
+		  		                            active.hpp                \
 		  		  gui/main_window.cpp       gui/main_window.hpp       \
 		  		  gui/password_dialog.cpp   gui/password_dialog.hpp   \
 		  		  gui/malitem_list_view.cpp gui/malitem_list_view.hpp \

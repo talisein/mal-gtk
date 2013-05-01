@@ -230,7 +230,7 @@ namespace MAL {
     protected:
         Gtk::Entry *m_search_entry;
 		virtual void refresh() override;
-
+        virtual void on_mal_update() override;
     };
 
     class MangaFilteredListPage final : public MALItemListPage {
@@ -241,6 +241,7 @@ namespace MAL {
 
     protected:
 		virtual void refresh() override;
+        virtual void on_mal_update() override;
 
     private:
         MangaListViewEditable* m_list_view;

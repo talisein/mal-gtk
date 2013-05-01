@@ -194,9 +194,11 @@ namespace MAL {
         MALItemListViewBase(const MALItemListViewBase&) = delete;
         virtual ~MALItemListViewBase() = default;
 
-		void set_item_list(std::list<std::shared_ptr<const MALItem>>&& items);
         void set_filter_func(const sigc::slot<bool, const std::shared_ptr<const MALItem>&>& slot);
-        void refilter();
+
+        void clear_items();
+        void block_updates(bool);
+        void append_item(const std::shared_ptr<const MALItem>& item);
 
 		void do_model_foreach(const Gtk::TreeModel::SlotForeachPathAndIter& slot) {m_model->foreach(slot);};
 		void set_row_activated_cb(sigc::slot<void, const std::shared_ptr<const MALItem>&> slot) { m_row_activated_cb = slot;} ;
@@ -223,9 +225,6 @@ namespace MAL {
 		sigc::slot<void, const std::shared_ptr<const MALItem>&> m_row_activated_cb;
 
     private:
-		Glib::Dispatcher                 m_signal_refreshed;
-
-		void                             refresh_cb();
 		void on_my_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
         sigc::slot<bool, const std::shared_ptr<const MALItem>&> m_filter_func;
 	};
@@ -296,6 +295,9 @@ namespace MAL {
 
         /* Refresh the List View. This method is called in a separate thread! */
 		virtual void refresh() = 0;
+
+        /* Callback on main thread when MAL has a new list */
+        virtual void on_mal_update() {};
 	};
 
 

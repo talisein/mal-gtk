@@ -19,6 +19,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <algorithm>
 #include <mutex>
 #include <curl/curl.h>
 #include <glibmm/dispatcher.h>
@@ -28,6 +29,7 @@
 #include "manga_serializer.hpp"
 #include "user_info.hpp"
 #include "text_util.hpp"
+#include "active.hpp"
 
 namespace MAL {
 
@@ -59,6 +61,30 @@ namespace MAL {
 	public:
 		MAL(std::unique_ptr<UserInfo>&& info);
 		~MAL() = default;
+
+        template <class UnaryFunction>
+        UnaryFunction for_each_anime(UnaryFunction&& f) {
+            std::lock_guard<std::mutex> lock(m_anime_list_mutex);
+            return std::for_each(m_anime_list.begin(), m_anime_list.end(), std::forward<UnaryFunction>(f));
+        }
+
+        template <class UnaryFunction>
+        UnaryFunction for_each_manga(UnaryFunction&& f) {
+            std::lock_guard<std::mutex> lock(m_manga_list_mutex);
+            return std::for_each(m_manga_list.begin(), m_manga_list.end(), std::forward<UnaryFunction>(f));
+        }
+
+        template <class UnaryFunction>
+        UnaryFunction for_each_anime_search_result(UnaryFunction&& f) {
+            std::lock_guard<std::mutex> lock(m_anime_search_results_mutex);
+            return std::for_each(m_anime_search_results.begin(), m_anime_search_results.end(), std::forward<UnaryFunction>(f));
+        }
+
+        template <class UnaryFunction>
+        UnaryFunction for_each_manga_search_result(UnaryFunction&& f) {
+            std::lock_guard<std::mutex> lock(m_manga_search_results_mutex);
+            return std::for_each(m_manga_search_results.begin(), m_manga_search_results.end(), std::forward<UnaryFunction>(f));
+        }
 
 		/** Returns the anime list for username. As slow as the
 		 * internet.
@@ -108,6 +134,8 @@ namespace MAL {
 
 		Glib::Dispatcher signal_anime_added;
 		Glib::Dispatcher signal_manga_added;
+        Glib::Dispatcher signal_anime_search_completed;
+        Glib::Dispatcher signal_manga_search_completed;
 
 		std::string get_image_sync(const MALItem& item);
 		std::string get_manga_image_sync(const Manga& manga);
@@ -125,6 +153,7 @@ namespace MAL {
 
 		std::unique_ptr<UserInfo> user_info;
 		Glib::Dispatcher signal_run_password_dialog;
+        Active active;
 		void run_password_dialog();
 
 		void involke_lock_function(CURL*, curl_lock_data, curl_lock_access);
@@ -144,5 +173,27 @@ namespace MAL {
 		
         std::map<std::string, std::unique_ptr<std::string> > image_cache;
         std::map<int_fast64_t, std::unique_ptr<std::string> > manga_image_cache;
+        
+        template <typename T>
+        class MALItemComparator {
+        public:
+            bool operator()(const std::shared_ptr<const T>& l,const std::shared_ptr<const T>& r)
+                {
+                    auto season = l->series_date_begin.substr(0,7).compare(r->series_date_begin.substr(0,7));
+                    if (season == 0)
+                        return l->series_title.compare(r->series_title) < 0;
+                    else
+                        return season > 0;
+                };
+        };
+
+        std::set<std::shared_ptr<Anime>, MALItemComparator<Anime> > m_anime_list;
+        std::mutex                                                  m_anime_list_mutex;
+        std::set<std::shared_ptr<Manga>, MALItemComparator<Manga> > m_manga_list;
+        std::mutex                                                  m_manga_list_mutex;
+        std::set<std::shared_ptr<Anime>, MALItemComparator<Anime> > m_anime_search_results;
+        std::mutex                                                  m_anime_search_results_mutex;
+        std::set<std::shared_ptr<Manga>, MALItemComparator<Manga> > m_manga_search_results;
+        std::mutex                                                  m_manga_search_results_mutex;
 	};
 }
