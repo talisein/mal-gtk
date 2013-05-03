@@ -117,6 +117,14 @@ namespace MAL {
 		if (code != CURLE_OK) {
 			print_curl_error(code);
 		}
+		code = curl_easy_setopt(easy, CURLOPT_NOSIGNAL, 1);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
+		code = curl_easy_setopt(easy, CURLOPT_TIMEOUT, 5);
+		if (code != CURLE_OK) {
+			print_curl_error(code);
+		}
 		code = curl_easy_setopt(easy, CURLOPT_URL, url.c_str());
 		if (code != CURLE_OK) {
 			print_curl_error(code);
@@ -144,6 +152,7 @@ namespace MAL {
 		
 		if (code != CURLE_OK) {
 			print_curl_error(code);
+            signal_mal_error(std::string("Error fetching anime list from myanimelist.net: ") + curl_ebuffer.get());
 			return out;
 		}
 
@@ -176,6 +185,7 @@ namespace MAL {
 		
 		if (code != CURLE_OK) {
 			print_curl_error(code);
+            signal_mal_error(std::string("Error fetching manga list from myanimelist.net: ") + curl_ebuffer.get());
 			return out;
 		}
 
@@ -202,6 +212,7 @@ namespace MAL {
             
             if (code != CURLE_OK) {
                 print_curl_error(code);
+                signal_mal_error("Unable to fetch image for " + item.series_title + ": " + curl_ebuffer.get());
                 return std::string();
             } else {
                 auto inserted = image_cache.insert(std::make_pair(item.image_url, std::move(buf)));
@@ -272,11 +283,11 @@ namespace MAL {
             std::lock_guard<std::mutex> lock(m_anime_search_results_mutex);
             m_anime_search_results.clear();
             m_anime_search_results.insert(res.cbegin(), res.cend());
-        }
-        else
+        } else {
+            signal_mal_error("myanimelist.net returned zero responses for search terms '" + terms + "'");
             std::cerr << "Info: Null response for search terms \"" << terms 
                       << "\"." << std::endl;
-
+        }
         signal_anime_search_completed();
 		
 		return res;
@@ -322,9 +333,11 @@ namespace MAL {
             std::lock_guard<std::mutex> lock(m_manga_search_results_mutex);
             m_manga_search_results.clear();
             m_manga_search_results.insert(res.cbegin(), res.cend());
-        } else
+        } else {
+            signal_mal_error("myanimelist.net returned zero responses for search terms '" + terms + "'");
             std::cerr << "Info: Null response for search terms \"" << terms 
                       << "\"." << std::endl;
+        }
 
         signal_manga_search_completed();
 
@@ -378,9 +391,11 @@ namespace MAL {
                     return a->series_itemdb_id == anime.series_itemdb_id;
                 });
             **iter = anime;
+            signal_mal_info(anime.series_title + " successfully updated");
 			return true;
         } else {
             std::cerr << "myanimelist.net Error: Response: " << *buf << std::endl;
+            signal_mal_error(anime.series_title + " not updated due to myanimelist.net error: " + *buf);
 			return false;
         }
 	}
@@ -426,10 +441,17 @@ namespace MAL {
 			}
 		}
 
-		if (buf->compare("Updated") == 0) 
+		if (buf->compare("Updated") == 0) {
+            std::lock_guard<std::mutex> lock(m_manga_list_mutex);
+            auto iter = std::find_if(m_manga_list.begin(), m_manga_list.end(), [&manga](const std::shared_ptr<Manga>& m) {
+                    return m->series_itemdb_id == manga.series_itemdb_id;
+                });
+            **iter = manga;
+            signal_mal_info(manga.series_title + " successfully updated");
 			return true;
-		else {
+        } else {
             std::cerr << "myanimelist.net Error: Response: " << *buf << std::endl;
+            signal_mal_error(manga.series_title + " not updated due to myanimelist.net error: " + *buf);
 			return false;
         }
 	}
@@ -472,11 +494,12 @@ namespace MAL {
 			}
 		}
 
-		std::cerr << "Response: " << *buf << std::endl;
 		if (code == CURLE_OK) {
 			signal_anime_added();
+            signal_mal_info(anime.series_title + " successfully added");
 			return true;
 		} else {
+            signal_mal_error(anime.series_title + " could not be added due to myanimelist.net error: " + *buf);
 			return false;
 		}
 	}
@@ -520,11 +543,12 @@ namespace MAL {
 			}
 		}
 
-		std::cerr << "Response: " << *buf << std::endl;
 		if (code == CURLE_OK) {
 			signal_manga_added();
+            signal_mal_info(manga.series_title + " successfully added");
 			return true;
 		} else {
+            signal_mal_error(manga.series_title + " could not be added due to myanimelist.net error: " + *buf);
 			return false;
 		}
 	}

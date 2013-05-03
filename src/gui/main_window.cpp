@@ -24,8 +24,22 @@
 namespace MAL {
 
 	MainWindow::MainWindow(const std::shared_ptr<MAL>& mal) :
-		Gtk::ApplicationWindow()
+		Gtk::ApplicationWindow(),
+        m_mal(mal),
+        m_infobar(Gtk::manage(new Gtk::InfoBar())),
+        m_infobar_label(Gtk::manage(new Gtk::Label())),
+        m_statusbar(Gtk::manage(new Gtk::Statusbar()))
 	{
+        auto grid = Gtk::manage(new Gtk::Grid());
+        grid->set_orientation(Gtk::ORIENTATION_VERTICAL);
+        grid->add(*m_infobar);
+        Gtk::Container* infoBarContainer = dynamic_cast<Gtk::Container*>(m_infobar->get_content_area());
+        if (infoBarContainer) {
+            infoBarContainer->add(*m_infobar_label);
+            m_infobar->add_button(Gtk::Stock::OK, 0);
+        }
+        m_infobar->signal_response().connect(sigc::mem_fun(this, &MainWindow::infobar_response_cb));
+
 		auto book = Gtk::manage(new Gtk::Notebook());
 		book->set_show_border(false);
 
@@ -65,10 +79,65 @@ namespace MAL {
         book->append_page(*itempage, "Manga Search");
         }
 
-		book->show();
-		add(*book);
+        grid->add(*book);
+        add(*grid);
+        grid->add(*m_statusbar);
+        grid->show();
+        book->show();
+        m_statusbar->show();
+        m_infobar->hide();
 		resize(1000,800);
+
+        mal->signal_mal_error.connect(sigc::mem_fun(this, &MainWindow::mal_error_cb));
+        mal->signal_mal_info.connect(sigc::mem_fun(this, &MainWindow::mal_info_cb));
 	}
 
+    void MainWindow::mal_error_cb()
+    {
+        Glib::ustring msg;
+        while (!m_mal->signal_mal_error.empty()) {
+            msg.append(m_mal->signal_mal_error.front());
+            m_mal->signal_mal_error.pop();
+            if (!m_mal->signal_mal_error.empty())
+                msg.append("\n");
+            else
+                break;
+        }
+        m_infobar_label->set_text(msg);
+        m_infobar_label->show();
+        m_infobar->set_message_type(Gtk::MESSAGE_ERROR);
+        m_infobar->show();
+    }
 
+    void MainWindow::mal_info_cb()
+    {
+        while (!m_mal->signal_mal_info.empty()) {
+            m_status_messages.push_back(m_mal->signal_mal_info.front());
+            m_mal->signal_mal_info.pop();
+        }
+
+        if (!m_status_timeout.connected() && !m_status_messages.empty()) {
+            m_status_timeout = Glib::signal_timeout().connect_seconds(sigc::mem_fun(this, &MainWindow::status_timeout_cb), 3);
+            m_statusbar->push(m_status_messages.front());
+            m_status_messages.pop_front();
+        }
+    }
+
+    bool MainWindow::status_timeout_cb()
+    {
+        m_statusbar->pop();
+        if (m_status_messages.empty()) {
+            m_status_timeout.disconnect();
+            return G_SOURCE_REMOVE;
+        } else {
+            m_statusbar->push(m_status_messages.front());
+            m_status_messages.pop_front();
+            return G_SOURCE_CONTINUE;
+        }
+    }
+
+    void MainWindow::infobar_response_cb(int)
+    {
+        m_infobar->hide();
+    }
 }

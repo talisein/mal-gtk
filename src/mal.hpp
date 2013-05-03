@@ -30,6 +30,7 @@
 #include "user_info.hpp"
 #include "text_util.hpp"
 #include "active.hpp"
+#include "message_dispatcher.hpp"
 
 namespace MAL {
 
@@ -85,6 +86,9 @@ namespace MAL {
             std::lock_guard<std::mutex> lock(m_manga_search_results_mutex);
             return std::for_each(m_manga_search_results.begin(), m_manga_search_results.end(), std::forward<UnaryFunction>(f));
         }
+
+        MessageDispatcher<Glib::ustring> signal_mal_error;
+        MessageDispatcher<Glib::ustring> signal_mal_info;
 
 		/** Returns the anime list for username. As slow as the
 		 * internet.

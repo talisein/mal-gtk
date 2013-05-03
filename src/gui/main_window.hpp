@@ -19,6 +19,8 @@
 #include <gtkmm/applicationwindow.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/entry.h>
+#include <gtkmm/infobar.h>
+#include <gtkmm/statusbar.h>
 #include "mal.hpp"
 #include "anime_list_view.hpp"
 #include "manga_list_view.hpp"
@@ -29,5 +31,16 @@ namespace MAL {
 		MainWindow(const std::shared_ptr<MAL>&);
 
 	private:
+        std::shared_ptr<MAL>       m_mal;
+        Gtk::InfoBar              *m_infobar;
+        Gtk::Label                *m_infobar_label;
+        Gtk::Statusbar            *m_statusbar;
+        std::deque<Glib::ustring>  m_status_messages;
+        sigc::connection           m_status_timeout;
+
+        void mal_error_cb();
+        void infobar_response_cb(int);
+        void mal_info_cb();
+        bool status_timeout_cb();
 	};
 }
