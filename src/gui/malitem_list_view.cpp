@@ -361,7 +361,7 @@ namespace MAL {
         m_score_grid->attach(*m_score, 1, 0, 1, 1);
         m_grid->attach_next_to(*m_score_grid, *m_series_date_grid,
                                Gtk::POS_BOTTOM, 1, 1);
-        m_score->signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+        m_score_changed_connection = m_score->signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
         auto grid = Gtk::manage(new Gtk::Grid());
         grid->attach(*m_date_begin_label, 0, 0, 1, 1);
         grid->attach(*m_date_begin_entry, 1, 0, 1, 1);
@@ -380,11 +380,13 @@ namespace MAL {
         switchgrid->set_column_spacing(5);
         m_grid->insert_next_to(*grid, Gtk::POS_BOTTOM);
         m_grid->attach_next_to(*switchgrid, *grid, Gtk::POS_BOTTOM, 1, 1);
-        m_reconsuming_switch->property_active().signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+        m_reconsuming_changed_connection = m_reconsuming_switch->property_active().signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
     }
 
     void MALItemDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
     {
+        m_score_changed_connection.block();
+        m_reconsuming_changed_connection.block();
         MALItemDetailViewBase::display_item(item);
 
         auto score = static_cast<int>(item->score);
@@ -406,6 +408,9 @@ namespace MAL {
         }
 
         m_reconsuming_switch->set_active(item->enable_reconsuming);
+
+        m_score_changed_connection.unblock();
+        m_reconsuming_changed_connection.unblock();
     }
 
     bool MALItemDetailViewEditable::update_list_model(const Gtk::TreeRow &row)

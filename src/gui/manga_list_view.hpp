@@ -218,6 +218,9 @@ namespace MAL {
 
         /* Chain up */
         virtual bool update_list_model(const Gtk::TreeRow &row) override;
+
+    private:
+        sigc::connection m_manga_status_changed_connection;
     };
 
     class MangaSearchListPage final : public MALItemListPage {

@@ -147,12 +147,13 @@ namespace MAL {
         m_grid->attach_next_to(*m_manga_status_combo, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_chapters_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_volumes_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
-        m_manga_status_combo->signal_changed().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
+        m_manga_status_changed_connection = m_manga_status_combo->signal_changed().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_reconsuming_label->set_text("Rereading:");
     }
 
     void MangaDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
     {
+        m_manga_status_changed_connection.block();
         MALItemDetailViewEditable::display_item(item);
         MangaDetailViewBase::display_item(item);
         auto manga = std::static_pointer_cast<const Manga>(item);
@@ -167,6 +168,8 @@ namespace MAL {
         } else {
             m_date_end_entry->set_sensitive(false);
         }
+
+        m_manga_status_changed_connection.unblock();
     }
 
     bool MangaDetailViewEditable::update_list_model(const Gtk::TreeRow &row)

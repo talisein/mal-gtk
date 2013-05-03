@@ -183,6 +183,10 @@ namespace MAL {
         DateEntry     *m_date_end_entry;
         Gtk::Label    *m_reconsuming_label;
         Gtk::Switch   *m_reconsuming_switch;
+
+    private:
+        sigc::connection m_score_changed_connection;
+        sigc::connection m_reconsuming_changed_connection;
     };
 
 	class MALItemListViewBase : public Gtk::Grid {

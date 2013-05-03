@@ -133,11 +133,12 @@ namespace MAL {
         m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
         m_grid->attach_next_to(*m_anime_status_combo, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_episodes_entry->signal_activate().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
-        m_anime_status_combo->signal_changed().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
+        m_anime_status_changed_connection = m_anime_status_combo->signal_changed().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
     }
 
     void AnimeDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
     {
+        m_anime_status_changed_connection.block();
         MALItemDetailViewEditable::display_item(item);
         AnimeDetailViewBase::display_item(item);
         auto anime = std::static_pointer_cast<const Anime>(item);
@@ -150,6 +151,8 @@ namespace MAL {
         } else {
             m_date_end_entry->set_sensitive(false);
         }
+
+        m_anime_status_changed_connection.unblock();
     }
 
     bool AnimeDetailViewEditable::update_list_model(const Gtk::TreeRow &row)
