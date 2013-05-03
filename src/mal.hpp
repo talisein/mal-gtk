@@ -90,27 +90,55 @@ namespace MAL {
         MessageDispatcher<Glib::ustring> signal_mal_error;
         MessageDispatcher<Glib::ustring> signal_mal_info;
 
+        void get_anime_list_async();
+        void get_manga_list_async();
+        void search_anime_async(const std::string&);
+        void search_manga_async(const std::string&);
+        void update_anime_async(const Anime&);
+        void update_manga_async(const Manga&);
+        void add_anime_async(const Anime&);
+        void add_manga_async(const Manga&);
+
+		Glib::Dispatcher signal_anime_added;
+		Glib::Dispatcher signal_manga_added;
+        Glib::Dispatcher signal_anime_search_completed;
+        Glib::Dispatcher signal_manga_search_completed;
+
+		std::string get_image_sync(const MALItem& item);
+		std::string get_manga_image_sync(const Manga& manga);
+
+		typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
+
+	private:
+		const std::string LIST_BASE_URL          = "http://myanimelist.net/malappinfo.php?u=";
+		const std::string SEARCH_BASE_URL        = "http://myanimelist.net/api/anime/search.xml?q=";
+		const std::string UPDATED_BASE_URL       = "http://myanimelist.net/api/animelist/update/";
+		const std::string ADD_BASE_URL           = "http://myanimelist.net/api/animelist/add/";
+		const std::string MANGA_SEARCH_BASE_URL  = "http://myanimelist.net/api/manga/search.xml?q=";
+		const std::string MANGA_UPDATED_BASE_URL = "http://myanimelist.net/api/mangalist/update/";
+		const std::string MANGA_ADD_BASE_URL     = "http://myanimelist.net/api/mangalist/add/";
+
 		/** Returns the anime list for username. As slow as the
 		 * internet.
 		 * Safe to call from multiple threads.
 		 */
-		std::list<std::shared_ptr<Anime>> get_anime_list_sync();
+		void get_anime_list_sync();
 
 		/** Returns the manga list for username. As slow as the
 		 * internet.
 		 * Safe to call from multiple threads.
 		 */
-		std::list<std::shared_ptr<Manga> > get_manga_list_sync();
+		void get_manga_list_sync();
 
 		/** Searches MAL.net. Slow as the Internet.
 		 * Safe to call from multiple threads.
 		 */
-		std::list<std::shared_ptr<Anime> > search_anime_sync(const std::string& terms);
+		void search_anime_sync(const std::string& terms);
 
 		/** Searches MAL.net. Slow as the Internet.
 		 * Safe to call from multiple threads.
 		 */
-		std::list<std::shared_ptr<Manga> > search_manga_sync(const std::string& terms);
+		void search_manga_sync(const std::string& terms);
 
 		/** Updates MAL.net with the new anime details. As slow as the
 		 * Internet.
@@ -136,28 +164,8 @@ namespace MAL {
 		 */
 		bool add_manga_sync(const Manga& manga);
 
-		Glib::Dispatcher signal_anime_added;
-		Glib::Dispatcher signal_manga_added;
-        Glib::Dispatcher signal_anime_search_completed;
-        Glib::Dispatcher signal_manga_search_completed;
-
-		std::string get_image_sync(const MALItem& item);
-		std::string get_manga_image_sync(const Manga& manga);
-
-		typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
-
-	private:
-		const std::string LIST_BASE_URL          = "http://myanimelist.net/malappinfo.php?u=";
-		const std::string SEARCH_BASE_URL        = "http://myanimelist.net/api/anime/search.xml?q=";
-		const std::string UPDATED_BASE_URL       = "http://myanimelist.net/api/animelist/update/";
-		const std::string ADD_BASE_URL           = "http://myanimelist.net/api/animelist/add/";
-		const std::string MANGA_SEARCH_BASE_URL  = "http://myanimelist.net/api/manga/search.xml?q=";
-		const std::string MANGA_UPDATED_BASE_URL = "http://myanimelist.net/api/mangalist/update/";
-		const std::string MANGA_ADD_BASE_URL     = "http://myanimelist.net/api/mangalist/add/";
-
 		std::unique_ptr<UserInfo> user_info;
 		Glib::Dispatcher signal_run_password_dialog;
-        Active active;
 		void run_password_dialog();
 
 		void involke_lock_function(CURL*, curl_lock_data, curl_lock_access);
@@ -174,6 +182,7 @@ namespace MAL {
 		std::unique_ptr<pair_lock_functor_t> share_lock_functors;
 		std::map<curl_lock_data, std::unique_ptr<std::mutex>> map_mutex;
 		std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
+        Active active; /* Must be destroyed before curl_share */
 		
         std::map<std::string, std::unique_ptr<std::string> > image_cache;
         std::map<int_fast64_t, std::unique_ptr<std::string> > manga_image_cache;

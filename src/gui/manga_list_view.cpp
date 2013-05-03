@@ -17,7 +17,6 @@
 
 #include "manga_list_view.hpp"
 #include <iostream>
-#include <thread>
 #include <cstring>
 #include <glibmm/markup.h>
 #include <gtkmm/label.h>
@@ -297,8 +296,7 @@ namespace MAL {
                     new_manga->volumes = 0;
                 }
                 if (new_manga->status != MANGASTATUS_INVALID) {
-                    std::thread t(std::bind(&MAL::add_manga_sync, std::ref(m_mal), std::ref(*new_manga)));
-                    t.detach();
+                    m_mal->add_manga_async(*new_manga);
                 }
             }
 		}
@@ -393,25 +391,7 @@ namespace MAL {
     void MangaListViewEditable::send_item_update(const std::shared_ptr<const MALItem>& item)
     {
         auto manga = std::static_pointer_cast<const Manga>(item);
-        std::thread t(std::bind(&MangaListViewEditable::send_manga_update, this, manga));
-        t.detach();
-    }
-
-    void MangaListViewEditable::send_manga_update(const std::shared_ptr<const Manga>& manga)
-    {
-        auto success = m_mal->update_manga_sync(*manga);
-        if (success) {
-            auto iter = std::find_if(std::begin(m_items),
-                                     std::end(m_items),
-                                     [&manga](const std::shared_ptr<const MALItem>& a) {
-                                         return manga->series_itemdb_id == a->series_itemdb_id;
-                                     });
-            if (iter != std::end(m_items)) {
-                // Since we're off the main thread, do a threadsafe iter_swap
-                std::list<std::shared_ptr<const MALItem>> l(1, manga);
-                std::iter_swap(iter, std::begin(l));
-            }
-        }
+        m_mal->update_manga_async(*manga);
     }
 
     void MangaListViewEditable::on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text)
@@ -431,10 +411,7 @@ namespace MAL {
 				iter->set_value(columns->manga, manga);
 
                 if (status != MANGASTATUS_INVALID) {
-                    std::thread t(std::bind(&MangaListViewEditable::send_item_update,
-                                            this,
-                                            manga));
-                    t.detach();
+                    send_item_update(manga);
                 }
             }
 		}
@@ -460,7 +437,7 @@ namespace MAL {
 
     void MangaSearchListPage::refresh()
     {
-        m_mal->search_manga_sync(m_search_entry->get_text());
+        m_mal->search_manga_async(m_search_entry->get_text());
     }
 
     void MangaSearchListPage::on_mal_update()
@@ -489,7 +466,7 @@ namespace MAL {
         list_view->set_filter_func(sigc::mem_fun(*this, &MangaFilteredListPage::m_filter_func));
         mal->signal_manga_added.connect(sigc::mem_fun(*this, &MangaFilteredListPage::on_mal_update));
 
-        refresh_async();
+        refresh();
     }
 
     bool MangaFilteredListPage::m_filter_func(const std::shared_ptr<const MALItem>& item) const
@@ -500,7 +477,7 @@ namespace MAL {
 
     void MangaFilteredListPage::refresh()
     {
-		m_mal->get_manga_list_sync();
+		m_mal->get_manga_list_async();
     }
 
     void MangaFilteredListPage::on_mal_update()

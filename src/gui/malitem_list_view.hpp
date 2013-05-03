@@ -284,7 +284,6 @@ namespace MAL {
 		MALItemListPage(const std::shared_ptr<MAL>   &mal,
                         MALItemListViewBase*   list_view,
                         MALItemDetailViewBase* detail_view);
-		void refresh_async();
 
     protected:
 		std::shared_ptr<MAL>   m_mal;
@@ -293,7 +292,7 @@ namespace MAL {
         Gtk::Grid             *m_button_row;
         Gtk::Button           *m_refresh_button;
 
-        /* Refresh the List View. This method is called in a separate thread! */
+        /* Refresh the List View */
 		virtual void refresh() = 0;
 
         /* Callback on main thread when MAL has a new list */

@@ -135,12 +135,15 @@ namespace MAL {
 		}
 	}
 
+    void MAL::get_anime_list_async()
+    {
+        active.send( [this](){ this->get_anime_list_sync(); } );
+    }
 
-	std::list<std::shared_ptr<Anime> > MAL::get_anime_list_sync() {
-		std::list<std::shared_ptr<Anime> > out;
+	void MAL::get_anime_list_sync() {
 		if (!user_info->get_username()) {
-			std::cerr << "Error: No username provided." << std::endl;
-			return out;
+            signal_mal_error("No username provided");
+			return;
 		}
 
 		const std::string url = LIST_BASE_URL + user_info->get_username().get() + "&status=all&type=anime";
@@ -151,29 +154,31 @@ namespace MAL {
 		CURLcode code = curl_easy_perform(curl.get());
 		
 		if (code != CURLE_OK) {
-			print_curl_error(code);
             signal_mal_error(std::string("Error fetching anime list from myanimelist.net: ") + curl_ebuffer.get());
-			return out;
+			return;
 		}
 
 		text_util->parse_html_entities(*buf);
-		out = serializer.deserialize(*buf);
+		auto anime_list = serializer.deserialize(*buf);
         
         {
             std::lock_guard<std::mutex> lock(m_anime_list_mutex);
             m_anime_list.clear();
-            m_anime_list.insert(out.cbegin(), out.cend());
+            m_anime_list.insert(anime_list.cbegin(), anime_list.cend());
         }
 
         signal_anime_added();
-		return out;
 	}
 
-	std::list<std::shared_ptr<Manga> > MAL::get_manga_list_sync() {
-		std::list<std::shared_ptr<Manga> > out;
+    void MAL::get_manga_list_async()
+    {
+        active.send( [this](){ this->get_manga_list_sync(); } );
+    }
+
+	void MAL::get_manga_list_sync() {
 		if (!user_info->get_username()) {
-			std::cerr << "Error: No username provided." << std::endl;
-			return out;
+            signal_mal_error("No username provided");
+            return;
 		}
 
 		const std::string url = LIST_BASE_URL + user_info->get_username().get() + "&status=all&type=manga";
@@ -184,22 +189,20 @@ namespace MAL {
 		CURLcode code = curl_easy_perform(curl.get());
 		
 		if (code != CURLE_OK) {
-			print_curl_error(code);
             signal_mal_error(std::string("Error fetching manga list from myanimelist.net: ") + curl_ebuffer.get());
-			return out;
+            return;
 		}
 
 		text_util->parse_html_entities(*buf);
-		out = manga_serializer.deserialize(*buf);
+		auto manga_list = manga_serializer.deserialize(*buf);
 
         {
             std::lock_guard<std::mutex> lock(m_manga_list_mutex);
             m_manga_list.clear();
-            m_manga_list.insert(out.cbegin(), out.cend());
+            m_manga_list.insert(manga_list.cbegin(), manga_list.cend());
         }
 
         signal_manga_added();
-		return out;
 	}
 
 	std::string MAL::get_image_sync(const MALItem& item) {
@@ -243,9 +246,11 @@ namespace MAL {
         }
 	}
 
-	std::list<std::shared_ptr<Anime> > MAL::search_anime_sync(const std::string& terms) {
-		std::list<std::shared_ptr<Anime> > res;
-		
+    void MAL::search_anime_async(const std::string& terms) {
+        active.send( [this, terms](){ this->search_anime_sync(terms); } );
+    }
+
+	void MAL::search_anime_sync(const std::string& terms) {
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());
 		std::unique_ptr<char, CURLEscapeDeleter> terms_escaped(curl_easy_escape(curl.get(), terms.c_str(), terms.size()));
@@ -267,35 +272,36 @@ namespace MAL {
 
 		code = curl_easy_perform(curl.get());
 		if (code != CURLE_OK) {
-			print_curl_error(code);
 			long res = 0;
 			code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
 			if (code != CURLE_OK)
-				print_curl_error(code);
+                print_curl_error(code);
 			else if (res == 401) {
 				signal_run_password_dialog();
-			}
+			} else {
+                signal_mal_error(std::string("Error searching myanimelist.net: ") + curl_ebuffer.get());
+            }
+            return;
 		}
 
 		text_util->parse_html_entities(*buf);
         if (buf->size() > 0) {
-            res = serializer.deserialize(*buf);
+            auto search_results = serializer.deserialize(*buf);
             std::lock_guard<std::mutex> lock(m_anime_search_results_mutex);
             m_anime_search_results.clear();
-            m_anime_search_results.insert(res.cbegin(), res.cend());
+            m_anime_search_results.insert(search_results.cbegin(), search_results.cend());
         } else {
             signal_mal_error("myanimelist.net returned zero responses for search terms '" + terms + "'");
-            std::cerr << "Info: Null response for search terms \"" << terms 
-                      << "\"." << std::endl;
         }
+
         signal_anime_search_completed();
-		
-		return res;
 	}
 
-	std::list<std::shared_ptr<Manga> > MAL::search_manga_sync(const std::string& terms) {
-		std::list<std::shared_ptr<Manga> > res;
+    void MAL::search_manga_async(const std::string& terms) {
+        active.send( [this, terms](){ this->search_manga_sync(terms); } );
+    }
 
+	void MAL::search_manga_sync(const std::string& terms) {
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());
 		std::unique_ptr<char, CURLEscapeDeleter> terms_escaped(curl_easy_escape(curl.get(), terms.c_str(), terms.size()));
@@ -317,33 +323,35 @@ namespace MAL {
 
 		code = curl_easy_perform(curl.get());
 		if (code != CURLE_OK) {
-			print_curl_error(code);
 			long res = 0;
 			code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
 			if (code != CURLE_OK)
-				print_curl_error(code);
+                print_curl_error(code);
 			else if (res == 401) {
 				signal_run_password_dialog();
-			}
+			} else {
+                signal_mal_error(std::string("Error searching myanimelist.net: ") + curl_ebuffer.get());
+            }
+            return;
 		}
 
 		text_util->parse_html_entities(*buf);
         if (buf->size() > 0) {
-            res = manga_serializer.deserialize(*buf);
+            auto search_results = manga_serializer.deserialize(*buf);
             std::lock_guard<std::mutex> lock(m_manga_search_results_mutex);
             m_manga_search_results.clear();
-            m_manga_search_results.insert(res.cbegin(), res.cend());
+            m_manga_search_results.insert(search_results.cbegin(), search_results.cend());
         } else {
             signal_mal_error("myanimelist.net returned zero responses for search terms '" + terms + "'");
-            std::cerr << "Info: Null response for search terms \"" << terms 
-                      << "\"." << std::endl;
         }
 
         signal_manga_search_completed();
-
-		return res;
 	}
 
+    void MAL::update_anime_async(const Anime& anime) {
+        active.send( [this, anime](){ this->update_anime_sync(anime); } );
+    }
+    
 	bool MAL::update_anime_sync(const Anime& anime) {
 		const std::string url = UPDATED_BASE_URL + std::to_string(anime.series_itemdb_id) + ".xml";
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
@@ -375,14 +383,16 @@ namespace MAL {
 
 		code = curl_easy_perform(curl.get());
 		if (code != CURLE_OK) {
-			print_curl_error(code);
 			long res = 0;
 			code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
 			if (code != CURLE_OK)
-				print_curl_error(code);
+                print_curl_error(code);
 			else if (res == 401) {
 				signal_run_password_dialog();
-			}
+			} else {
+                signal_mal_error(anime.series_title + " not updated due to myanimelist.net error: " + curl_ebuffer.get());
+            }
+            return false;
 		}
 
 		if (buf->compare("Updated") == 0) {
@@ -390,15 +400,20 @@ namespace MAL {
             auto iter = std::find_if(m_anime_list.begin(), m_anime_list.end(), [&anime](const std::shared_ptr<Anime>& a) {
                     return a->series_itemdb_id == anime.series_itemdb_id;
                 });
-            **iter = anime;
-            signal_mal_info(anime.series_title + " successfully updated");
+            if (iter != m_anime_list.end()) {
+                **iter = anime;
+                signal_mal_info(anime.series_title + " successfully updated");
+            }
 			return true;
         } else {
-            std::cerr << "myanimelist.net Error: Response: " << *buf << std::endl;
             signal_mal_error(anime.series_title + " not updated due to myanimelist.net error: " + *buf);
 			return false;
         }
 	}
+
+    void MAL::update_manga_async(const Manga& manga) {
+        active.send( [this, manga](){ this->update_manga_sync(manga); } );
+    }
 
 	bool MAL::update_manga_sync(const Manga& manga) {
 		const std::string url = MANGA_UPDATED_BASE_URL + std::to_string(manga.series_itemdb_id) + ".xml";
@@ -431,14 +446,16 @@ namespace MAL {
 
 		code = curl_easy_perform(curl.get());
 		if (code != CURLE_OK) {
-			print_curl_error(code);
 			long res = 0;
 			code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
 			if (code != CURLE_OK)
-				print_curl_error(code);
+                print_curl_error(code);
 			else if (res == 401) {
 				signal_run_password_dialog();
-			}
+			} else {
+                signal_mal_error(manga.series_title + " not updated due to myanimelist.net error: " + curl_ebuffer.get());
+            }
+            return false;
 		}
 
 		if (buf->compare("Updated") == 0) {
@@ -446,15 +463,20 @@ namespace MAL {
             auto iter = std::find_if(m_manga_list.begin(), m_manga_list.end(), [&manga](const std::shared_ptr<Manga>& m) {
                     return m->series_itemdb_id == manga.series_itemdb_id;
                 });
-            **iter = manga;
-            signal_mal_info(manga.series_title + " successfully updated");
+            if (iter != m_manga_list.end()) {
+                **iter = manga;
+                signal_mal_info(manga.series_title + " successfully updated");
+            }
 			return true;
         } else {
-            std::cerr << "myanimelist.net Error: Response: " << *buf << std::endl;
             signal_mal_error(manga.series_title + " not updated due to myanimelist.net error: " + *buf);
 			return false;
         }
 	}
+
+    void MAL::add_anime_async(const Anime& anime) {
+        active.send( [this, anime](){ this->add_anime_sync(anime); } );
+    }
 
 	bool MAL::add_anime_sync(const Anime& anime) {
 		const std::string url = ADD_BASE_URL + std::to_string(anime.series_itemdb_id) + ".xml";
@@ -486,12 +508,13 @@ namespace MAL {
 
 		code = curl_easy_perform(curl.get());
 		if (code != CURLE_OK) {
-			print_curl_error(code);
+            signal_mal_error(anime.series_title + " not added due to myanimelist.net error: " + curl_ebuffer.get());
 			long res = 0;
 			curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
 			if (res == 401) {
 				signal_run_password_dialog();
 			}
+            return false;
 		}
 
 		if (code == CURLE_OK) {
@@ -503,6 +526,10 @@ namespace MAL {
 			return false;
 		}
 	}
+
+    void MAL::add_manga_async(const Manga& manga) {
+        active.send( [this, manga](){ this->add_manga_sync(manga); } );
+    }
 
 	bool MAL::add_manga_sync(const Manga& manga) {
 		const std::string url = MANGA_ADD_BASE_URL + std::to_string(manga.series_itemdb_id) + ".xml";
@@ -537,10 +564,11 @@ namespace MAL {
         curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &html_code);
 
 		if (code != CURLE_OK) {
-			print_curl_error(code);
+            signal_mal_error(manga.series_title + " not added due to myanimelist.net error: " + curl_ebuffer.get());
 			if (html_code == 401) {
 				signal_run_password_dialog();
 			}
+            return false;
 		}
 
 		if (code == CURLE_OK) {

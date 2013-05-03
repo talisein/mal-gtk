@@ -18,7 +18,6 @@
 #include "malitem_list_view.hpp"
 #include <array>
 #include <iostream>
-#include <thread>
 #include <cstring>
 #include <functional>
 #include <glibmm/markup.h>
@@ -287,7 +286,7 @@ namespace MAL {
         if (item->series_synopsis.size() == 0) m_synopsis_frame->hide();
 
         if (oldid == 0 || oldid != m_item->series_itemdb_id) {
-            std::thread t(std::bind(&MALItemDetailViewBase::do_fetch_image, this));
+            std::thread t(&MALItemDetailViewBase::do_fetch_image, this);
             t.detach();
         }
 
@@ -670,7 +669,7 @@ namespace MAL {
             list_view->set_row_activated_cb(sigc::mem_fun(*m_detail_view, &MALItemDetailViewBase::display_item));
 
 		auto action = Gtk::Action::create();
-		action->signal_activate().connect(sigc::mem_fun(*this, &MALItemListPage::refresh_async));
+		action->signal_activate().connect(sigc::mem_fun(*this, &MALItemListPage::refresh));
 		m_refresh_button->set_related_action(action);
         m_refresh_button->set_can_default(true);
         m_refresh_button->set_receives_default(true);
@@ -683,11 +682,4 @@ namespace MAL {
 		show_all();
 		if (m_detail_view) m_detail_view->hide();
 	}
-
-	// Asynchronous call to refresh the anime list from MAL
-	void MALItemListPage::refresh_async() {
-		std::thread t(std::bind(&MALItemListPage::refresh, this));
-		t.detach();
-	}
-
 }

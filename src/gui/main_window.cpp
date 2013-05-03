@@ -15,7 +15,6 @@
  *  along with mal-gtk.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <thread>
 #include <gtkmm/notebook.h>
 #include <gtkmm/stock.h>
 #include "main_window.hpp"

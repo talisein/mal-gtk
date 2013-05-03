@@ -17,7 +17,6 @@
 
 #include "anime_list_view.hpp"
 #include <iostream>
-#include <thread>
 #include <cstring>
 #include <glibmm/markup.h>
 #include <gtkmm/label.h>
@@ -262,8 +261,7 @@ namespace MAL {
                 else
                     new_anime->episodes = 0;
                 if (anime->status != ANIMESTATUS_INVALID) {
-                    std::thread t(std::bind(&MAL::add_anime_sync, m_mal, *new_anime));
-                    t.detach();
+                    m_mal->add_anime_async(*new_anime);
                 }
             }
 		}
@@ -345,25 +343,7 @@ namespace MAL {
     void AnimeListViewEditable::send_item_update(const std::shared_ptr<const MALItem>& item)
     {
         auto anime = std::static_pointer_cast<const Anime>(item);
-        std::thread t(&AnimeListViewEditable::send_anime_update, this, anime);
-        t.detach();
-    }
-
-    void AnimeListViewEditable::send_anime_update(const std::shared_ptr<const Anime>& anime)
-    {
-        auto success = m_mal->update_anime_sync(*anime);
-        if (success) {
-            auto iter = std::find_if(std::begin(m_items),
-                                     std::end(m_items),
-                                     [&anime](const std::shared_ptr<const MALItem>& a) {
-                                         return anime->series_itemdb_id == a->series_itemdb_id;
-                                     });
-            if (iter != std::end(m_items)) {
-                // Since we're off the main thread, do a threadsafe iter_swap
-                std::list<std::shared_ptr<const MALItem>> l(1, anime);
-                std::iter_swap(iter, std::begin(l));
-            }
-        }
+        m_mal->update_anime_async(*anime);
     }
 
     void AnimeListViewEditable::on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text)
@@ -383,10 +363,7 @@ namespace MAL {
 				iter->set_value(columns->anime, anime);
 
                 if (status != ANIMESTATUS_INVALID) {
-                    std::thread t(std::bind(&AnimeListViewEditable::send_item_update,
-                                            this,
-                                            anime));
-                    t.detach();
+                    send_item_update(anime);
                 }
             }
 		}
@@ -412,7 +389,7 @@ namespace MAL {
 
     void AnimeSearchListPage::refresh()
     {
-        m_mal->search_anime_sync(m_search_entry->get_text());
+        m_mal->search_anime_async(m_search_entry->get_text());
     }
 
     void AnimeSearchListPage::on_mal_update()
@@ -440,7 +417,7 @@ namespace MAL {
         m_status_combo->show();
         list_view->set_filter_func(sigc::mem_fun(*this, &AnimeFilteredListPage::m_filter_func));
         mal->signal_anime_added.connect(sigc::mem_fun(*this, &AnimeFilteredListPage::on_mal_update));
-        refresh_async();
+        refresh();
     }
 
     bool AnimeFilteredListPage::m_filter_func(const std::shared_ptr<const MALItem>& item) const
@@ -451,7 +428,7 @@ namespace MAL {
 
     void AnimeFilteredListPage::refresh()
     {
-        m_mal->get_anime_list_sync();
+        m_mal->get_anime_list_async();
     }
 
     void AnimeFilteredListPage::on_mal_update()

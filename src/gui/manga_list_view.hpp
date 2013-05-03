@@ -171,7 +171,6 @@ namespace MAL {
 
     private:
         void on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text);
-        void send_manga_update(const std::shared_ptr<const Manga>& manga);
     };
 
     class MangaDetailViewBase: public virtual MALItemDetailViewBase {
