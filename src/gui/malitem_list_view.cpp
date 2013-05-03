@@ -490,22 +490,31 @@ namespace MAL {
         row.set_value(m_columns->item, item);
     }
 
-    void MALItemListViewBase::clear_items()
+    /** Clear the list view and repopulate from the for_each_functor
+     *
+     * Because the MALItems are stored behind a std::mutex, we can not
+     * access them directly. Instead the mutex is taken and
+     * std::for_each(items.begin(), items.end(), ItemFunctor) is
+     * called. Unfortunately, ItemFunctor can not be a public version
+     * of append_item() because the model_changed_connection needs to
+     * be blocked.
+     *
+     * So, sadly, this method is called with a functor to the for_each
+     * functor, and the argument to that functor is a functor that is
+     * fed the MALItem.
+     *
+     * @for_each_functor: functor to a std::for_each-like function
+     */
+    void MALItemListViewBase::refresh_items(std::function<void (std::function<void (const std::shared_ptr<const MALItem>&)>&& )>&& for_each_functor)
     {
         m_model->clear();
-    }
-
-    void MALItemListViewBase::block_updates(bool block)
-    {
-        if (block)
-            m_model_changed_connection.block();
-        else
-            m_model_changed_connection.unblock();
+        m_model_changed_connection.block();
+        for_each_functor(std::bind(&MALItemListViewBase::append_item, this, std::placeholders::_1));
+        m_model_changed_connection.unblock();
     }
 
     void MALItemListViewBase::append_item(const std::shared_ptr<const MALItem>& item)
     {
-        //m_model_changed_connection.block();
         if (m_filter_func) {
             if (m_filter_func(item)) {
                 auto iter = m_model->append();
@@ -515,7 +524,6 @@ namespace MAL {
             auto iter = m_model->append();
             refresh_item_cb(item, *iter);
         }
-        //m_model_changed_connection.unblock();
     }
 
 	void MALItemListViewBase::on_my_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*)

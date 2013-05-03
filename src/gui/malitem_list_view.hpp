@@ -196,9 +196,8 @@ namespace MAL {
 
         void set_filter_func(const sigc::slot<bool, const std::shared_ptr<const MALItem>&>& slot);
 
-        void clear_items();
-        void block_updates(bool);
-        void append_item(const std::shared_ptr<const MALItem>& item);
+
+        void refresh_items(std::function<void (std::function<void (const std::shared_ptr<const MALItem>&)>&& )>&& for_each_functor);
 
 		void do_model_foreach(const Gtk::TreeModel::SlotForeachPathAndIter& slot) {m_model->foreach(slot);};
 		void set_row_activated_cb(sigc::slot<void, const std::shared_ptr<const MALItem>&> slot) { m_row_activated_cb = slot;} ;
@@ -208,7 +207,6 @@ namespace MAL {
 		std::shared_ptr<MAL>                       m_mal;
 		Glib::RefPtr<Gtk::ListStore>               m_model;
 		Gtk::TreeView                              *m_treeview;
-		std::list<std::shared_ptr<const MALItem> > m_items;
         std::shared_ptr<const MALItem>             m_detailed_item;
         Gtk::TreeViewColumn                        *m_title_column;
         Gtk::TreeViewColumn                        *m_season_column;
@@ -227,6 +225,7 @@ namespace MAL {
     private:
 		void on_my_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
         sigc::slot<bool, const std::shared_ptr<const MALItem>&> m_filter_func;
+        void append_item(const std::shared_ptr<const MALItem>& item);
 	};
 
     class MALItemListViewStatic : public virtual MALItemListViewBase {
