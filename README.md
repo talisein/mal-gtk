@@ -39,6 +39,7 @@ Features
 - View Anime and Manga lists
 - Search for anime and manga, add them to lists
 - Modify fundamental elements:
+
         Seen Episode/Chapter/Volume
         Score
         Viewing Status (Watching/Dropped/etc)
@@ -48,6 +49,7 @@ Features
 
 ### Planned
 - Detailed modification
+
         Rewatching episode number
         Fansub Group
         Comments and Tags
