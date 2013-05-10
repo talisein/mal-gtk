@@ -12,10 +12,10 @@ provider such as gnome-keyring-daemon or ksecretservice.
 
 Building
 ========
-        autoreconf --force --install
-        ./configure
-        make
-        sudo make install
+        # autoreconf --force --install
+        # ./configure
+        # make
+        # sudo make install
 
 mal-gtk is the executable name.
 
@@ -29,11 +29,11 @@ Screenshots
 ===========
 Anime List
 ----------
-!(images/animelist.jpg)
+!(https://github.com/talisein/mal-gtk/blob/master/images/animelist.jpg)
 
 Manga Search
 ------------
-!(images/mangasearch.jpg)
+!(https://github.com/talisein/mal-gtk/blob/master/images/mangasearch.jpg)
 
 Features
 ========
@@ -43,23 +43,24 @@ Implemented
 - Search for anime and manga, add them to lists
 - Modify fundamental elements:
   
-  Seen Episode/Chapter/Volume 
-  Score
-  Viewing Status (Watching/Dropped/etc)
-  Began/Finished dates
-  Rewatching flag
+        Seen Episode/Chapter/Volume
+        Score
+        Viewing Status (Watching/Dropped/etc)
+        Began/Finished dates
+        Rewatching flag
 - Modification possible both the List View and the Detail View
 
 Planned
 -------
 - Detailed modification
 
-  Rewatching episode number
-  Fansub Group
-  comments and tags
-  downloaded episode count
-  times rewatched
-  priority
+           Rewatching episode number
+           Fansub Group
+           Comments and Tags
+           Downloaded episode count
+           Times rewatched
+           Priority
+           Storage type & value
 
 - Cache a local copy of the anime list
 - Set a preferred name (Space Brothers instead of Uchuu Kyoudai)
