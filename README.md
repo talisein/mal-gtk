@@ -29,11 +29,11 @@ Screenshots
 ===========
 Anime List
 ----------
-!(https://github.com/talisein/mal-gtk/blob/master/images/animelist.jpg)
+![Anime List](http://github.com/talisein/mal-gtk/blob/master/images/animelist.jpg?raw=true)
 
 Manga Search
 ------------
-!(https://github.com/talisein/mal-gtk/blob/master/images/mangasearch.jpg)
+![Manga Search](http://github.com/talisein/mal-gtk/blob/master/images/mangasearch.jpg?raw=true)
 
 Features
 ========
