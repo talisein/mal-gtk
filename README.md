@@ -57,11 +57,42 @@ Features
         Times rewatched
         Priority
         Storage type & value
-
 - Cache a local copy of the anime list
 - Set a preferred name (Space Brothers instead of Uchuu Kyoudai)
 - Add custom series that aren't in MAL (Akiba Ranger, Game of Thrones)
 - User-guided conflict resolution when local cache is different than MAL
+- Countdown to next airing
+- A .desktop file and icon
 - Use a GtkStack instead of tabs (Gtk+ 3.10)
 - anidb.net backend (Longer term goal)
+- Get a .rpm and .deb in Debian/Fedora
+- Make builds available for Mac/Windows
 
+### Not Planned 
+Most of these are either bad ideas, better implemented in specialized
+client, or too difficult to get right in 100% of situations:
+
+- Updating episode count by monitoring your media player
+- Torrent / Tracker integration (Use [flexget](http://www.flexget.com))
+- Twitter/Facebook/Twipo integration
+- Interface for MAL.net forums/messages
+- Realtime chat with people watching the same episode
+- Sorting/Renaming files on your hard disk
+
+These aren't necessarily absolutes; I may end up providing messages
+from anidb.net & MAL to telepathy or something someday, but don't look
+for these features anytime soon.
+
+Competitors
+-----------
+These are the GUI MAL updaters I know about. There's a ton of CLI only
+clients out there, but that's not the same thing.
+
+- [Taiga](https://code.google.com/p/taiga/) - Mac/Windows Only, but
+  pretty cool.
+- [MALDECK](http://myanimelist.net/clubs.php?cid=33305) - Mac/Windows
+  only. Hipster minimalist interface.
+- [MALU](http://http://www.malupdater.com/) - Windows only bloatware.
+- [wMAL](https://github.com/z411/wmal-python) - Python. Enjoy your
+  [GIL](https://en.wikipedia.org/wiki/Global_Interpreter_Lock). But it
+  also has a cool curses interface.
