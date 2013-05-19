@@ -38,6 +38,7 @@ namespace MAL {
         Glib::ustring get_entry_text() const;
         void set_entry_text(const Glib::ustring& text);
         void set_label(const Glib::ustring& text);
+        void set_sensitive(const bool sensitive);
 
     protected:
         Gtk::Label        *m_label;

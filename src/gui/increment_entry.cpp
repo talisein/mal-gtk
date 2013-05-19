@@ -84,6 +84,12 @@ namespace MAL {
         m_label->set_text(text);
     }
 
+    void IncrementEntry::set_sensitive(const bool sensitive)
+    {
+        m_button->set_sensitive(sensitive);
+        m_entry->set_sensitive(sensitive);
+    }
+
     void IncrementEntry::increment_cb()
     {
         auto const text = m_entry->get_text();
