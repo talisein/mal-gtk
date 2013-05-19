@@ -69,8 +69,8 @@ namespace MAL {
         m_series_status_label(Gtk::manage(new FancyLabel())),
         m_series_type_label(Gtk::manage(new FancyLabel()))
     {
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_TOP);
-        m_grid->attach_next_to(*m_status_type_grid, *m_series_date_grid,
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_TOP);
+        m_grid_left->attach_next_to(*m_status_type_grid, *m_series_date_grid,
                                Gtk::POS_TOP, 1, 1);
         m_status_type_sizegroup->add_widget(*m_series_type_label);
         m_status_type_sizegroup->add_widget(*m_series_status_label);
@@ -79,12 +79,14 @@ namespace MAL {
         m_status_type_grid->attach(*m_series_type_label, 0, 0, 1, 1);
         m_status_type_grid->attach(*m_series_status_label, 1, 0, 1, 1);
         m_status_type_grid->set_column_spacing(10);
+        m_series_status_label->set_vexpand(true);
+        m_series_type_label->set_vexpand(true);
     }
 
-    void MangaDetailViewBase::display_item(const std::shared_ptr<const MALItem>& item)
+    void MangaDetailViewBase::display_item(const std::shared_ptr<MALItem>& item)
     {
         MALItemDetailViewBase::display_item(item);
-        auto manga = std::static_pointer_cast<const Manga>(item);
+        auto manga = std::static_pointer_cast<Manga>(item);
 
         m_series_status_label->set_label(to_string(manga->series_status));
         m_series_type_label->set_label(to_string(manga->series_type));
@@ -99,20 +101,20 @@ namespace MAL {
         m_series_chapters_label(Gtk::manage(new Gtk::Label())),
         m_series_volumes_label(Gtk::manage(new Gtk::Label()))
     {
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_volumes_grid, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*m_volumes_grid, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_volumes_grid->attach(*m_series_volumes_label, 0, 0, 1, 1);
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_chapters_grid, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*m_chapters_grid, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_chapters_grid->attach(*m_series_chapters_label, 0, 0, 1, 1);
     }
 
-    void MangaDetailViewStatic::display_item(const std::shared_ptr<const MALItem>& item)
+    void MangaDetailViewStatic::display_item(const std::shared_ptr<MALItem>& item)
     {
         MALItemDetailViewStatic::display_item(item);
         MangaDetailViewBase::display_item(item);
 
-        auto manga = std::static_pointer_cast<const Manga>(item);
+        auto manga = std::static_pointer_cast<Manga>(item);
 
         if (manga->series_chapters > 0) {
             m_series_chapters_label->set_text(std::to_string(manga->series_chapters) + ((manga->series_chapters>1)?" Chapters":" Chapter"));
@@ -139,24 +141,27 @@ namespace MAL {
         m_volumes_entry(Gtk::manage(new IncrementEntry())),
         m_manga_status_combo(Gtk::manage(new MangaStatusComboBox()))
     {
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_chapters_entry, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_volumes_entry, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_manga_status_combo, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*m_chapters_entry, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*m_volumes_entry, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*m_manga_status_combo, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_chapters_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_volumes_entry->signal_activate().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_manga_status_changed_connection = m_manga_status_combo->signal_changed().connect(sigc::mem_fun(*this, &MangaDetailViewEditable::notify_list_model));
         m_reconsuming_label->set_text("Rereading:");
+        m_fansub_group_label->set_text("Scan Group:");
+        m_downloaded_items_entry->set_label("Downloaded Chapters");
+        m_times_consumed_entry->set_label("Times Read");
     }
 
-    void MangaDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
+    void MangaDetailViewEditable::display_item(const std::shared_ptr<MALItem>& item)
     {
         m_manga_status_changed_connection.block();
         MALItemDetailViewEditable::display_item(item);
         MangaDetailViewBase::display_item(item);
-        auto manga = std::static_pointer_cast<const Manga>(item);
+        auto manga = std::static_pointer_cast<Manga>(item);
         m_chapters_entry->set_label("/ " + std::to_string(manga->series_chapters) + ((manga->series_chapters!=1)?" Chapters":" Chapter"));
         m_volumes_entry->set_label("/ " + std::to_string(manga->series_volumes) + ((manga->series_volumes!=1)?" Volumes":" Volume"));
         m_chapters_entry->set_entry_text(std::to_string(manga->chapters));
@@ -165,8 +170,10 @@ namespace MAL {
 
         if (manga->status == MANGACOMPLETED) {
             m_date_end_entry->set_sensitive(true);
+            m_times_consumed_entry->show();
         } else {
             m_date_end_entry->set_sensitive(false);
+            m_times_consumed_entry->hide();
         }
 
         m_manga_status_changed_connection.unblock();
@@ -184,7 +191,7 @@ namespace MAL {
             if (chapters != row.get_value(columns->chapters))
                 row.set_value(columns->chapters, chapters);
         } catch (std::exception e) {
-            auto manga = std::static_pointer_cast<const Manga>(m_item);
+            auto manga = std::static_pointer_cast<Manga>(m_item);
             m_chapters_entry->set_entry_text(std::to_string(manga->chapters));
         }
 
@@ -193,7 +200,7 @@ namespace MAL {
             if (volumes != row.get_value(columns->volumes))
                 row.set_value(columns->volumes, volumes);
         } catch (std::exception e) {
-            auto manga = std::static_pointer_cast<const Manga>(m_item);
+            auto manga = std::static_pointer_cast<Manga>(m_item);
             m_volumes_entry->set_entry_text(std::to_string(manga->volumes));
         }
 
@@ -227,11 +234,11 @@ namespace MAL {
      * Called when m_items has changed (We have fetched a new manga list from MAL)
      * This method should take data from the item and put it on the row
      */
-    void MangaListViewBase::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    void MangaListViewBase::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         MALItemListViewBase::refresh_item_cb(item, row);
         auto columns = std::dynamic_pointer_cast<MangaModelColumnsBase>(m_columns);
-        auto manga = std::static_pointer_cast<const Manga>(item);
+        auto manga = std::static_pointer_cast<Manga>(item);
 
         row.set_value(columns->series_type, Glib::ustring(to_string(manga->series_type)));
         row.set_value(columns->series_status, Glib::ustring(to_string(manga->series_status)));
@@ -259,13 +266,13 @@ namespace MAL {
      * Called when m_items has changed (We have fetched a new manga list from MAL)
      * This method should take data from the item and put it on the row
      */
-    void MangaListViewStatic::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    void MangaListViewStatic::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         MangaListViewBase::refresh_item_cb(item, row);
         MALItemListViewStatic::refresh_item_cb(item, row);
 
         auto columns = std::dynamic_pointer_cast<MangaModelColumnsStatic>(m_columns);
-        auto manga = std::static_pointer_cast<const Manga>(item);
+        auto manga = std::static_pointer_cast<Manga>(item);
         auto status = manga->status;
         if (status == MANGASTATUS_INVALID || status == 0)
             row.set_value(columns->status, Glib::ustring("Add To My Manga List..."));
@@ -324,19 +331,27 @@ namespace MAL {
         m_volumes_column = m_treeview->get_column(num - 1);
         m_treeview->move_column_after(*m_chapters_column, *m_series_type_column);
         m_treeview->move_column_after(*m_volumes_column, *m_series_chapters_column);
+        m_mal->signal_manga_detailed.connect(sigc::mem_fun(this, &MangaListViewEditable::on_detailed_item));
+    }
+
+    void MangaListViewEditable::get_details_for_item(const std::shared_ptr<MALItem>& item)
+    {
+        auto manga = std::static_pointer_cast<Manga>(item);
+        if (!manga->has_details)
+            m_mal->get_manga_details_async(manga);
     }
 
     /* Chain up!
      * Called when m_items has changed (We have fetched a new manga list from MAL)
      * This method should take data from the item and put it on the row
      */
-    void MangaListViewEditable::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    void MangaListViewEditable::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         MangaListViewBase::refresh_item_cb(item, row);
         MALItemListViewEditable::refresh_item_cb(item, row);
 
         auto columns = std::dynamic_pointer_cast<MangaModelColumnsEditable>(m_columns);
-        auto manga = std::static_pointer_cast<const Manga>(item);
+        auto manga = std::static_pointer_cast<Manga>(item);
 
         row.set_value(columns->status, Glib::ustring(to_string(manga->status)));
         row.set_value(columns->chapters, static_cast<int>(manga->chapters));
@@ -350,14 +365,16 @@ namespace MAL {
      * well. 
      * Return true when the item value is different from the model value.
      */
-    bool MangaListViewEditable::model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    bool MangaListViewEditable::model_changed_cb(std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         bool is_changed = false;
         auto mal_changed = MALItemListViewEditable::model_changed_cb(item, row);
         
         auto const columns = std::dynamic_pointer_cast<MangaModelColumnsEditable>(m_columns);
-        auto manga = std::static_pointer_cast<const Manga>(item);
+        auto manga = std::static_pointer_cast<Manga>(item);
         auto new_manga = std::static_pointer_cast<Manga>(manga->clone());
+        if (mal_changed)
+            row.set_value(columns->manga, manga);
 
         auto const chapters = row.get_value(columns->chapters);
         if (chapters != manga->chapters) {
@@ -391,10 +408,10 @@ namespace MAL {
 
     /* Called on main thread. Item should be transmitted back to MAL.net.
      */
-    void MangaListViewEditable::send_item_update(const std::shared_ptr<const MALItem>& item)
+    void MangaListViewEditable::send_item_update(const std::shared_ptr<MALItem>& item)
     {
-        auto manga = std::static_pointer_cast<const Manga>(item);
-        m_mal->update_manga_async(*manga);
+        auto manga = std::static_pointer_cast<Manga>(item);
+        m_mal->update_manga_async(manga);
     }
 
     void MangaListViewEditable::on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text)
@@ -414,7 +431,7 @@ namespace MAL {
 				iter->set_value(columns->manga, manga);
 
                 if (status != MANGASTATUS_INVALID) {
-                    send_item_update(manga);
+                    send_item_update(new_manga);
                 }
             }
 		}
@@ -449,8 +466,8 @@ namespace MAL {
          * we can't use std::mem_fn. Instead we need to use a lambda
          * so that there is a definite type.
          */
-        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<const MALItem>&)>&& f)->void {
-                m_mal->for_each_manga_search_result(std::forward<std::function<void (const std::shared_ptr<const MALItem>&)>>(f));
+        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<MALItem>&)>&& f)->void {
+                m_mal->for_each_manga_search_result(std::forward<std::function<void (const std::shared_ptr<MALItem>&)>>(f));
             }
             );
     }
@@ -472,13 +489,11 @@ namespace MAL {
         m_status_combo->show();
         list_view->set_filter_func(sigc::mem_fun(*this, &MangaFilteredListPage::m_filter_func));
         mal->signal_manga_added.connect(sigc::mem_fun(*this, &MangaFilteredListPage::on_mal_update));
-
-        refresh();
     }
 
-    bool MangaFilteredListPage::m_filter_func(const std::shared_ptr<const MALItem>& item) const
+    bool MangaFilteredListPage::m_filter_func(const std::shared_ptr<MALItem>& item) const
     {
-        auto manga = std::static_pointer_cast<const Manga>(item);
+        auto manga = std::static_pointer_cast<Manga>(item);
         return manga->status == m_status_combo->get_manga_status();
     }
 
@@ -493,8 +508,8 @@ namespace MAL {
          * we can't use std::mem_fn. Instead we need to use a lambda
          * so that there is a definite type.
          */
-        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<const MALItem>&)>&& f)->void {
-                m_mal->for_each_manga(std::forward<std::function<void (const std::shared_ptr<const MALItem>&)>>(f));
+        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<MALItem>&)>&& f)->void {
+                m_mal->for_each_manga(std::forward<std::function<void (const std::shared_ptr<MALItem>&)>>(f));
             }
             );
     }

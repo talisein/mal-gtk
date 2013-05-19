@@ -61,7 +61,7 @@ namespace MAL {
 		typedef std::function<void (CURL*, curl_lock_data)> unlock_functor_t;
 	public:
 		MAL(std::unique_ptr<UserInfo>&& info);
-		~MAL() = default;
+		~MAL();
 
         template <class UnaryFunction>
         UnaryFunction for_each_anime(UnaryFunction&& f) {
@@ -92,10 +92,12 @@ namespace MAL {
 
         void get_anime_list_async();
         void get_manga_list_async();
+        void get_anime_details_async(const std::shared_ptr<const Anime>& anime);
+        void get_manga_details_async(const std::shared_ptr<const Manga>& manga);
         void search_anime_async(const std::string&);
         void search_manga_async(const std::string&);
-        void update_anime_async(const Anime&);
-        void update_manga_async(const Manga&);
+        void update_anime_async(const std::shared_ptr<Anime>&);
+        void update_manga_async(const std::shared_ptr<Manga>&);
         void add_anime_async(const Anime&);
         void add_manga_async(const Manga&);
 
@@ -103,17 +105,22 @@ namespace MAL {
 		Glib::Dispatcher signal_manga_added;
         Glib::Dispatcher signal_anime_search_completed;
         Glib::Dispatcher signal_manga_search_completed;
+        Glib::Dispatcher signal_anime_detailed;
+        Glib::Dispatcher signal_manga_detailed;
 
 		std::string get_image_sync(const MALItem& item);
 		std::string get_manga_image_sync(const Manga& manga);
 
 		typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
+        void serialize_to_disk_async();
 
 	private:
 		const std::string LIST_BASE_URL          = "http://myanimelist.net/malappinfo.php?u=";
+		const std::string DETAILS_BASE_URL       = "http://myanimelist.net/editlist.php?type=anime&id=";
 		const std::string SEARCH_BASE_URL        = "http://myanimelist.net/api/anime/search.xml?q=";
 		const std::string UPDATED_BASE_URL       = "http://myanimelist.net/api/animelist/update/";
 		const std::string ADD_BASE_URL           = "http://myanimelist.net/api/animelist/add/";
+		const std::string MANGA_DETAILS_BASE_URL = "http://myanimelist.net/panel.php?go=editmanga&id=";
 		const std::string MANGA_SEARCH_BASE_URL  = "http://myanimelist.net/api/manga/search.xml?q=";
 		const std::string MANGA_UPDATED_BASE_URL = "http://myanimelist.net/api/mangalist/update/";
 		const std::string MANGA_ADD_BASE_URL     = "http://myanimelist.net/api/mangalist/add/";
@@ -130,6 +137,10 @@ namespace MAL {
 		 */
 		void get_manga_list_sync();
 
+        std::unique_ptr<std::string> get_sync(const std::string& url);
+        void get_anime_details_sync(const std::shared_ptr<const Anime>& anime);
+        void get_manga_details_sync(const std::shared_ptr<const Manga>& manga);
+
 		/** Searches MAL.net. Slow as the Internet.
 		 * Safe to call from multiple threads.
 		 */
@@ -144,13 +155,13 @@ namespace MAL {
 		 * Internet.
 		 * Safe to call from multiple threads.
 		 */
-		bool update_anime_sync(const Anime& anime);
+		bool update_anime_sync(const std::shared_ptr<Anime>& anime);
 
 		/** Updates MAL.net with the new manga details. As slow as the
 		 * Internet.
 		 * Safe to call from multiple threads.
 		 */
-		bool update_manga_sync(const Manga& manga);
+		bool update_manga_sync(const std::shared_ptr<Manga>& manga);
 
 		/** Adds an anime to the MAL.net anime list. As slow as the
 		 * Internet.
@@ -171,22 +182,12 @@ namespace MAL {
 		void involke_lock_function(CURL*, curl_lock_data, curl_lock_access);
 		void involke_unlock_function(CURL*, curl_lock_data);
 
-		void print_curl_error(CURLcode code);
-		void print_curl_share_error(CURLSHcode code);
 		void setup_curl_easy(CURL* easy, const std::string& url, std::string*);
 
-        std::shared_ptr<TextUtility> text_util;
-		AnimeSerializer serializer;
-		MangaSerializer manga_serializer;
-		std::unique_ptr<char[]> curl_ebuffer;
-		std::unique_ptr<pair_lock_functor_t> share_lock_functors;
-		std::map<curl_lock_data, std::unique_ptr<std::mutex>> map_mutex;
-		std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
-        Active active; /* Must be destroyed before curl_share */
-		
-        std::map<std::string, std::unique_ptr<std::string> > image_cache;
-        std::map<int_fast64_t, std::unique_ptr<std::string> > manga_image_cache;
-        
+        void serialize_to_disk_sync();
+        void deserialize_from_disk_async();
+        void deserialize_from_disk_sync();
+
         template <typename T>
         class MALItemComparator {
         public:
@@ -208,5 +209,20 @@ namespace MAL {
         std::mutex                                                  m_anime_search_results_mutex;
         std::set<std::shared_ptr<Manga>, MALItemComparator<Manga> > m_manga_search_results;
         std::mutex                                                  m_manga_search_results_mutex;
+
+        std::shared_ptr<TextUtility> text_util;
+		AnimeSerializer serializer;
+		MangaSerializer manga_serializer;
+		std::unique_ptr<char[]> curl_ebuffer;
+		std::unique_ptr<pair_lock_functor_t> share_lock_functors;
+		std::map<curl_lock_data, std::unique_ptr<std::mutex>> map_mutex;
+		
+        std::map<std::string, std::unique_ptr<std::string> > image_cache;
+        std::map<int_fast64_t, std::unique_ptr<std::string> > manga_image_cache;
+
+		std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
+        Active active; /* Must be destroyed before curl_share */
+        
+
 	};
 }

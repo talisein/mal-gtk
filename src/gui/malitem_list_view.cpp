@@ -159,27 +159,37 @@ namespace MAL {
     }
 
 	MALItemDetailViewBase::MALItemDetailViewBase(const std::shared_ptr<MAL>& mal) :
-		m_mal  (mal),
-		m_image(Gtk::manage(new Gtk::Image())),
-		m_title(Gtk::manage(new Gtk::Label())),
-        m_grid (Gtk::manage(new Gtk::Grid())),
-        m_alt_title_grid(Gtk::manage(new Gtk::Grid())),
-        m_synopsis_frame(Gtk::manage(new Gtk::Frame("Synopsis"))),
-        m_synopsis_label(Gtk::manage(new Gtk::Label())),
-        m_series_date_grid(Gtk::manage(new Gtk::Grid())),
-        m_series_start_date_label(Gtk::manage(new DateLabel(""))),
-        m_series_end_date_label(Gtk::manage(new DateLabel("")))
+		m_mal                     (mal),
+		m_image                   (Gtk::manage(new Gtk::Image())),
+		m_title                   (Gtk::manage(new Gtk::Label())),
+        m_grid                    (Gtk::manage(new Gtk::Grid())),
+        m_grid_left               (Gtk::manage(new Gtk::Grid())),
+        m_grid_center             (Gtk::manage(new Gtk::Grid())),
+        m_grid_right              (Gtk::manage(new Gtk::Grid())),
+        m_alt_title_grid          (Gtk::manage(new Gtk::Grid())),
+        m_synopsis_frame          (Gtk::manage(new Gtk::Frame("Synopsis"))),
+        m_synopsis_label          (Gtk::manage(new Gtk::Label())),
+        m_series_date_grid        (Gtk::manage(new Gtk::Grid())),
+        m_series_start_date_label (Gtk::manage(new DateLabel(""))),
+        m_series_end_date_label   (Gtk::manage(new DateLabel(""))),
+        m_series_date_sizegroup   (Gtk::SizeGroup::create(Gtk::SIZE_GROUP_BOTH))
 	{
 		set_vexpand(false);
         set_column_spacing(5);
         m_grid->set_row_spacing(5);
+        m_grid->set_column_spacing(5);
+        m_grid_left->set_row_spacing(5);
+        m_grid_center->set_row_spacing(5);
+        m_grid_right->set_row_spacing(5);
 		//                       left, top, width, height
 		attach(*m_image,            0,   0,     1,      4);
-		attach(*m_title,            1,   0,     2,      1);
-		attach(*m_alt_title_grid,   1,   1,     2,      1);
+		attach(*m_title,            1,   0,     1,      1);
+		attach(*m_alt_title_grid,   1,   1,     1,      1);
         attach(*m_grid,             1,   2,     1,      1);
-        attach(*m_synopsis_frame,   2,   2,     1,      1);
-        
+        m_grid->attach(*m_grid_left,   0, 0, 1, 1);
+        m_grid->attach(*m_grid_center, 1, 0, 1, 1);
+        m_grid->attach(*m_grid_right,  2, 0, 1, 1);
+        m_grid_right->attach(*m_synopsis_frame, 0, 0, 1, 3);
         m_title->set_alignment(Gtk::ALIGN_CENTER);
         m_title->set_hexpand(true);
         m_title->set_vexpand(false);
@@ -191,6 +201,9 @@ namespace MAL {
         m_alt_title_grid->set_column_homogeneous(true);
         //m_alt_title_grid->set_alignment(Gtk::ALIGN_CENTER);
         m_grid->set_vexpand(true);
+        m_grid_left->set_vexpand(true);
+        m_grid_center->set_vexpand(true);
+        m_grid_right->set_vexpand(true);
         //m_alt_title_grid->set_hfill(true);
         auto sw = Gtk::manage(new Gtk::ScrolledWindow());
         sw->add(*m_synopsis_label);
@@ -200,6 +213,7 @@ namespace MAL {
         m_synopsis_frame->set_margin_left(10);
         m_synopsis_frame->set_margin_right(10);
         m_synopsis_frame->set_margin_bottom(10);
+        m_synopsis_frame->set_vexpand(true);
         m_synopsis_label->set_justify(Gtk::JUSTIFY_FILL);
         m_synopsis_label->set_line_wrap(true);
         m_synopsis_label->set_line_wrap_mode(Pango::WRAP_WORD_CHAR);
@@ -208,13 +222,21 @@ namespace MAL {
         m_synopsis_label->set_line_wrap(true);
         m_synopsis_label->set_valign(Gtk::ALIGN_START);
 		m_signal_image_available.connect(sigc::mem_fun(*this, &MALItemDetailViewBase::on_image_available));
-        m_grid->attach(*m_series_date_grid, 0, 1, 1, 1);
+        m_grid_left->attach(*m_series_date_grid, 0, 1, 1, 1);
         
         m_series_date_grid->attach(*m_series_start_date_label, 0, 0, 1, 1);
         auto label = Gtk::manage(new Gtk::Label("–"));
         m_series_date_grid->attach(*label, 1, 0, 1, 1);
         m_series_date_grid->attach(*m_series_end_date_label,   2, 0, 1, 1);
         m_series_date_grid->set_column_spacing(5);
+        m_series_date_grid->set_vexpand(true);
+        m_series_start_date_label->set_vexpand(true);
+        m_series_end_date_label->set_vexpand(true);
+        label->set_vexpand(true);
+        m_series_date_grid->set_halign(Gtk::ALIGN_CENTER);
+        m_series_date_sizegroup->add_widget(*m_series_start_date_label);
+        m_series_date_sizegroup->add_widget(*m_series_end_date_label);
+        m_series_date_sizegroup->set_ignore_hidden(false);
     }
 
     namespace {
@@ -229,7 +251,7 @@ namespace MAL {
             return label;
         }
 
-        static void add_alt_titles(Gtk::Grid *grid, const std::shared_ptr<const MALItem>& item) {
+        static void add_alt_titles(Gtk::Grid *grid, const std::shared_ptr<MALItem>& item) {
             grid->foreach(sigc::mem_fun(grid, &Gtk::Grid::remove));
 
             const int rows = item->series_synonyms.size() / 3 + 1;
@@ -269,7 +291,7 @@ namespace MAL {
         }
     }
 
-	void MALItemDetailViewBase::display_item(const std::shared_ptr<const MALItem>& item) {
+	void MALItemDetailViewBase::display_item(const std::shared_ptr<MALItem>& item) {
         decltype(item->series_itemdb_id) oldid = 0;
         if (m_item)
             oldid = m_item->series_itemdb_id;
@@ -292,15 +314,16 @@ namespace MAL {
 
         if (!m_series_start_date_label->set_date(item->series_date_begin)) {
             m_series_start_date_label->hide();
-            m_series_date_grid->get_child_at(0, 0)->hide();
+            m_series_date_grid->get_child_at(1, 0)->hide();
         } else {
             m_series_start_date_label->show();
-            m_series_date_grid->get_child_at(0, 0)->show();
+            m_series_date_grid->get_child_at(1, 0)->show();
         }
 
         if (!m_series_end_date_label->set_date(item->series_date_end) 
             || item->series_date_end == item->series_date_begin) {
             m_series_end_date_label->hide();
+            m_series_date_grid->get_child_at(1, 0)->hide();
         } else {
             m_series_end_date_label->show();
         }
@@ -325,12 +348,12 @@ namespace MAL {
         MALItemDetailViewBase(mal),
         m_score(Gtk::manage(new Gtk::Label()))
     {
-        m_grid->attach_next_to(*m_score, *m_series_date_grid,
+        m_grid_left->attach_next_to(*m_score, *m_series_date_grid,
                                Gtk::POS_BOTTOM, 1, 1);
         m_score->set_alignment(Gtk::ALIGN_START);
     }
 
-    void MALItemDetailViewStatic::display_item(const std::shared_ptr<const MALItem>& item)
+    void MALItemDetailViewStatic::display_item(const std::shared_ptr<MALItem>& item)
     {
         MALItemDetailViewBase::display_item(item);
         std::stringstream ss;
@@ -354,13 +377,17 @@ namespace MAL {
         m_date_end_label(Gtk::manage(new Gtk::Label("Finished:", Gtk::ALIGN_START))),
         m_date_end_entry(Gtk::manage(new DateEntry())),
         m_reconsuming_label(Gtk::manage(new Gtk::Label("Rewatching:", Gtk::ALIGN_START))),
-        m_reconsuming_switch(Gtk::manage(new Gtk::Switch()))
+        m_reconsuming_switch(Gtk::manage(new Gtk::Switch())),
+        m_downloaded_items_entry(Gtk::manage(new IncrementEntry("Downloaded Episodes"))),
+        m_times_consumed_entry(Gtk::manage(new IncrementEntry("Times Watched"))),
+        m_fansub_group_label(Gtk::manage(new Gtk::Label("Fansub Group:"))),
+        m_fansub_group_entry(Gtk::manage(new Gtk::Entry()))
     {
         auto label = Gtk::manage(new Gtk::Label("Score: "));
         m_score_grid->attach(*label, 0, 0, 1, 1);
         m_score_grid->attach(*m_score, 1, 0, 1, 1);
-        m_grid->attach_next_to(*m_score_grid, *m_series_date_grid,
-                               Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->attach_next_to(*m_score_grid, *m_series_date_grid,
+                                    Gtk::POS_BOTTOM, 1, 1);
         m_score_changed_connection = m_score->signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
         auto grid = Gtk::manage(new Gtk::Grid());
         grid->attach(*m_date_begin_label, 0, 0, 1, 1);
@@ -368,8 +395,9 @@ namespace MAL {
         grid->attach(*m_date_end_label, 0, 1, 1, 1);
         grid->attach(*m_date_end_entry, 1, 1, 1, 1);
         grid->set_column_spacing(5);
-        m_grid->insert_next_to(*m_score_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*grid, *m_score_grid, Gtk::POS_BOTTOM, 1, 1);
+        grid->set_row_spacing(5);
+        m_grid_left->insert_next_to(*m_score_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*grid, *m_score_grid, Gtk::POS_BOTTOM, 1, 2);
 
         m_date_begin_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
         m_date_end_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
@@ -378,36 +406,72 @@ namespace MAL {
         switchgrid->attach(*m_reconsuming_label, 0, 0, 1, 1);
         switchgrid->attach(*m_reconsuming_switch, 1, 0, 1, 1);
         switchgrid->set_column_spacing(5);
-        m_grid->insert_next_to(*grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*switchgrid, *grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*switchgrid, *grid, Gtk::POS_BOTTOM, 1, 1);
         m_reconsuming_changed_connection = m_reconsuming_switch->property_active().signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+
+        auto fansubgrid = Gtk::manage(new Gtk::Grid());
+        m_downloaded_items_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+        m_times_consumed_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+        m_grid_center->attach(*m_downloaded_items_entry, 0, 0, 1, 1);
+        m_grid_center->attach(*m_times_consumed_entry, 0, 1, 1, 1);
+        m_grid_center->attach(*fansubgrid, 0, 2, 1, 1);
+        fansubgrid->set_column_spacing(5);
+        fansubgrid->set_orientation(Gtk::ORIENTATION_HORIZONTAL);
+        fansubgrid->add(*m_fansub_group_label);
+        fansubgrid->add(*m_fansub_group_entry);
+        fansubgrid->set_column_spacing(5);
+        m_fansub_group_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+        m_grid_left->set_row_homogeneous(true);
+        //m_grid_center->set_row_homogeneous(true);
     }
 
-    void MALItemDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
+    void MALItemDetailViewEditable::display_item(const std::shared_ptr<MALItem>& item)
     {
         m_score_changed_connection.block();
         m_reconsuming_changed_connection.block();
+        auto const olditem = m_item;
         MALItemDetailViewBase::display_item(item);
+        
+        if (!olditem || item->series_itemdb_id != olditem->series_itemdb_id) {
+            auto score = static_cast<int>(item->score);
+            m_score->set_score(score);
+            m_score->show_all();
 
-        auto score = static_cast<int>(item->score);
-        m_score->set_score(score);
-        m_score->show_all();
+            auto begin = item->get_date(item->date_start);
+            if (begin.valid()) {
+                m_date_begin_entry->set_date(begin);
+            } else {
+                m_date_begin_entry->set_text("");
+            }
 
-        auto begin = item->get_date(item->date_start);
-        if (begin.valid()) {
-            m_date_begin_entry->set_date(begin);
-        } else {
-            m_date_begin_entry->set_text("");
+            auto end = item->get_date(item->date_finish);
+            if (end.valid()) {
+                m_date_end_entry->set_date(end);
+            } else {
+                m_date_end_entry->set_text("");
+            }
+
+            m_reconsuming_switch->set_active(item->enable_reconsuming);
         }
 
-        auto end = item->get_date(item->date_finish);
-        if (end.valid()) {
-            m_date_end_entry->set_date(end);
-        } else {
-            m_date_end_entry->set_text("");
-        }
+        if (item->has_details) {
+            m_fansub_group_entry->set_sensitive(true);
+            m_downloaded_items_entry->set_sensitive(true);
+            m_times_consumed_entry->set_sensitive(true);
 
-        m_reconsuming_switch->set_active(item->enable_reconsuming);
+            m_fansub_group_entry->set_text(m_item->fansub_group);
+            m_downloaded_items_entry->set_entry_text(std::to_string(item->downloaded_items));
+            m_times_consumed_entry->set_entry_text(std::to_string(item->times_consumed));
+        } else {
+            m_fansub_group_entry->set_sensitive(false);
+            m_downloaded_items_entry->set_sensitive(false);
+            m_times_consumed_entry->set_sensitive(false);
+
+            m_fansub_group_entry->set_text(Glib::ustring());
+            m_downloaded_items_entry->set_entry_text(Glib::ustring());
+            m_times_consumed_entry->set_entry_text(Glib::ustring());
+        }
 
         m_score_changed_connection.unblock();
         m_reconsuming_changed_connection.unblock();
@@ -440,6 +504,20 @@ namespace MAL {
         auto reconsuming = m_reconsuming_switch->get_active();
         if (reconsuming != row.get_value(columns->enable_reconsuming))
             row.set_value(columns->enable_reconsuming, reconsuming);
+
+        if (m_item->has_details) {
+            auto fansubgroup = m_fansub_group_entry->get_text();
+            if (fansubgroup != row.get_value(columns->fansub_group))
+                row.set_value(columns->fansub_group, fansubgroup);
+
+            auto downloaded_items = std::stoi(m_downloaded_items_entry->get_entry_text());
+            if (downloaded_items != row.get_value(columns->downloaded_items))
+                row.set_value(columns->downloaded_items, downloaded_items);
+
+            auto times_consumed = std::stoi(m_times_consumed_entry->get_entry_text());
+            if (times_consumed != row.get_value(columns->times_consumed))
+                row.set_value(columns->times_consumed, times_consumed);
+        }
 
         return true;
     }
@@ -482,12 +560,12 @@ namespace MAL {
 #endif
 	}
 
-    void MALItemListViewBase::set_filter_func(const sigc::slot<bool, const std::shared_ptr<const MALItem>&>& slot)
+    void MALItemListViewBase::set_filter_func(const sigc::slot<bool, const std::shared_ptr<MALItem>&>& slot)
     {
         m_filter_func = slot;
     }
 
-    void MALItemListViewBase::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row) {
+    void MALItemListViewBase::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row) {
         row.set_value(m_columns->series_title, Glib::ustring(item->series_title));
         row.set_value(m_columns->series_season, Glib::ustring(item->get_season_began()));
         auto sort_text = item->series_date_begin.substr(0,7);
@@ -510,7 +588,7 @@ namespace MAL {
      *
      * @for_each_functor: functor to a std::for_each-like function
      */
-    void MALItemListViewBase::refresh_items(std::function<void (std::function<void (const std::shared_ptr<const MALItem>&)>&& )>&& for_each_functor)
+    void MALItemListViewBase::refresh_items(std::function<void (std::function<void (const std::shared_ptr<MALItem>&)>&& )>&& for_each_functor)
     {
         m_model->clear();
         m_model_changed_connection.block();
@@ -518,7 +596,7 @@ namespace MAL {
         m_model_changed_connection.unblock();
     }
 
-    void MALItemListViewBase::append_item(const std::shared_ptr<const MALItem>& item)
+    void MALItemListViewBase::append_item(const std::shared_ptr<MALItem>& item)
     {
         if (m_filter_func) {
             if (m_filter_func(item)) {
@@ -535,7 +613,9 @@ namespace MAL {
     {
 		auto iter = m_model->get_iter(path);
         m_detailed_item = iter->get_value(m_columns->item);
-		if (m_row_activated_cb) m_row_activated_cb(m_detailed_item);
+		if (m_row_activated_cb) {
+            m_row_activated_cb(m_detailed_item);
+        }
 	}
 
     MALItemListViewStatic::MALItemListViewStatic(const std::shared_ptr<MAL>& mal,
@@ -546,7 +626,7 @@ namespace MAL {
         m_score_column = m_treeview->get_column(num - 1);
     }
 
-    void MALItemListViewStatic::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    void MALItemListViewStatic::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         MALItemListViewBase::refresh_item_cb(item, row);
         auto columns = std::dynamic_pointer_cast<MALItemModelColumnsStatic>(m_columns);
@@ -565,9 +645,16 @@ namespace MAL {
         m_score_cellrenderer->signal_edited().connect(sigc::mem_fun(*this, &MALItemListViewEditable::score_edited_cb));
         m_model_changed_connection = m_model->signal_row_changed().connect(sigc::mem_fun(*this, &MALItemListViewEditable::on_model_changed));
         m_treeview->append_column(*m_score_column);
+		m_treeview->signal_row_activated().connect([this](const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*)->void{
+                auto iter = this->m_model->get_iter(path);
+                auto detailed_item = iter->get_value(m_columns->item);
+                if (this->m_row_activated_cb && !this->m_detailed_item->has_details) {
+                    this->get_details_for_item(detailed_item);
+                }
+                    });
     }
 
-    void MALItemListViewEditable::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    void MALItemListViewEditable::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         MALItemListViewBase::refresh_item_cb(item, row);
         auto columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_columns);
@@ -575,6 +662,39 @@ namespace MAL {
         row.set_value(columns->begin_date, Glib::ustring(item->date_start));
         row.set_value(columns->end_date, Glib::ustring(item->date_finish));
         row.set_value(columns->enable_reconsuming, item->enable_reconsuming);
+        if (item->has_details) {
+            row.set_value(columns->fansub_group, Glib::ustring(item->fansub_group));
+            row.set_value(columns->downloaded_items, static_cast<int>(item->downloaded_items));
+            row.set_value(columns->times_consumed, static_cast<int>(item->times_consumed));
+        }
+    }
+
+    void MALItemListViewEditable::on_detailed_item_cb(const Gtk::TreeRow& row)
+    {
+        if (m_detailed_item->has_details) {
+            auto columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_columns);
+            row.set_value(columns->fansub_group, Glib::ustring(m_detailed_item->fansub_group));
+            row.set_value(columns->downloaded_items, static_cast<int>(m_detailed_item->downloaded_items));
+            row.set_value(columns->times_consumed, static_cast<int>(m_detailed_item->times_consumed));
+        }
+    }
+
+    void MALItemListViewEditable::on_detailed_item()
+    {
+        if (m_detailed_item->has_details) {
+            m_model_changed_connection.block();
+            auto columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_columns);
+            m_model->foreach_iter([this, &columns](const Gtk::TreeModel::iterator& iter)->bool {
+                    if (this->m_detailed_item->series_itemdb_id == iter->get_value(columns->item)->series_itemdb_id) {
+                        this->on_detailed_item_cb(*iter);
+                        if (m_row_activated_cb) m_row_activated_cb(m_detailed_item);
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
+            m_model_changed_connection.unblock();
+        }
     }
 
     void MALItemListViewEditable::on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter)
@@ -591,7 +711,7 @@ namespace MAL {
         }
     }
 
-    bool MALItemListViewEditable::model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    bool MALItemListViewEditable::model_changed_cb(std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         bool is_changed = false;
         auto const columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_columns);
@@ -630,6 +750,35 @@ namespace MAL {
             new_item->enable_reconsuming = reconsuming;
             item = new_item;
             row.set_value(columns->item, item);
+        }
+
+        if (item->has_details) {
+            auto const fansubgroup = row.get_value(columns->fansub_group);
+            if (fansubgroup != item->fansub_group) {
+                is_changed = true;
+                auto new_item = item->clone();
+                new_item->fansub_group = fansubgroup;
+                item = new_item;
+                row.set_value(columns->item, item);
+            }
+
+            auto const downloaded_items = row.get_value(columns->downloaded_items);
+            if (downloaded_items != item->downloaded_items) {
+                is_changed = true;
+                auto new_item = item->clone();
+                new_item->downloaded_items = downloaded_items;
+                item = new_item;
+                row.set_value(columns->item, item);
+            }
+
+            auto const times_consumed = row.get_value(columns->times_consumed);
+            if (times_consumed != item->times_consumed) {
+                is_changed = true;
+                auto new_item = item->clone();
+                new_item->times_consumed = times_consumed;
+                item = new_item;
+                row.set_value(columns->item, item);
+            }
         }
 
         return is_changed;

@@ -70,8 +70,8 @@ namespace MAL {
         m_series_status_label(Gtk::manage(new FancyLabel())),
         m_series_type_label(Gtk::manage(new FancyLabel()))
     {
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_TOP);
-        m_grid->attach_next_to(*m_status_type_grid, *m_series_date_grid,
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_TOP);
+        m_grid_left->attach_next_to(*m_status_type_grid, *m_series_date_grid,
                                Gtk::POS_TOP, 1, 1);
         auto type_box = Gtk::manage(new Gtk::EventBox());
         type_box->add(*m_series_type_label);
@@ -86,16 +86,17 @@ namespace MAL {
         m_status_type_grid->attach(*type_box, 0, 0, 1, 1);
         m_status_type_grid->attach(*status_box, 1, 0, 1, 1);
         m_status_type_grid->set_column_spacing(5);
+        m_series_status_label->set_vexpand(true);
+        m_series_type_label->set_vexpand(true);
     }
 
-    void AnimeDetailViewBase::display_item(const std::shared_ptr<const MALItem>& item)
+    void AnimeDetailViewBase::display_item(const std::shared_ptr<MALItem>& item)
     {
         MALItemDetailViewBase::display_item(item);
-        auto anime = std::static_pointer_cast<const Anime>(item);
+        auto anime = std::static_pointer_cast<Anime>(item);
 
         m_series_status_label->set_label(to_string(anime->series_status));
         m_series_type_label->set_label(to_string(anime->series_type));
-
     }
 
     AnimeDetailViewStatic::AnimeDetailViewStatic(const std::shared_ptr<MAL>& mal) :
@@ -105,17 +106,17 @@ namespace MAL {
         m_episodes_grid(Gtk::manage(new Gtk::Grid())),
         m_series_episodes_label(Gtk::manage(new Gtk::Label()))
     {
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_episodes_grid, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*m_episodes_grid, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_episodes_grid->attach(*m_series_episodes_label, 0, 0, 1, 1);
     }
 
-    void AnimeDetailViewStatic::display_item(const std::shared_ptr<const MALItem>& item)
+    void AnimeDetailViewStatic::display_item(const std::shared_ptr<MALItem>& item)
     {
         MALItemDetailViewStatic::display_item(item);
         AnimeDetailViewBase::display_item(item);
 
-        auto anime = std::static_pointer_cast<const Anime>(item);
+        auto anime = std::static_pointer_cast<Anime>(item);
         m_series_episodes_label->set_text(std::to_string(anime->series_episodes) + " Episodes");
     }
 
@@ -128,28 +129,33 @@ namespace MAL {
         m_episodes_entry(Gtk::manage(new IncrementEntry())),
         m_anime_status_combo(Gtk::manage(new AnimeStatusComboBox()))
     {
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_episodes_entry, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
-        m_grid->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
-        m_grid->attach_next_to(*m_anime_status_combo, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*m_episodes_entry, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*m_series_date_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*m_anime_status_combo, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_episodes_entry->signal_activate().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
         m_anime_status_changed_connection = m_anime_status_combo->signal_changed().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
     }
 
-    void AnimeDetailViewEditable::display_item(const std::shared_ptr<const MALItem>& item)
+    void AnimeDetailViewEditable::display_item(const std::shared_ptr<MALItem>& item)
     {
         m_anime_status_changed_connection.block();
+        auto const olditem = m_item;
         MALItemDetailViewEditable::display_item(item);
-        AnimeDetailViewBase::display_item(item);
-        auto anime = std::static_pointer_cast<const Anime>(item);
-        m_episodes_entry->set_label("/ " + std::to_string(anime->series_episodes) + " Episodes");
-        m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
-		m_anime_status_combo->set_active_text(to_string(anime->status));
+        auto anime = std::static_pointer_cast<Anime>(item);
+        if (!olditem || olditem->series_itemdb_id != item->series_itemdb_id) {
+            AnimeDetailViewBase::display_item(item);
+            m_episodes_entry->set_label("/ " + std::to_string(anime->series_episodes) + " Episodes");
+            m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
+            m_anime_status_combo->set_active_text(to_string(anime->status));
+        }
 
         if (anime->status == COMPLETED) {
             m_date_end_entry->set_sensitive(true);
+            m_times_consumed_entry->show();
         } else {
             m_date_end_entry->set_sensitive(false);
+            m_times_consumed_entry->hide();
         }
 
         m_anime_status_changed_connection.unblock();
@@ -167,7 +173,7 @@ namespace MAL {
             if (episodes != row.get_value(columns->episodes))
                 row.set_value(columns->episodes, episodes);
         } catch (std::exception e) {
-            auto anime = std::static_pointer_cast<const Anime>(m_item);
+            auto anime = std::static_pointer_cast<Anime>(m_item);
             m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
         }
 
@@ -199,11 +205,11 @@ namespace MAL {
      * Called when m_items has changed (We have fetched a new anime list from MAL)
      * This method should take data from the item and put it on the row
      */
-    void AnimeListViewBase::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    void AnimeListViewBase::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         MALItemListViewBase::refresh_item_cb(item, row);
         auto columns = std::dynamic_pointer_cast<AnimeModelColumnsBase>(m_columns);
-        auto anime = std::static_pointer_cast<const Anime>(item);
+        auto anime = std::static_pointer_cast<Anime>(item);
 
         row.set_value(columns->series_type, Glib::ustring(to_string(anime->series_type)));
         row.set_value(columns->series_status, Glib::ustring(to_string(anime->series_status)));
@@ -230,13 +236,13 @@ namespace MAL {
      * Called when m_items has changed (We have fetched a new anime list from MAL)
      * This method should take data from the item and put it on the row
      */
-    void AnimeListViewStatic::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    void AnimeListViewStatic::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         AnimeListViewBase::refresh_item_cb(item, row);
         MALItemListViewStatic::refresh_item_cb(item, row);
 
         auto columns = std::dynamic_pointer_cast<AnimeModelColumnsStatic>(m_columns);
-        auto anime = std::static_pointer_cast<const Anime>(item);
+        auto anime = std::static_pointer_cast<Anime>(item);
         auto status = anime->status;
         if (status == ANIMESTATUS_INVALID || status == 0)
             row.set_value(columns->status, Glib::ustring("Add To My Anime List..."));
@@ -286,19 +292,27 @@ namespace MAL {
         auto num = m_treeview->append_column_numeric_editable("Seen", columns->episodes, "%d");
         m_episodes_column = m_treeview->get_column(num - 1);
         m_treeview->move_column_after(*m_episodes_column, *m_series_type_column);
+        m_mal->signal_anime_detailed.connect(sigc::mem_fun(this, &AnimeListViewEditable::on_detailed_item));
+    }
+
+    void AnimeListViewEditable::get_details_for_item(const std::shared_ptr<MALItem>& item)
+    {
+        auto anime = std::static_pointer_cast<Anime>(item);
+        if (!anime->has_details)
+            m_mal->get_anime_details_async(anime);
     }
 
     /* Chain up!
      * Called when m_items has changed (We have fetched a new anime list from MAL)
      * This method should take data from the item and put it on the row
      */
-    void AnimeListViewEditable::refresh_item_cb(const std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    void AnimeListViewEditable::refresh_item_cb(const std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         AnimeListViewBase::refresh_item_cb(item, row);
         MALItemListViewEditable::refresh_item_cb(item, row);
 
         auto columns = std::dynamic_pointer_cast<AnimeModelColumnsEditable>(m_columns);
-        auto anime = std::static_pointer_cast<const Anime>(item);
+        auto anime = std::static_pointer_cast<Anime>(item);
 
         row.set_value(columns->status, Glib::ustring(to_string(anime->status)));
         row.set_value(columns->episodes, static_cast<int>(anime->episodes));
@@ -311,14 +325,16 @@ namespace MAL {
      * well. 
      * Return true when the item value is different from the model value.
      */
-    bool AnimeListViewEditable::model_changed_cb(std::shared_ptr<const MALItem>& item, const Gtk::TreeRow& row)
+    bool AnimeListViewEditable::model_changed_cb(std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         bool is_changed = false;
         auto mal_changed = MALItemListViewEditable::model_changed_cb(item, row);
         
         auto const columns = std::dynamic_pointer_cast<AnimeModelColumnsEditable>(m_columns);
-        auto anime = std::static_pointer_cast<const Anime>(item);
+        auto anime = std::static_pointer_cast<Anime>(item);
         auto new_anime = std::static_pointer_cast<Anime>(anime->clone());
+        if (mal_changed)
+            row.set_value(columns->anime, anime);
 
         auto const episodes = row.get_value(columns->episodes);
         if (episodes != anime->episodes) {
@@ -343,10 +359,10 @@ namespace MAL {
 
     /* Called on main thread. Item should be transmitted back to MAL.net.
      */
-    void AnimeListViewEditable::send_item_update(const std::shared_ptr<const MALItem>& item)
+    void AnimeListViewEditable::send_item_update(const std::shared_ptr<MALItem>& item)
     {
-        auto anime = std::static_pointer_cast<const Anime>(item);
-        m_mal->update_anime_async(*anime);
+        auto anime = std::static_pointer_cast<Anime>(item);
+        m_mal->update_anime_async(anime);
     }
 
     void AnimeListViewEditable::on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text)
@@ -401,8 +417,8 @@ namespace MAL {
          * we can't use std::mem_fn. Instead we need to use a lambda
          * so that there is a definite type.
          */
-        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<const MALItem>&)>&& f)->void {
-                m_mal->for_each_anime_search_result(std::forward<std::function<void (const std::shared_ptr<const MALItem>&)>>(f));
+        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<MALItem>&)>&& f)->void {
+                m_mal->for_each_anime_search_result(std::forward<std::function<void (const std::shared_ptr<MALItem>&)>>(f));
             });
     }
 
@@ -423,12 +439,11 @@ namespace MAL {
         m_status_combo->show();
         list_view->set_filter_func(sigc::mem_fun(*this, &AnimeFilteredListPage::m_filter_func));
         mal->signal_anime_added.connect(sigc::mem_fun(*this, &AnimeFilteredListPage::on_mal_update));
-        refresh();
     }
 
-    bool AnimeFilteredListPage::m_filter_func(const std::shared_ptr<const MALItem>& item) const
+    bool AnimeFilteredListPage::m_filter_func(const std::shared_ptr<MALItem>& item) const
     {
-        auto anime = std::static_pointer_cast<const Anime>(item);
+        auto anime = std::static_pointer_cast<Anime>(item);
         return anime->status == m_status_combo->get_anime_status();
     }
 
@@ -443,8 +458,8 @@ namespace MAL {
          * we can't use std::mem_fn. Instead we need to use a lambda
          * so that there is a definite type.
          */
-        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<const MALItem>&)>&& f)->void {
-                m_mal->for_each_anime(std::forward<std::function<void (const std::shared_ptr<const MALItem>&)>>(f));
+        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<MALItem>&)>&& f)->void {
+                m_mal->for_each_anime(std::forward<std::function<void (const std::shared_ptr<MALItem>&)>>(f));
             }
             );
     }

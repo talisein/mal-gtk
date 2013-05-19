@@ -18,6 +18,25 @@ Building
 
 mal-gtk is the executable name.
 
+Usage Notes
+-----------
+- MAL.net has no way to read a Manga's "Scan Group" field.
+
+  While the API does allow writing to this field, at present mal-gtk
+  will only save this field locally; I don't want to overwrite any
+  value you have on MAL.
+
+- Entry boxes (E.g. Fansub Group or Begin Date) in the Detail View
+  will not be saved until you press enter, or you edit a different
+  field. Pressing the + button on the episode count will automatically
+  save the change, but if you manually modify the episode count you'll
+  need to press enter.
+
+- Presently the Search view does not know if you already have an
+  anime/manga in your list, and if you try to set an entry to
+  'Watching' or 'Completed' when its already in your list, it will
+  silently fail. This is a bug that will be addressed soon.
+
 Goals
 -----
 - Responsive, completely asyncronous design
@@ -86,7 +105,7 @@ for these features anytime soon.
 Competitors
 -----------
 These are the GUI MAL updaters I know about. There's a ton of CLI-only
-clients out there, but that's not the same thing.
+clients out there, but that's not the same thing. 
 
 - [Taiga](https://code.google.com/p/taiga/) - Mac/Windows Only, but
   pretty cool.
