@@ -64,7 +64,8 @@ Features
         Viewing Status (Watching/Dropped/etc)
         Began/Finished dates
         Rewatching flag
-- Detailed modification
+- Detailed modification:
+
         Fansub Group
         Downloaded episode count
         Times rewatched
@@ -73,7 +74,8 @@ Features
 
 ### Planned
 
-- Detailed modification
+- Detailed modification:
+
         Rewatching episode number
         Comments and Tags
         Priority
@@ -89,8 +91,8 @@ Features
 - Make builds available for Mac/Windows
 
 ### Not Planned 
-Most of these are either bad ideas, better implemented in specialized
-client, or too difficult to get right in 100% of situations:
+Most of these are either bad ideas, better implemented in a specialized
+program, or too difficult to get right in 100% of situations:
 
 - Updating episode count by monitoring your media player
 - Torrent / Tracker integration (Use [flexget](http://www.flexget.com))
