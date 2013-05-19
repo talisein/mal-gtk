@@ -46,10 +46,22 @@ namespace MAL {
                            OEL     = 7
 	};
 	                  
+	enum MangaStorageType {
+        MANGA_STORAGE_INVALID     = -1,
+        MANGA_STORAGE_NONE        = 0,
+        MANGA_STORAGE_HARDDRIVE   = 1,
+        MANGA_STORAGE_EXTERNALHD  = 2,
+        MANGA_STORAGE_DVDCD       = 3,
+        MANGA_STORAGE_RETAILMANGA = 4,
+        MANGA_STORAGE_MAGAZINE    = 5,
+        MANGA_STORAGE_NAS         = 6
+    };
+
 	
     Glib::ustring to_string(const MangaSeriesType s);
     Glib::ustring to_string(const MangaSeriesStatus s);
     Glib::ustring to_string(const MangaStatus s);
+    Glib::ustring to_string(const MangaStorageType s);
 
 	MangaSeriesType manga_series_type_from_int(const int i);
 	MangaSeriesType manga_series_type_from_string(const Glib::ustring& s);
@@ -60,11 +72,16 @@ namespace MAL {
 	MangaStatus manga_status_from_int(const int i);
 	MangaStatus manga_status_from_string(const Glib::ustring& s);
 
+    MangaStorageType manga_storage_type_from_int(const Glib::ustring& s);
+    MangaStorageType manga_storage_type_from_string(const Glib::ustring& s);
 
 	class Manga final : public MALItem {
 	public:
-		Manga() = default;
+		Manga();
+        Manga(XmlReader& reader);
         virtual std::shared_ptr<MALItem> clone() const override;
+        virtual void serialize(XmlWriter&) const override;
+
 		
 		MangaSeriesType       series_type;
 		MangaSeriesStatus     series_status;
@@ -79,6 +96,11 @@ namespace MAL {
 		int_fast16_t          retail_volumes;    // We know how to serialize
                                                  // but not deserialize
 
+        MangaStorageType      storage_type;      // Don't know how to serialize!
+
+        virtual void update_from_details (const std::shared_ptr<MALItem>& details) override;
+        virtual void update_from_list (const std::shared_ptr<MALItem>& item) override;
+
 		void set_series_type         (std::string&&);
 		void set_series_chapters     (std::string&&);
 		void set_series_volumes      (std::string&&);
@@ -90,5 +112,6 @@ namespace MAL {
 		void set_rereading_chapter   (std::string&&);
 
 		void set_retail_volumes      (std::string&&);
+		void set_storage_type        (std::string&&);
 	};
 }
