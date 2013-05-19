@@ -351,6 +351,9 @@ namespace MAL {
     void MALItem::update_from_list(const std::shared_ptr<MALItem>& item)
     {
         if (series_itemdb_id == item->series_itemdb_id) {
+            if (last_updated != item->last_updated)
+                has_details = false;
+
             series_title       = item->series_title;
             series_date_begin  = item->series_date_begin;
             series_date_end    = item->series_date_end;
@@ -365,6 +368,7 @@ namespace MAL {
             date_finish        = item->date_finish;
             score              = item->score;
             enable_reconsuming = item->enable_reconsuming;
+
         } else {
             std::cerr << "Error: Attempted to update " << series_title << " from " << item->series_title << std::endl;
         }
