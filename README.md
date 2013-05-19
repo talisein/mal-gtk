@@ -64,19 +64,20 @@ Features
         Viewing Status (Watching/Dropped/etc)
         Began/Finished dates
         Rewatching flag
+- Detailed modification
+        Fansub Group
+        Downloaded episode count
+        Times rewatched
+- Caches a local copy of the anime/manga list
 - Modification possible via both the List View and the Detail View
 
 ### Planned
-- Detailed modification
 
+- Detailed modification
         Rewatching episode number
-        Fansub Group
         Comments and Tags
-        Downloaded episode count
-        Times rewatched
         Priority
         Storage type & value
-- Cache a local copy of the anime list
 - Set a preferred name (Space Brothers instead of Uchuu Kyoudai)
 - Add custom series that aren't in MAL (Akiba Ranger, Game of Thrones)
 - User-guided conflict resolution when local cache is different than MAL
