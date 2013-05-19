@@ -19,7 +19,9 @@
 #include <cstring>
 #include <memory>
 #include <libxml/xmlreader.h>
+#include <libxml/HTMLparser.h>
 #include "anime_serializer.hpp"
+#include "xml_writer.hpp"
 
 namespace MAL {
 	enum FIELDS : int_fast8_t { FIELDNONE, FIELDTEXT,
@@ -115,12 +117,35 @@ namespace {
 		}
 	};
 
-	static std::string xmlchar_to_str(const xmlChar* str) {
+    struct htmlParserCtxtDeleter {
+        void operator()(htmlParserCtxtPtr parser) const {
+            htmlFreeParserCtxt (parser);
+        }
+    };
+
+    struct XmlCharDeleter {
+        void operator()(xmlChar* str) const {
+            if (str) xmlFree(str);
+        }
+    };
+
+    struct XmlDocDeleter {
+        void operator()(xmlDocPtr doc) const {
+            if (doc) xmlFreeDoc(doc);
+        }
+    };
+
+    static std::string xmlchar_to_str(const xmlChar* str) {
 		if (str)
 			return std::string(reinterpret_cast<const char*>(str));
 		else
 			return std::string();
 	}
+
+    constexpr const xmlChar* operator"" _xml(const char* str, size_t) {
+        return reinterpret_cast<const xmlChar*>(str);
+    }
+
 }
 
 namespace MAL {
@@ -218,79 +243,159 @@ namespace MAL {
 		return res;
 	}
 
+    /** Parse the 'detailed' Anime fields from HTML
+     *
+     * 
+     */
+    std::shared_ptr<Anime> AnimeSerializer::deserialize_details(const std::string& xml) const
+    {
+        auto res = std::make_shared<Anime>();
+		std::unique_ptr<char[]> cstr(new char[xml.size()]);
+		std::memcpy(cstr.get(), xml.c_str(), xml.size());
+        std::unique_ptr<xmlDoc, XmlDocDeleter> doc(htmlReadMemory(cstr.get(), xml.size(), "http://myanimelist.net/",
+                                                                   nullptr, HTML_PARSE_RECOVER
+                                                                   | HTML_PARSE_NOERROR 
+                                                                   | HTML_PARSE_NOWARNING
+                                                                   | HTML_PARSE_NONET));
+		std::unique_ptr<xmlTextReader, xmlTextReaderDeleter> reader(xmlReaderWalker(doc.get()));
+		if (!reader) {
+			std::cerr << "Error: Couldn't create XML reader" << std::endl;
+            std::cerr << "XML follows: " << xml << std::endl;
+			return nullptr;
+		}
+        
+        enum { PRIORITY, STORAGE, REWATCHVALUE, DISCUSS, SELECTOR_NONE } selector = SELECTOR_NONE;
+        enum { TAGS, COMMENTS, NONE } textarea = NONE;
+        std::string textbuf;
+        int ret = 1;
+		for( ret = xmlTextReaderRead(reader.get()); ret == 1;
+		     ret = xmlTextReaderRead(reader.get()) ) {
+			const std::string name  = xmlchar_to_str(xmlTextReaderConstName (reader.get()));
+
+            if (name == "input") {
+                std::unique_ptr<xmlChar, XmlCharDeleter> type(xmlTextReaderGetAttribute(reader.get(), "type"_xml));
+                std::unique_ptr<xmlChar, XmlCharDeleter> attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
+                std::unique_ptr<xmlChar, XmlCharDeleter> attr_value(xmlTextReaderGetAttribute(reader.get(), "value"_xml));
+                if (type) {
+                    if (xmlStrEqual(type.get(), "text"_xml) || xmlStrEqual(type.get(), "checkbox"_xml)) {
+                        if (xmlStrEqual(attr_name.get(), "fansub_group"_xml))
+                            res->set_fansub_group(xmlchar_to_str(attr_value.get()));
+                        else if (xmlStrEqual(attr_name.get(), "list_downloaded_eps"_xml))
+                            res->set_downloaded_items(xmlchar_to_str(attr_value.get()));
+                        else if (xmlStrEqual(attr_name.get(), "list_times_watched"_xml))
+                            res->set_times_consumed(xmlchar_to_str(attr_value.get()));
+                        else if (xmlStrEqual(attr_name.get(), "storageVal"_xml))
+                            res->set_storage_value(xmlchar_to_str(attr_value.get()));
+                    }
+                }
+            } else if (name == "textarea" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
+                std::unique_ptr<xmlChar, XmlCharDeleter> attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
+                if (xmlStrEqual(attr_name.get(), "tags"_xml)) textarea = TAGS;
+                else if (xmlStrEqual(attr_name.get(), "list_comments"_xml)) textarea = COMMENTS;
+                else textarea = NONE;
+                textbuf.clear();
+            } else if (name == "textarea" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_END_ELEMENT) {
+                if (textarea != NONE) {
+                    switch (textarea) {
+                        case TAGS:
+                            /* Not a 'detailed' field */
+                            break;
+                        case COMMENTS:
+                            res->set_comments(std::string(textbuf));
+                            break;
+                        default:
+                            break;
+                    }
+                    textarea = NONE;
+                }
+            } else if (name == "#text" && textarea != NONE) {
+                textbuf.append(xmlchar_to_str(xmlTextReaderConstValue(reader.get())));
+            } else if (name == "select" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
+                std::unique_ptr<xmlChar, XmlCharDeleter> attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
+                if (xmlStrEqual(attr_name.get(), "priority"_xml)) selector = PRIORITY;
+                if (xmlStrEqual(attr_name.get(), "storage"_xml)) selector = STORAGE;
+                if (xmlStrEqual(attr_name.get(), "list_rewatch_value"_xml)) selector = REWATCHVALUE;
+                if (xmlStrEqual(attr_name.get(), "discuss"_xml)) selector = DISCUSS;                
+            } else if (name == "select" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_END_ELEMENT)  {
+                selector = SELECTOR_NONE;
+            } else if (name == "option" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
+                std::unique_ptr<xmlChar, XmlCharDeleter> value(xmlTextReaderGetAttribute(reader.get(), "value"_xml));
+                if (xmlTextReaderMoveToAttribute(reader.get(), "selected"_xml) == 1) {
+                    switch (selector) {
+                        case PRIORITY:
+                            res->set_priority(xmlchar_to_str(value.get()));
+                            break;
+                        case STORAGE:
+                            res->set_storage_value(xmlchar_to_str(value.get()));
+                            break;
+                        case REWATCHVALUE:
+                            res->set_reconsume_value(xmlchar_to_str(value.get()));
+                            break;
+                        case DISCUSS:
+                            res->set_enable_discussion(xmlchar_to_str(value.get()));
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
+        if (ret != 0) return nullptr; // Some sort of parsing error
+        
+        return res;
+    }
+
 	std::string AnimeSerializer::serialize(const Anime& anime) const {
-		std::string out;
-		
-		out += "<?xml version=\"1.0\" encoding=\"UTF-8\"?><entry>";
-		out += "<episode>";
-		out += std::to_string(anime.episodes);
-		out += "</episode>";
-		out += "<status>";
-		out += std::to_string(anime.status);
-		out += "</status>";
-		out += "<score>";
-		out += std::to_string(anime.score);
-		out += "</score>";
-		out += "<downloaded_episodes>";
-		out += std::to_string(anime.downloaded_items);
-		out += "</downloaded_episodes>";
-		out += "<storage_type>";
-		//out += std::to_string(anime.storage_type);
-		out += "</storage_type>";
-		out += "<storage_value>";
-		//out += std::to_string(anime.storage_value);
-		out += "</storage_value>";
-		out += "<times_rewatched>";
-		//out += std::to_string(anime.times_consumed);
-		out += "</times_rewatched>";
-		out += "<rewatch_value>";
-		//out += std::to_string(anime.reconsume_value);
-		out += "</rewatch_value>";
-		out += "<date_start>";
+        XmlWriter writer;
+        writer.startDoc();
+		writer.startElement("entry");
+        writer.writeElement("episode",             std::to_string(anime.episodes));
+        writer.writeElement("status",              std::to_string(anime.status));
+        writer.writeElement("score",               std::to_string(anime.score));
+        writer.writeElement("downloaded_episodes", std::to_string(anime.downloaded_items));
+        if (anime.has_details) {
+            writer.writeElement("storage_type",    std::to_string(anime.storage_type));
+            writer.writeElement("storage_value",   std::to_string(anime.storage_value));
+            writer.writeElement("times_rewatched", std::to_string(anime.times_consumed));
+            writer.writeElement("rewatch_value",   std::to_string(anime.reconsume_value));
+        }
         auto start = Glib::Date();
         start.set_parse(anime.date_start);
         if (start.valid()) {
-            out += start.format_string("%m%d%Y");
+            writer.writeElement("date_start", start.format_string("%m%d%Y"));
         }
-		out += "</date_start>";
-		out += "<date_finish>";
+
         auto finish = Glib::Date();
         finish.set_parse(anime.date_finish);
         if (finish.valid()) {
-            out += finish.format_string("%m%d%Y");
+            writer.writeElement("date_finish", finish.format_string("%m%d%Y"));
         }
-		out += "</date_finish>";
-		out += "<priority>";
-		//out += std::to_string(anime.priority);
-		out += "</priority>";
-		out += "<enable_discussion>";
-		//out += anime.enable_discussion?"1":"0";
-		out += "</enable_discussion>";
-		out += "<enable_rewatching>";
-		out += (anime.enable_reconsuming)?"1":"0";
-		out += "</enable_rewatching>";
-		out += "<comments>";
-		//out += anime.comments;
-		out += "</comments>";
-		out += "<fansub_group>";
-		//out += std::to_string(anime.fansub_group);
-		out += "</fansub_group>";
-		out += "<tags>";
+
+        if (anime.has_details) {
+        writer.writeElement("priority", std::to_string(anime.priority));
+        writer.writeElement("enable_discussion", anime.enable_discussion?"1":"0");
+        }
+        writer.writeElement("enable_rewatching", anime.enable_reconsuming?"1":"0");
+        if (anime.has_details) {
+            writer.writeElement("comments", anime.comments);
+            writer.writeElement("fansub_group", anime.fansub_group);
+        }
+        std::string tags;
 		auto iter = anime.tags.begin();
 		bool was_first = true;
 		while (iter != anime.tags.end()) {
 			if (!was_first)
-				out += "; ";
-			out += *iter;
+				tags += ", ";
+			tags += *iter;
 			was_first = false;
 			++iter;
 		}
-		out += "</tags>";
-		out += "<rewatch_episode>";
-		out += std::to_string(anime.rewatch_episode);
-		out += "</rewatch_episode>";
-		out += "</entry>";
-		return out;
+
+        writer.writeElement("tags", tags);
+        writer.writeElement("rewatch_episode", std::to_string(anime.rewatch_episode));
+        writer.endDoc();
+        return writer.getString();
 	}
 	
 }

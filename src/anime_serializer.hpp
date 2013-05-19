@@ -35,6 +35,7 @@ namespace MAL {
 
 		std::list<std::shared_ptr<Anime> > deserialize(const std::string& xml) const;
 		std::string serialize(const Anime& anime) const;
+        std::shared_ptr<Anime> deserialize_details(const std::string & xml) const;
 
 	private:
 		const std::map<const std::string, const FIELDS> field_map;
