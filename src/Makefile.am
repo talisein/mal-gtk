@@ -14,6 +14,8 @@ mal_gtk_SOURCES = main.cpp                                            \
 		  		  malitem.cpp               malitem.hpp               \
 		  		  anime.cpp                 anime.hpp                 \
 		  		  manga.cpp                 manga.hpp                 \
+		  		  xml_reader.cpp            xml_reader.hpp            \
+		  		  xml_writer.cpp            xml_writer.hpp            \
 		  		  anime_serializer.cpp      anime_serializer.hpp      \
 		  		  manga_serializer.cpp      manga_serializer.hpp      \
 		  		  text_util.cpp             text_util.hpp             \
