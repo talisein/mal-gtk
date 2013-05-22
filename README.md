@@ -69,6 +69,8 @@ Features
         Fansub Group
         Downloaded episode count
         Times rewatched
+        Priority
+        Rewatch/Reread Value
 - Caches a local copy of the anime/manga list
 - Modification possible via both the List View and the Detail View
 
@@ -78,7 +80,6 @@ Features
 
         Rewatching episode number
         Comments and Tags
-        Priority
         Storage type & value
 - Set a preferred name (Space Brothers instead of Uchuu Kyoudai)
 - Add custom series that aren't in MAL (Akiba Ranger, Game of Thrones)
