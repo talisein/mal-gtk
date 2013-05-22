@@ -107,17 +107,17 @@ namespace MAL {
 	}
 
 	ReconsumeValue reconsume_value_from_string(const Glib::ustring& s) {
-		if (s.compare(to_string(RECONSUME_VALUE_INVALID)) == 0)
+		if (s == to_string(RECONSUME_VALUE_INVALID))
 			return RECONSUME_VALUE_INVALID;
-		else if (s.compare(to_string(RECONSUME_VALUE_VERYLOW)) == 0)
+		else if (s == to_string(RECONSUME_VALUE_VERYLOW))
 			return RECONSUME_VALUE_VERYLOW;
-		else if (s.compare(to_string(RECONSUME_VALUE_LOW)) == 0)
+		else if (s == to_string(RECONSUME_VALUE_LOW))
 			return RECONSUME_VALUE_LOW;
-		else if (s.compare(to_string(RECONSUME_VALUE_MEDIUM)) == 0)
+		else if (s == to_string(RECONSUME_VALUE_MEDIUM))
 			return RECONSUME_VALUE_MEDIUM;
-		else if (s.compare(to_string(RECONSUME_VALUE_HIGH)) == 0)
+		else if (s == to_string(RECONSUME_VALUE_HIGH))
 			return RECONSUME_VALUE_HIGH;
-		else if (s.compare(to_string(RECONSUME_VALUE_VERYHIGH)) == 0)
+		else if (s == to_string(RECONSUME_VALUE_VERYHIGH))
 			return RECONSUME_VALUE_VERYHIGH;
 		else {
 			std::cerr << "Error: Unknown Reconsume Value (" << s << ")" << std::endl;
@@ -348,10 +348,21 @@ namespace MAL {
         has_details       = true;
     }
 
+    namespace {
+        template<typename T>
+        static inline auto absdiff(const T l, const T r)->decltype(l-r)
+        {
+            if (l > r)
+                return l - r;
+            else
+                return r - l;
+        }
+    }
+
     void MALItem::update_from_list(const std::shared_ptr<MALItem>& item)
     {
         if (series_itemdb_id == item->series_itemdb_id) {
-            if (last_updated != item->last_updated)
+            if (absdiff (last_updated, item->last_updated) > 3)
                 has_details = false;
 
             series_title       = item->series_title;
@@ -368,7 +379,6 @@ namespace MAL {
             date_finish        = item->date_finish;
             score              = item->score;
             enable_reconsuming = item->enable_reconsuming;
-
         } else {
             std::cerr << "Error: Attempted to update " << series_title << " from " << item->series_title << std::endl;
         }
@@ -474,7 +484,7 @@ namespace MAL {
 
 	void MALItem::set_last_updated(std::string&& str)
 	{
-		last_updated = std::stoull(str);
+		last_updated = static_cast<std::time_t>(std::stoull(str));
 	}
 
 	void MALItem::set_score(std::string&& str)

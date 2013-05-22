@@ -154,6 +154,7 @@ namespace MAL {
         m_fansub_group_label->set_text("Scan Group:");
         m_downloaded_items_entry->set_label("Downloaded Chapters");
         m_times_consumed_entry->set_label("Times Read");
+        m_reconsume_value_label->set_text("Reread Value:");
     }
 
     void MangaDetailViewEditable::display_item(const std::shared_ptr<MALItem>& item)

@@ -84,10 +84,10 @@ namespace MAL {
 
 		std::string           fansub_group;       //DWe know how to serialize
 		std::string           comments;           // these fields, but not
-		int_fast16_t          downloaded_items;   // deserialize
-		int_fast16_t          times_consumed;     //
-		ReconsumeValue        reconsume_value;    //
-		Priority              priority;           //
+		int_fast16_t          downloaded_items;   //Ddeserialize
+		int_fast16_t          times_consumed;     //D
+		ReconsumeValue        reconsume_value;    //D
+		Priority              priority;           //D
 		bool                  enable_discussion;  //
 
         bool                  has_details;

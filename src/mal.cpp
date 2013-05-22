@@ -21,6 +21,7 @@
 #include <giomm/file.h>
 #include <glibmm/miscutils.h>
 #include <glibmm.h>
+#include <chrono>
 #include "xml_reader.hpp"
 
 namespace {
@@ -279,7 +280,7 @@ namespace MAL {
 
     void MAL::get_manga_details_sync(const std::shared_ptr<const Manga>& manga)
     {
-        const std::string url = MANGA_DETAILS_BASE_URL + std::to_string(manga->series_itemdb_id);
+        const std::string url = MANGA_DETAILS_BASE_URL + std::to_string(manga->id);
         auto buf = get_sync(url);
         std::shared_ptr<Manga> details = nullptr;
         if (buf) {
@@ -529,9 +530,12 @@ namespace MAL {
                     return a->series_itemdb_id == anime->series_itemdb_id;
                 });
             if (iter != m_anime_list.end()) {
+                anime->last_updated = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
                 m_anime_list.erase(iter);
                 m_anime_list.insert(anime);
                 signal_mal_info(anime->series_title + " successfully updated");
+            } else {
+                signal_mal_error(anime->series_title + " updated, but is not in our local list. Programmer error!");
             }
 			return true;
         } else {

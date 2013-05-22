@@ -31,6 +31,47 @@ namespace sigc {
 
 namespace MAL {
 
+    MALItemPriorityComboBox::MALItemPriorityComboBox()
+    {
+        append(to_string(PRIORITY_LOW));
+        append(to_string(PRIORITY_MEDIUM));
+        append(to_string(PRIORITY_HIGH));
+        set_active_text(to_string(PRIORITY_LOW));
+    }
+
+    Priority MALItemPriorityComboBox::get_priority() const
+    {
+        return priority_from_string(get_active_text());
+    }
+
+    MALItemReconsumeValueComboBox::MALItemReconsumeValueComboBox() :
+        invalid_text("Select...")
+    {
+        append(invalid_text);
+        append(to_string(RECONSUME_VALUE_VERYLOW));
+        append(to_string(RECONSUME_VALUE_LOW));
+        append(to_string(RECONSUME_VALUE_MEDIUM));
+        append(to_string(RECONSUME_VALUE_HIGH));
+        append(to_string(RECONSUME_VALUE_VERYHIGH));
+    }
+
+    ReconsumeValue MALItemReconsumeValueComboBox::get_reconsume_value() const
+    {
+        auto const text = get_active_text();
+        if (text == invalid_text)
+            return RECONSUME_VALUE_INVALID;
+        else
+            return reconsume_value_from_string(text);
+    }
+
+    void MALItemReconsumeValueComboBox::set_reconsume_value(const ReconsumeValue value)
+    {
+        if (value == RECONSUME_VALUE_INVALID)
+            set_active_text(invalid_text);
+        else
+            set_active_text(to_string(value));
+    }
+
     ScoreComboBox::ScoreComboBox() :
         Gtk::ComboBox(false),
         m_columns(),
@@ -381,7 +422,11 @@ namespace MAL {
         m_downloaded_items_entry(Gtk::manage(new IncrementEntry("Downloaded Episodes"))),
         m_times_consumed_entry(Gtk::manage(new IncrementEntry("Times Watched"))),
         m_fansub_group_label(Gtk::manage(new Gtk::Label("Fansub Group:"))),
-        m_fansub_group_entry(Gtk::manage(new Gtk::Entry()))
+        m_fansub_group_entry(Gtk::manage(new Gtk::Entry())),
+        m_priority_label(Gtk::manage(new Gtk::Label("Priority:"))),
+        m_reconsume_value_label(Gtk::manage(new Gtk::Label("Rewatch Value:"))),
+        m_priority_combo(Gtk::manage(new MALItemPriorityComboBox())),
+        m_reconsume_value_combo(Gtk::manage(new MALItemReconsumeValueComboBox()))
     {
         auto label = Gtk::manage(new Gtk::Label("Score: "));
         m_score_grid->attach(*label, 0, 0, 1, 1);
@@ -424,12 +469,29 @@ namespace MAL {
         m_fansub_group_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
         m_grid_left->set_row_homogeneous(true);
         //m_grid_center->set_row_homogeneous(true);
+
+        auto prioritygrid = Gtk::manage(new Gtk::Grid());
+        prioritygrid->attach(*m_priority_label, 0, 0, 1, 1);
+        prioritygrid->attach(*m_priority_combo, 1, 0, 1, 1);
+        prioritygrid->set_column_spacing(5);
+        m_grid_center->attach(*prioritygrid, 0, 3, 1, 1);
+        m_priority_changed_connection = m_priority_combo->signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
+
+        auto reconsume_valuegrid = Gtk::manage(new Gtk::Grid());
+        reconsume_valuegrid->attach(*m_reconsume_value_label, 0, 0, 1, 1);
+        reconsume_valuegrid->attach(*m_reconsume_value_combo, 1, 0, 1, 1);
+        reconsume_valuegrid->set_column_spacing(5);
+        m_grid_center->attach(*reconsume_valuegrid, 0, 4, 1, 1);
+        m_reconsume_value_changed_connection = m_reconsume_value_combo->signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
     }
 
     void MALItemDetailViewEditable::display_item(const std::shared_ptr<MALItem>& item)
     {
         m_score_changed_connection.block();
         m_reconsuming_changed_connection.block();
+        m_priority_changed_connection.block();
+        m_reconsume_value_changed_connection.block();
+
         auto const olditem = m_item;
         MALItemDetailViewBase::display_item(item);
         
@@ -459,22 +521,32 @@ namespace MAL {
             m_fansub_group_entry->set_sensitive(true);
             m_downloaded_items_entry->set_sensitive(true);
             m_times_consumed_entry->set_sensitive(true);
-
+            m_priority_combo->set_sensitive(true);
+            m_reconsume_value_combo->set_sensitive(true);
+            
             m_fansub_group_entry->set_text(m_item->fansub_group);
             m_downloaded_items_entry->set_entry_text(std::to_string(item->downloaded_items));
             m_times_consumed_entry->set_entry_text(std::to_string(item->times_consumed));
+            m_priority_combo->set_active_text(to_string(item->priority));
+            m_reconsume_value_combo->set_reconsume_value(item->reconsume_value);
         } else {
             m_fansub_group_entry->set_sensitive(false);
             m_downloaded_items_entry->set_sensitive(false);
             m_times_consumed_entry->set_sensitive(false);
+            m_priority_combo->set_sensitive(false);
+            m_reconsume_value_combo->set_sensitive(false);
 
             m_fansub_group_entry->set_text(Glib::ustring());
             m_downloaded_items_entry->set_entry_text(Glib::ustring());
             m_times_consumed_entry->set_entry_text(Glib::ustring());
+            m_priority_combo->set_active_text("None");
+            m_reconsume_value_combo->set_active_text("None");
         }
 
         m_score_changed_connection.unblock();
         m_reconsuming_changed_connection.unblock();
+        m_priority_changed_connection.unblock();
+        m_reconsume_value_changed_connection.unblock();
     }
 
     bool MALItemDetailViewEditable::update_list_model(const Gtk::TreeRow &row)
@@ -517,11 +589,19 @@ namespace MAL {
             auto times_consumed = std::stoi(m_times_consumed_entry->get_entry_text());
             if (times_consumed != row.get_value(columns->times_consumed))
                 row.set_value(columns->times_consumed, times_consumed);
+
+            auto priority = priority_from_string(m_priority_combo->get_active_text());
+            if (priority != row.get_value(columns->priority))
+                row.set_value(columns->priority, priority);
+
+            auto reconsume_value = m_reconsume_value_combo->get_reconsume_value();
+            if (reconsume_value != row.get_value(columns->reconsume_value))
+                row.set_value(columns->reconsume_value, reconsume_value);
         }
 
         return true;
     }
-    
+
 	MALItemListViewBase::MALItemListViewBase(const std::shared_ptr<MAL>& mal,
                                              const std::shared_ptr<MALItemModelColumns>& columns) :
 		Gtk::Grid (),
@@ -552,6 +632,8 @@ namespace MAL {
 		show_all();
 		m_treeview->signal_row_activated().connect(sigc::mem_fun(*this, &MALItemListViewBase::on_my_row_activated));
         m_treeview->set_rules_hint(true);
+        m_model->set_default_sort_func(sigc::mem_fun(*this, &MALItemListViewBase::malitem_comparitor));
+        m_model->set_sort_column(Gtk::TreeSortable::DEFAULT_SORT_COLUMN_ID, Gtk::SORT_DESCENDING);
 #if GTK_CHECK_VERSION(3,8,0)
         Glib::Value<bool> sc_val;
         sc_val.init(Glib::Value<bool>::value_type());
@@ -559,6 +641,18 @@ namespace MAL {
         m_treeview->set_property_value("activate-on-single-click", sc_val);
 #endif
 	}
+
+    int MALItemListViewBase::malitem_comparitor(const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b)
+    {
+        auto & season_column = m_columns->series_start_date;
+        auto season = a->get_value(season_column).compare(0, 7, b->get_value(season_column));
+        if (season == 0) {
+            auto & title_column = m_columns->series_title;
+            return b->get_value(title_column).compare(a->get_value(title_column));
+        } else {
+            return season;
+        }
+    }
 
     void MALItemListViewBase::set_filter_func(const sigc::slot<bool, const std::shared_ptr<MALItem>&>& slot)
     {
@@ -666,6 +760,8 @@ namespace MAL {
             row.set_value(columns->fansub_group, Glib::ustring(item->fansub_group));
             row.set_value(columns->downloaded_items, static_cast<int>(item->downloaded_items));
             row.set_value(columns->times_consumed, static_cast<int>(item->times_consumed));
+            row.set_value(columns->priority, item->priority);
+            row.set_value(columns->reconsume_value, item->reconsume_value);
         }
     }
 
@@ -676,6 +772,8 @@ namespace MAL {
             row.set_value(columns->fansub_group, Glib::ustring(m_detailed_item->fansub_group));
             row.set_value(columns->downloaded_items, static_cast<int>(m_detailed_item->downloaded_items));
             row.set_value(columns->times_consumed, static_cast<int>(m_detailed_item->times_consumed));
+            row.set_value(columns->priority, m_detailed_item->priority);
+            row.set_value(columns->reconsume_value, m_detailed_item->reconsume_value);
         }
     }
 
@@ -776,6 +874,24 @@ namespace MAL {
                 is_changed = true;
                 auto new_item = item->clone();
                 new_item->times_consumed = times_consumed;
+                item = new_item;
+                row.set_value(columns->item, item);
+            }
+
+            auto const priority = row.get_value(columns->priority);
+            if (priority != item->priority) {
+                is_changed = true;
+                auto new_item = item->clone();
+                new_item->priority = priority;
+                item = new_item;
+                row.set_value(columns->item, item);
+            }
+
+            auto const reconsume_value = row.get_value(columns->reconsume_value);
+            if (reconsume_value != item->reconsume_value) {
+                is_changed = true;
+                auto new_item = item->clone();
+                new_item->reconsume_value = reconsume_value;
                 item = new_item;
                 row.set_value(columns->item, item);
             }

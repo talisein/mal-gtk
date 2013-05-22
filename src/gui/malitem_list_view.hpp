@@ -37,6 +37,22 @@
 #include "date_widgets.hpp"
 
 namespace MAL {
+	class MALItemPriorityComboBox final : public Gtk::ComboBoxText {
+	public:
+		MALItemPriorityComboBox();
+		Priority get_priority() const;
+	};
+
+	class MALItemReconsumeValueComboBox final : public Gtk::ComboBoxText {
+	public:
+		MALItemReconsumeValueComboBox();
+		ReconsumeValue get_reconsume_value() const;
+        void set_reconsume_value(const ReconsumeValue value);
+
+    private:
+        const Glib::ustring invalid_text;
+	};
+
 	class ScoreColumns final : public Gtk::TreeModel::ColumnRecord {
 	public:
         Gtk::TreeModelColumn<Glib::ustring> text;
@@ -103,10 +119,13 @@ namespace MAL {
         Gtk::TreeModelColumn<Glib::ustring> fansub_group;
         Gtk::TreeModelColumn<int> downloaded_items;
         Gtk::TreeModelColumn<int> times_consumed;
-
+        Gtk::TreeModelColumn<ReconsumeValue> reconsume_value;
+        Gtk::TreeModelColumn<Priority> priority;
+        
         MALItemModelColumnsEditable() : MALItemModelColumns() {
             add(score); add(begin_date); add(end_date); add(enable_reconsuming);
             add(fansub_group); add(downloaded_items); add(times_consumed);
+            add(reconsume_value); add(priority);
         }
     };
 
@@ -198,10 +217,16 @@ namespace MAL {
         IncrementEntry *m_times_consumed_entry;
         Gtk::Label     *m_fansub_group_label;
         Gtk::Entry     *m_fansub_group_entry;
+        Gtk::Label     *m_priority_label;
+        Gtk::Label     *m_reconsume_value_label;
+        MALItemPriorityComboBox       *m_priority_combo;
+        MALItemReconsumeValueComboBox *m_reconsume_value_combo;
 
     private:
         sigc::connection m_score_changed_connection;
         sigc::connection m_reconsuming_changed_connection;
+        sigc::connection m_priority_changed_connection;
+        sigc::connection m_reconsume_value_changed_connection;
     };
 
 	class MALItemListViewBase : public Gtk::Grid {
@@ -245,6 +270,7 @@ namespace MAL {
 		void on_my_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
         sigc::slot<bool, const std::shared_ptr<MALItem>&> m_filter_func;
         void append_item(const std::shared_ptr<MALItem>& item);
+        int malitem_comparitor(const Gtk::TreeModel::iterator&, const Gtk::TreeModel::iterator&);
 	};
 
     class MALItemListViewStatic : public virtual MALItemListViewBase {

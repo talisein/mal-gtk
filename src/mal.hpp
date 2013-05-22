@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <algorithm>
+#include <functional>
 #include <mutex>
 #include <curl/curl.h>
 #include <glibmm/dispatcher.h>
@@ -193,11 +194,12 @@ namespace MAL {
         public:
             bool operator()(const std::shared_ptr<const T>& l,const std::shared_ptr<const T>& r)
                 {
-                    auto season = l->series_date_begin.substr(0,7).compare(r->series_date_begin.substr(0,7));
+                    return l->series_itemdb_id < r->series_itemdb_id;
+                    /*auto season = l->series_date_begin.substr(0,7).compare(r->series_date_begin.substr(0,7));
                     if (season == 0)
-                        return l->series_title.compare(r->series_title) < 0;
+                    return l->series_itemdb_id < r->series_itemdb_id;
                     else
-                        return season > 0;
+                    return season > 0;*/
                 };
         };
 
