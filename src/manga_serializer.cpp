@@ -288,7 +288,7 @@ namespace MAL {
                             res->set_retail_volumes(xmlchar_to_str(attr_value.get()));
                     }
                 }
-        } else if (name == "textarea" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
+            } else if (name == "textarea" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
                 std::unique_ptr<xmlChar, XmlCharDeleter> attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
                 if (xmlStrEqual(attr_name.get(), "tags"_xml)) textarea = TAGS;
                 else if (xmlStrEqual(attr_name.get(), "comments"_xml)) textarea = COMMENTS;
