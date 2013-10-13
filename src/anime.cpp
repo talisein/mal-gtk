@@ -17,239 +17,243 @@
 
 #include "anime.hpp"
 #include <iostream>
+#include <string>
+#include <stdexcept>
 
 namespace MAL {
-	SeriesType anime_series_type_from_int(const int i) {
+	SeriesType anime_series_type(const int i) {
 		switch(i) {
 		case 1:
-			return TV;
+			return SeriesType::TV;
 		case 2:
-			return OVA;
+			return SeriesType::OVA;
 		case 3:
-			return MOVIE;
+			return SeriesType::MOVIE;
 		case 4:
-			return SPECIAL;
+			return SeriesType::SPECIAL;
 		case 5:
-			return ONA;
+			return SeriesType::ONA;
 		case 6:
-			return MUSIC;
+			return SeriesType::MUSIC;
         case 0:
-            return SERIESTYPE_INVALID;
+            return SeriesType::INVALID;
 		default:
             std::cerr << "Error: Unknown Anime Series Type (" << i << ")" << std::endl;
-			return SERIESTYPE_INVALID;
+			return SeriesType::INVALID;
 		}
 	}
 
-	SeriesStatus anime_series_status_from_int(const int i) {
+	SeriesStatus anime_series_status(const int i) {
 		switch (i) {
 		case 1:
-			return AIRING;
+			return SeriesStatus::AIRING;
 		case 2:
-			return FINISHED;
+			return SeriesStatus::FINISHED;
 		case 3:
-			return NOTYETAIRED;
+			return SeriesStatus::NOTYETAIRED;
         case 0:
-            return SERIESSTATUS_INVALID;
+            return SeriesStatus::INVALID;
 		default:
             std::cerr << "Error: Unknown Anime Series Status (" << i << ")" << std::endl;
-			return SERIESSTATUS_INVALID;
+			return SeriesStatus::INVALID;
 		}
 	}
 
-	AnimeStatus anime_status_from_int(const int i) {
+	AnimeStatus anime_status(const int i) {
 		switch (i) {
 		case 1:
-			return WATCHING;
+			return AnimeStatus::WATCHING;
 		case 2:
-			return COMPLETED;
+			return AnimeStatus::COMPLETED;
 		case 3:
-			return ONHOLD;
+			return AnimeStatus::ONHOLD;
 		case 4:
-			return DROPPED;
+			return AnimeStatus::DROPPED;
 		case 6:
-			return PLANTOWATCH;
+			return AnimeStatus::PLANTOWATCH;
         case 0:
-            return ANIMESTATUS_INVALID;
+            return AnimeStatus::INVALID;
 		default:
             std::cerr << "Error: Unknown Anime Status (" << i << ")" << std::endl;
-			return ANIMESTATUS_INVALID;
+			return AnimeStatus::INVALID;
 		}
 	}
 
 
-    AnimeStorageType anime_storage_type_from_int(const int i) {
+    AnimeStorageType anime_storage_type(const int i) {
        switch (i) {
            case 0:
-               return ANIME_STORAGE_INVALID;
+               return AnimeStorageType::INVALID;
            case 1:
-               return ANIME_STORAGE_HARDDRIVE;
+               return AnimeStorageType::HARDDRIVE;
            case 2:
-               return ANIME_STORAGE_DVDCD;
+               return AnimeStorageType::DVDCD;
            case 3:
-               return ANIME_STORAGE_NONE;
+               return AnimeStorageType::NONE;
            case 4:
-               return ANIME_STORAGE_RETAILDVD;
+               return AnimeStorageType::RETAILDVD;
            case 5:
-               return ANIME_STORAGE_VHS;
+               return AnimeStorageType::VHS;
            case 6:
-               return ANIME_STORAGE_EXTERNALHD;
+               return AnimeStorageType::EXTERNALHD;
            case 7:
-               return ANIME_STORAGE_NAS;
+               return AnimeStorageType::NAS;
            default:
                std::cerr << "Error: Unknown Anime Storage Type (" << i << ")" << std::endl;
-               return ANIME_STORAGE_INVALID;
+               return AnimeStorageType::INVALID;
        }
     }
 
-	SeriesType anime_series_type_from_string(const Glib::ustring& s) {
-		if (s == to_string(TV) )
-			return TV;
-		else if (s == to_string(OVA))
-			return OVA;
-		else if (s == to_string(MOVIE))
-			return MOVIE;
-		else if (s == to_string(SPECIAL))
-			return SPECIAL;
-		else if (s == to_string(ONA))
-			return ONA;
-		else if (s == to_string(MUSIC))
-			return MUSIC;
-        else if (s == to_string(SERIESTYPE_INVALID))
-            return SERIESTYPE_INVALID;
+	SeriesType anime_series_type(const Glib::ustring& s) {
+		if (s == to_string(SeriesType::TV) )
+			return SeriesType::TV;
+		else if (s == to_string(SeriesType::OVA))
+			return SeriesType::OVA;
+		else if (s == to_string(SeriesType::MOVIE))
+			return SeriesType::MOVIE;
+		else if (s == to_string(SeriesType::SPECIAL))
+			return SeriesType::SPECIAL;
+		else if (s == to_string(SeriesType::ONA))
+			return SeriesType::ONA;
+		else if (s == to_string(SeriesType::MUSIC))
+			return SeriesType::MUSIC;
+        else if (s == to_string(SeriesType::INVALID))
+            return SeriesType::INVALID;
 		else {
 			std::cerr << "Error: Unknown Anime Series Type (" << s << ")" << std::endl;
-			return SERIESTYPE_INVALID;
+			return SeriesType::INVALID;
 		}
 	}
 
-	SeriesStatus anime_series_status_from_string(const Glib::ustring& s) {
-		if (s == to_string(AIRING) || s == "Currently Airing")
-			return AIRING;
-		else if (s == to_string(FINISHED) || s == "Finished Airing")
-			return FINISHED;
-        else if (s == to_string(NOTYETAIRED) || s == "Not yet aired")
-            return NOTYETAIRED;
-        else if (s == to_string(SERIESSTATUS_INVALID))
-            return SERIESSTATUS_INVALID;
+	SeriesStatus anime_series_status(const Glib::ustring& s) {
+		if (s == to_string(SeriesStatus::AIRING) || s == "Currently Airing")
+			return SeriesStatus::AIRING;
+		else if (s == to_string(SeriesStatus::FINISHED) || s == "Finished Airing")
+			return SeriesStatus::FINISHED;
+        else if (s == to_string(SeriesStatus::NOTYETAIRED) || s == "Not yet aired")
+            return SeriesStatus::NOTYETAIRED;
+        else if (s == to_string(SeriesStatus::INVALID))
+            return SeriesStatus::INVALID;
 		else {
 			std::cerr << "Error: Unknown Anime Series Status (" << s << ")" << std::endl;
-			return SERIESSTATUS_INVALID;
+			return SeriesStatus::INVALID;
 		}
 	}
 
-	AnimeStatus anime_status_from_string(const Glib::ustring& s) {
-		if (s == to_string(WATCHING))
-			return WATCHING;
-		else if (s == to_string(COMPLETED))
-			return COMPLETED;
-		else if (s == to_string(ONHOLD))
-			return ONHOLD;
-		else if (s == to_string(DROPPED))
-			return DROPPED;
-		else if (s == to_string(PLANTOWATCH))
-			return PLANTOWATCH;
-        else if (s == to_string(ANIMESTATUS_INVALID))
-            return ANIMESTATUS_INVALID;
+	AnimeStatus anime_status(const Glib::ustring& s) {
+		if (s == to_string(AnimeStatus::WATCHING))
+			return AnimeStatus::WATCHING;
+		else if (s == to_string(AnimeStatus::COMPLETED))
+			return AnimeStatus::COMPLETED;
+		else if (s == to_string(AnimeStatus::ONHOLD))
+			return AnimeStatus::ONHOLD;
+		else if (s == to_string(AnimeStatus::DROPPED))
+			return AnimeStatus::DROPPED;
+		else if (s == to_string(AnimeStatus::PLANTOWATCH))
+			return AnimeStatus::PLANTOWATCH;
+        else if (s == to_string(AnimeStatus::NONE))
+            return AnimeStatus::INVALID;
+        else if (s == to_string(AnimeStatus::INVALID))
+            return AnimeStatus::INVALID;
 		else {
 			std::cerr << "Error: Unknown Anime Status (" << s << ")" << std::endl;
-			return ANIMESTATUS_INVALID;
+			return AnimeStatus::INVALID;
         }
 	}
 
-	AnimeStorageType anime_storage_type_from_string(const Glib::ustring& s) {
-		if (s == to_string(ANIME_STORAGE_INVALID))
-			return ANIME_STORAGE_INVALID;
-		else if (s == to_string(ANIME_STORAGE_HARDDRIVE))
-			return ANIME_STORAGE_HARDDRIVE;
-		else if (s == to_string(ANIME_STORAGE_DVDCD))
-			return ANIME_STORAGE_DVDCD;
-		else if (s == to_string(ANIME_STORAGE_NONE))
-			return ANIME_STORAGE_NONE;
-		else if (s == to_string(ANIME_STORAGE_RETAILDVD))
-			return ANIME_STORAGE_RETAILDVD;
-		else if (s == to_string(ANIME_STORAGE_VHS))
-			return ANIME_STORAGE_VHS;
-		else if (s == to_string(ANIME_STORAGE_EXTERNALHD))
-			return ANIME_STORAGE_EXTERNALHD;
-		else if (s == to_string(ANIME_STORAGE_NAS))
-			return ANIME_STORAGE_NAS;
+	AnimeStorageType anime_storage_type(const Glib::ustring& s) {
+		if (s == to_string(AnimeStorageType::INVALID))
+			return AnimeStorageType::INVALID;
+		else if (s == to_string(AnimeStorageType::HARDDRIVE))
+			return AnimeStorageType::HARDDRIVE;
+		else if (s == to_string(AnimeStorageType::DVDCD))
+			return AnimeStorageType::DVDCD;
+		else if (s == to_string(AnimeStorageType::NONE))
+			return AnimeStorageType::NONE;
+		else if (s == to_string(AnimeStorageType::RETAILDVD))
+			return AnimeStorageType::RETAILDVD;
+		else if (s == to_string(AnimeStorageType::VHS))
+			return AnimeStorageType::VHS;
+		else if (s == to_string(AnimeStorageType::EXTERNALHD))
+			return AnimeStorageType::EXTERNALHD;
+		else if (s == to_string(AnimeStorageType::NAS))
+			return AnimeStorageType::NAS;
 		else {
 			std::cerr << "Error: Unknown Anime Storage Type (" << s << ")" << std::endl;
-			return ANIME_STORAGE_INVALID;
+			return AnimeStorageType::INVALID;
         }
 	}
 
 
     Glib::ustring to_string(const SeriesType s) {
 		switch (s) {
-		case TV:
-			return "TV";
-		case OVA:
-			return "OVA";
-		case MOVIE:
-			return "Movie";
-		case SPECIAL:
-			return "Special";
-		case ONA:
-			return "ONA";
-		case MUSIC:
-			return "Music";
-		default:
-			return "Unknown";
+            case SeriesType::TV:
+                return "TV";
+            case SeriesType::OVA:
+                return "OVA";
+            case SeriesType::MOVIE:
+                return "Movie";
+            case SeriesType::SPECIAL:
+                return "Special";
+            case SeriesType::ONA:
+                return "ONA";
+            case SeriesType::MUSIC:
+                return "Music";
+            default:
+                return "Unknown";
 		}
 	}
 
 	Glib::ustring to_string(const SeriesStatus s) {
 		switch (s) {
-		case AIRING:
-			return "Airing";
-		case FINISHED:
-			return "Finished";
-		case NOTYETAIRED:
-			return "Not Yet Aired";
-		default:
-			return "Unknown";
+            case SeriesStatus::AIRING:
+                return "Airing";
+            case SeriesStatus::FINISHED:
+                return "Finished";
+            case SeriesStatus::NOTYETAIRED:
+                return "Not Yet Aired";
+            default:
+                return "Unknown";
 		}
 	}
 
 	Glib::ustring to_string(const AnimeStatus s) {
 		switch (s) {
-		case WATCHING:
-			return "Watching";
-		case COMPLETED:
-			return "Completed";
-		case ONHOLD:
-			return "On Hold";
-		case DROPPED:
-			return "Dropped";
-		case PLANTOWATCH:
-			return "Plan To Watch";
-		default:
-			return "Unknown";
+            case AnimeStatus::WATCHING:
+                return "Watching";
+            case AnimeStatus::COMPLETED:
+                return "Completed";
+            case AnimeStatus::ONHOLD:
+                return "On Hold";
+            case AnimeStatus::DROPPED:
+                return "Dropped";
+            case AnimeStatus::PLANTOWATCH:
+                return "Plan To Watch";
+            default:
+                return "Unknown";
 		}
 	}
 
 	Glib::ustring to_string(const AnimeStorageType s) {
 		switch (s) {
-		case ANIME_STORAGE_INVALID:
-			return "Invalid Anime Storage";
-		case ANIME_STORAGE_HARDDRIVE:
-			return "Hard Drive";
-		case ANIME_STORAGE_DVDCD:
-			return "DVD/CD";
-		case ANIME_STORAGE_NONE:
-			return "None";
-		case ANIME_STORAGE_RETAILDVD:
-			return "Retail DVD";
-		case ANIME_STORAGE_VHS:
-			return "VHS";
-		case ANIME_STORAGE_EXTERNALHD:
-			return "External HD";
-		case ANIME_STORAGE_NAS:
-			return "NAS";
-		default:
-			return "Invalid Anime Storage";
+            case AnimeStorageType::INVALID:
+                return "Invalid Anime Storage";
+            case AnimeStorageType::HARDDRIVE:
+                return "Hard Drive";
+            case AnimeStorageType::DVDCD:
+                return "DVD/CD";
+            case AnimeStorageType::NONE:
+                return "None";
+            case AnimeStorageType::RETAILDVD:
+                return "Retail DVD";
+            case AnimeStorageType::VHS:
+                return "VHS";
+            case AnimeStorageType::EXTERNALHD:
+                return "External HD";
+            case AnimeStorageType::NAS:
+                return "NAS";
+            default:
+                return "Invalid Anime Storage";
 		}
 	}
 
@@ -275,10 +279,10 @@ namespace MAL {
 
     Anime::Anime() :
         MALItem(),
-        series_type(SERIESTYPE_INVALID),
-        series_status(SERIESSTATUS_INVALID),
-        status(ANIMESTATUS_INVALID),
-        storage_type(ANIME_STORAGE_INVALID)
+        series_type(SeriesType::INVALID),
+        series_status(SeriesStatus::INVALID),
+        status(AnimeStatus::INVALID),
+        storage_type(AnimeStorageType::INVALID)
     {
     }
 
@@ -312,10 +316,10 @@ namespace MAL {
 
     Anime::Anime(XmlReader& reader) :
         MALItem(reader),
-        series_type(SERIESTYPE_INVALID),
-        series_status(SERIESSTATUS_INVALID),
-        status(ANIMESTATUS_INVALID),
-        storage_type(ANIME_STORAGE_INVALID)
+        series_type(SeriesType::INVALID),
+        series_status(SeriesStatus::INVALID),
+        status(AnimeStatus::INVALID),
+        storage_type(AnimeStorageType::INVALID)
     {
         reader.read();
         if (reader.get_name() != "series_type") {
@@ -377,27 +381,51 @@ namespace MAL {
         }
     }
 
-	void Anime::set_series_type(std::string&& str)
+	void Anime::set_series_type(const std::string&& str)
 	{
 		if (str.size() == 1)
 			try {
-                series_type = anime_series_type_from_int(std::stoi(str));
-            } catch (std::exception e) {
-                std::cerr << "Error converting from int: " << e.what() << std::endl;
+                series_type = anime_series_type(std::stoi(str));
+            } catch (std::invalid_argument e) {
+                std::cerr << "Error: Invalid argument converting series type \""
+                          << str << "\" to an integer: "
+                          << e.what() << std::endl;
+                series_type = SeriesType::INVALID;
+            } catch (std::out_of_range e) {
+                std::cerr << "Error: Converting series type \"" << str
+                          << "\" to int falls outside the expected range: "
+                          << e.what() << std::endl;
+                series_type = SeriesType::INVALID;
             }
 		else
-			series_type = anime_series_type_from_string(str);
+			series_type = anime_series_type(str);
 	}
 
-	void Anime::set_series_status(std::string&& str)
+	void Anime::set_series_status(const std::string&& str)
 	{
-		if (str.size() == 1)
-			series_status = anime_series_status_from_int(std::stoi(str));
-		else
-			series_status = anime_series_status_from_string(str);
+        constexpr int status_invalid = static_cast<int>(SeriesStatus::INVALID);
+		if (str.size() == 1) {
+            int status = status_invalid;
+            try {
+                status = std::stoi(str);
+            } catch (std::invalid_argument e) {
+                std::cerr << "Error: Invalid argument converting series type \""
+                          << str << "\" to an integer: "
+                          << e.what() << std::endl;
+                status = status_invalid;
+            } catch (std::out_of_range e) {
+                std::cerr << "Error: Converting \"" << str
+                          << "\" to int falls outside the expected range: "
+                          << e.what() << std::endl;
+                status = status_invalid;
+            }
+            series_status = anime_series_status(status);
+        } else {
+			series_status = anime_series_status(str);
+        }
 	}
 
-	void Anime::set_series_episodes(std::string&& str)
+	void Anime::set_series_episodes(const std::string&& str)
 	{
         if (str.size() > 0)
             series_episodes = std::stoi(str);
@@ -405,15 +433,15 @@ namespace MAL {
             series_episodes = 0;
 	}
 
-	void Anime::set_status(std::string&& str)
+	void Anime::set_status(const std::string&& str)
 	{
         if (str.size() == 1)
-            status = anime_status_from_int(std::stoi(str));
+            status = anime_status(std::stoi(str));
         else
-            status = anime_status_from_string(str);
+            status = anime_status(str);
 	}
 
-	void Anime::set_episodes(std::string&& str)
+	void Anime::set_episodes(const std::string&& str)
 	{
         if (str.size() > 0)
             episodes = std::stoi(str);
@@ -421,20 +449,20 @@ namespace MAL {
             episodes = 0;
 	}
 
-	void Anime::set_rewatch_episode(std::string&& str)
+	void Anime::set_rewatch_episode(const std::string&& str)
 	{
 		rewatch_episode = std::stoi(str);
 	}
 
-	void Anime::set_storage_type(std::string&& str)
+	void Anime::set_storage_type(const std::string&& str)
 	{
         if (str.size() == 1)
-            storage_type = anime_storage_type_from_int(std::stoi(str));
+            storage_type = anime_storage_type(std::stoi(str));
         else
-            storage_type = anime_storage_type_from_string(str);
+            storage_type = anime_storage_type(str);
 	}
 
-	void Anime::set_storage_value(std::string&& str)
+	void Anime::set_storage_value(const std::string&& str)
 	{
 		storage_value = std::stof(str);
 	}

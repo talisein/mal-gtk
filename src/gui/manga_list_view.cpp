@@ -292,22 +292,22 @@ namespace MAL {
             auto manga = iter->get_value(columns->manga);
 
 			if (status != manga->status) {
-				iter->set_value(columns->status, Glib::ustring(to_string(status)));
                 auto new_manga = std::static_pointer_cast<Manga>(manga->clone());
 				new_manga->status = status;
-                manga = new_manga;
-				iter->set_value(columns->manga, manga);
-
                 new_manga->score = 0.0f;
                 if (new_manga->status == MANGACOMPLETED) {
-                    new_manga->chapters = manga->series_chapters;
-                    new_manga->volumes = manga->series_volumes;
+                    new_manga->chapters = new_manga->series_chapters;
+                    new_manga->volumes = new_manga->series_volumes;
                 } else {
                     new_manga->chapters = 0;
                     new_manga->volumes = 0;
                 }
+
                 if (new_manga->status != MANGASTATUS_INVALID) {
                     m_mal->add_manga_async(*new_manga);
+
+                    iter->set_value(columns->status, Glib::ustring(to_string(status)));
+                    iter->set_value(columns->manga, new_manga);
                 }
             }
 		}

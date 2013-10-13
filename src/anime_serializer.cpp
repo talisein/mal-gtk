@@ -351,11 +351,11 @@ namespace MAL {
         writer.startDoc();
 		writer.startElement("entry");
         writer.writeElement("episode",             std::to_string(anime.episodes));
-        writer.writeElement("status",              std::to_string(anime.status));
+        writer.writeElement("status",              to_string(anime.status));
         writer.writeElement("score",               std::to_string(anime.score));
         writer.writeElement("downloaded_episodes", std::to_string(anime.downloaded_items));
         if (anime.has_details) {
-            writer.writeElement("storage_type",    std::to_string(anime.storage_type));
+            writer.writeElement("storage_type",    std::to_string(static_cast<int>(anime.storage_type)));
             writer.writeElement("storage_value",   std::to_string(anime.storage_value));
             writer.writeElement("times_rewatched", std::to_string(anime.times_consumed));
             writer.writeElement("rewatch_value",   std::to_string(anime.reconsume_value));

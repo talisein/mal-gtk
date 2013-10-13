@@ -194,7 +194,7 @@ namespace MAL {
 		if (code != CURLE_OK) {
 			print_curl_error(code, curl_ebuffer);
 		}
-		code = curl_easy_setopt(easy, CURLOPT_TIMEOUT, 5);
+		code = curl_easy_setopt(easy, CURLOPT_TIMEOUT, 7);
 		if (code != CURLE_OK) {
 			print_curl_error(code, curl_ebuffer);
 		}
@@ -602,7 +602,6 @@ namespace MAL {
 		xml.insert(0, "data=");
         curl_setup_post(curl, xml);
         curl_setup_httpauth(curl, user_info);
-
 		CURLcode code = curl_easy_perform(curl.get());
 		if (code != CURLE_OK) {
             signal_mal_error(anime.series_title + " not added due to myanimelist.net error: " + curl_ebuffer.get());

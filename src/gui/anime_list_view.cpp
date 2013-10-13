@@ -31,36 +31,36 @@ namespace MAL {
 		model(Gtk::ListStore::create(columns))
 	{
 		auto iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(WATCHING)));
-		iter->set_value(columns.status, WATCHING);
+		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::WATCHING)));
+		iter->set_value(columns.status, AnimeStatus::WATCHING);
 		iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(COMPLETED)));
-		iter->set_value(columns.status, COMPLETED);
+		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::COMPLETED)));
+		iter->set_value(columns.status, AnimeStatus::COMPLETED);
 		iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(ONHOLD)));
-		iter->set_value(columns.status, ONHOLD);
+		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::ONHOLD)));
+		iter->set_value(columns.status, AnimeStatus::ONHOLD);
 		iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(DROPPED)));
-		iter->set_value(columns.status, DROPPED);
+		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::DROPPED)));
+		iter->set_value(columns.status, AnimeStatus::DROPPED);
 		iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(PLANTOWATCH)));
-		iter->set_value(columns.status, PLANTOWATCH);
+		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::PLANTOWATCH)));
+		iter->set_value(columns.status, AnimeStatus::PLANTOWATCH);
 		property_model() = model;
 		property_text_column() = columns.text.index();
 		property_has_entry() = false;
 	}
 
 	AnimeStatusComboBox::AnimeStatusComboBox() {
-        append(to_string(WATCHING));
-        append(to_string(COMPLETED));
-        append(to_string(ONHOLD));
-        append(to_string(DROPPED));
-        append(to_string(PLANTOWATCH));
-        set_active_text(to_string(WATCHING));
+        append(to_string(AnimeStatus::WATCHING));
+        append(to_string(AnimeStatus::COMPLETED));
+        append(to_string(AnimeStatus::ONHOLD));
+        append(to_string(AnimeStatus::DROPPED));
+        append(to_string(AnimeStatus::PLANTOWATCH));
+        set_active_text(to_string(AnimeStatus::WATCHING));
 	}
 
 	AnimeStatus AnimeStatusComboBox::get_anime_status() const {
-        return anime_status_from_string(get_active_text());
+        return anime_status(get_active_text());
 	}
 
     AnimeDetailViewBase::AnimeDetailViewBase(const std::shared_ptr<MAL>& mal) :
@@ -80,7 +80,7 @@ namespace MAL {
         status_box->add(*m_series_status_label);
         status_box->set_visible_window(true);
         m_status_type_sizegroup->add_widget(m_maximum_length_label);
-        m_maximum_length_label.set_label(to_string(NOTYETAIRED));
+        m_maximum_length_label.set_label(to_string(SeriesStatus::NOTYETAIRED));
         m_status_type_sizegroup->add_widget(*m_series_type_label);
         m_status_type_sizegroup->add_widget(*m_series_status_label);
         m_status_type_grid->attach(*type_box, 0, 0, 1, 1);
@@ -150,7 +150,7 @@ namespace MAL {
             m_anime_status_combo->set_active_text(to_string(anime->status));
         }
 
-        if (anime->status == COMPLETED) {
+        if (anime->status == AnimeStatus::COMPLETED) {
             m_date_end_entry->set_sensitive(true);
             m_times_consumed_entry->show();
         } else {
@@ -177,9 +177,11 @@ namespace MAL {
             m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
         }
 
-        auto status = m_anime_status_combo->get_anime_status();
-        if (status != row.get_value(columns->status))
+        auto const status = m_anime_status_combo->get_anime_status();
+        auto const row_status = anime_status(row.get_value(columns->status));
+        if ( status != row_status ) {
             row.set_value(columns->status, Glib::ustring(to_string(status)));
+        }
 
         return true;
     }
@@ -244,7 +246,7 @@ namespace MAL {
         auto columns = std::dynamic_pointer_cast<AnimeModelColumnsStatic>(m_columns);
         auto anime = std::static_pointer_cast<Anime>(item);
         auto status = anime->status;
-        if (status == ANIMESTATUS_INVALID || status == 0)
+        if (status == AnimeStatus::INVALID || status == AnimeStatus::NONE)
             row.set_value(columns->status, Glib::ustring("Add To My Anime List..."));
         else
             row.set_value(columns->status, Glib::ustring(to_string(anime->status)));
@@ -257,20 +259,24 @@ namespace MAL {
 		Gtk::TreeModel::iterator iter = m_model->get_iter(path);
 
 		if (iter) {
-			auto status = anime_status_from_string(new_text);
+			auto status = anime_status(new_text);
             auto anime = iter->get_value(columns->anime);
+
 			if (status != anime->status) {
                 auto new_anime = std::static_pointer_cast<Anime>(anime->clone());
-				iter->set_value(columns->status, Glib::ustring(to_string(status)));
 				new_anime->status = status;
-				iter->set_value(columns->anime, anime);
                 new_anime->score = 0.0f;
-                if (anime->status == COMPLETED)
-                    new_anime->episodes = anime->series_episodes;
-                else
+                if (anime->status == AnimeStatus::COMPLETED) {
+                    new_anime->episodes = new_anime->series_episodes;
+                } else {
                     new_anime->episodes = 0;
-                if (anime->status != ANIMESTATUS_INVALID) {
+                }
+
+                if (new_anime->status != AnimeStatus::INVALID) {
                     m_mal->add_anime_async(*new_anime);
+
+                    iter->set_value(columns->status, Glib::ustring(to_string(status)));
+                    iter->set_value(columns->anime, new_anime);
                 }
             }
 		}
@@ -345,7 +351,7 @@ namespace MAL {
             row.set_value(columns->anime, anime);
         }
 
-        auto const status = anime_status_from_string(row.get_value(columns->status));
+        auto const status = anime_status(row.get_value(columns->status));
         if (status != anime->status) {
             is_changed = true;
             new_anime->status = status;
@@ -371,7 +377,7 @@ namespace MAL {
 		Gtk::TreeModel::iterator iter = m_model->get_iter(path);
 
 		if (iter) {
-			auto status = anime_status_from_string(new_text);
+			auto status = anime_status(new_text);
             auto anime = iter->get_value(columns->anime);
 
 			if (status != anime->status) {
@@ -381,7 +387,7 @@ namespace MAL {
                 anime = new_anime;
 				iter->set_value(columns->anime, anime);
 
-                if (status != ANIMESTATUS_INVALID) {
+                if (status != AnimeStatus::INVALID) {
                     send_item_update(anime);
                 }
             }
@@ -435,7 +441,7 @@ namespace MAL {
         m_button_row->attach(*m_status_combo, -1, 0, 1, 1);
         m_button_row->attach(*label, -2, 0, 1, 1);
         m_status_combo->set_hexpand(true);
-        m_status_combo->set_active_text(to_string(WATCHING));
+        m_status_combo->set_active_text(to_string(AnimeStatus::WATCHING));
         m_status_combo->show();
         list_view->set_filter_func(sigc::mem_fun(*this, &AnimeFilteredListPage::m_filter_func));
         mal->signal_anime_added.connect(sigc::mem_fun(*this, &AnimeFilteredListPage::on_mal_update));

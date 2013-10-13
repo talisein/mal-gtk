@@ -634,7 +634,7 @@ namespace MAL {
         m_treeview->set_rules_hint(true);
         m_model->set_default_sort_func(sigc::mem_fun(*this, &MALItemListViewBase::malitem_comparitor));
         m_model->set_sort_column(Gtk::TreeSortable::DEFAULT_SORT_COLUMN_ID, Gtk::SORT_DESCENDING);
-#if GTK_CHECK_VERSION(3,8,0)
+#if GLIB_CHECK_VERSION(3,36,0)
         Glib::Value<bool> sc_val;
         sc_val.init(Glib::Value<bool>::value_type());
         sc_val.set(true);
