@@ -182,6 +182,7 @@ namespace MAL {
 		bool entry_after_anime = false;
 		bool seen_anime        = false;
 		bool seen_entry        = false;
+
 		for( ret = xmlTextReaderRead(reader.get()); ret == 1;
 		     ret = xmlTextReaderRead(reader.get()) ) {
 			const std::string name  = xmlchar_to_str(xmlTextReaderConstName (reader.get()));
@@ -249,6 +250,7 @@ namespace MAL {
      */
     std::shared_ptr<Anime> AnimeSerializer::deserialize_details(const std::string& xml) const
     {
+        typedef std::unique_ptr<xmlChar, XmlCharDeleter> xmlStringUPtr;
         auto res = std::make_shared<Anime>();
 		std::unique_ptr<char[]> cstr(new char[xml.size()]);
 		std::memcpy(cstr.get(), xml.c_str(), xml.size());
@@ -273,9 +275,9 @@ namespace MAL {
 			const std::string name  = xmlchar_to_str(xmlTextReaderConstName (reader.get()));
 
             if (name == "input") {
-                std::unique_ptr<xmlChar, XmlCharDeleter> type(xmlTextReaderGetAttribute(reader.get(), "type"_xml));
-                std::unique_ptr<xmlChar, XmlCharDeleter> attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
-                std::unique_ptr<xmlChar, XmlCharDeleter> attr_value(xmlTextReaderGetAttribute(reader.get(), "value"_xml));
+                xmlStringUPtr type(xmlTextReaderGetAttribute(reader.get(), "type"_xml));
+                xmlStringUPtr attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
+                xmlStringUPtr attr_value(xmlTextReaderGetAttribute(reader.get(), "value"_xml));
                 if (type) {
                     if (xmlStrEqual(type.get(), "text"_xml) || xmlStrEqual(type.get(), "checkbox"_xml)) {
                         if (xmlStrEqual(attr_name.get(), "fansub_group"_xml))
@@ -289,7 +291,7 @@ namespace MAL {
                     }
                 }
             } else if (name == "textarea" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
-                std::unique_ptr<xmlChar, XmlCharDeleter> attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
+                xmlStringUPtr attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
                 if (xmlStrEqual(attr_name.get(), "tags"_xml)) textarea = TAGS;
                 else if (xmlStrEqual(attr_name.get(), "list_comments"_xml)) textarea = COMMENTS;
                 else textarea = NONE;
@@ -311,7 +313,7 @@ namespace MAL {
             } else if (name == "#text" && textarea != NONE) {
                 textbuf.append(xmlchar_to_str(xmlTextReaderConstValue(reader.get())));
             } else if (name == "select" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
-                std::unique_ptr<xmlChar, XmlCharDeleter> attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
+                xmlStringUPtr attr_name(xmlTextReaderGetAttribute(reader.get(), "name"_xml));
                 if (xmlStrEqual(attr_name.get(), "priority"_xml)) selector = PRIORITY;
                 if (xmlStrEqual(attr_name.get(), "storage"_xml)) selector = STORAGE;
                 if (xmlStrEqual(attr_name.get(), "list_rewatch_value"_xml)) selector = REWATCHVALUE;
@@ -319,7 +321,7 @@ namespace MAL {
             } else if (name == "select" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_END_ELEMENT)  {
                 selector = SELECTOR_NONE;
             } else if (name == "option" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
-                std::unique_ptr<xmlChar, XmlCharDeleter> value(xmlTextReaderGetAttribute(reader.get(), "value"_xml));
+                xmlStringUPtr value(xmlTextReaderGetAttribute(reader.get(), "value"_xml));
                 if (xmlTextReaderMoveToAttribute(reader.get(), "selected"_xml) == 1) {
                     switch (selector) {
                         case PRIORITY:
@@ -381,6 +383,7 @@ namespace MAL {
             writer.writeElement("comments", anime.comments);
             writer.writeElement("fansub_group", anime.fansub_group);
         }
+
         std::string tags;
 		auto iter = anime.tags.begin();
 		bool was_first = true;
