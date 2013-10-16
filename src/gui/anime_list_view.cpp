@@ -455,7 +455,20 @@ namespace MAL {
 
     void AnimeFilteredListPage::refresh()
     {
-        m_mal->get_anime_list_async();
+        auto complete_cb = [this] { 
+            m_refresh_button->set_sensitive(true);
+            m_refresh_button->show();
+            m_progressbar->hide();
+        };
+        auto prog_cb = [this](int_fast64_t bytes) {
+            m_progressbar->set_text(std::to_string(bytes) + " bytes");
+            m_progressbar->pulse();
+        };
+
+        m_refresh_button->set_sensitive(false);
+        m_refresh_button->hide();
+        m_progressbar->show();
+        m_mal->get_anime_list_async(prog_cb, complete_cb);
     }
 
     void AnimeFilteredListPage::on_mal_update()

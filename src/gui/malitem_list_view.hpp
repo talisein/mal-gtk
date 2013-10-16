@@ -30,6 +30,7 @@
 #include <gtkmm/comboboxtext.h>
 #include <gtkmm/cellrenderercombo.h>
 #include <gtkmm/sizegroup.h>
+#include <gtkmm/progressbar.h>
 #include <sigc++/slot.h>
 #include "malitem.hpp"
 #include "mal.hpp"
@@ -353,6 +354,7 @@ namespace MAL {
 		MALItemDetailViewBase *m_detail_view;
         Gtk::Grid             *m_button_row;
         Gtk::Button           *m_refresh_button;
+        Gtk::ProgressBar      *m_progressbar;
 
         /* Refresh the List View */
 		virtual void refresh() = 0;

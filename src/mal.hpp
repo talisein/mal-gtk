@@ -92,7 +92,8 @@ namespace MAL {
         MessageDispatcher<Glib::ustring> signal_mal_error;
         MessageDispatcher<Glib::ustring> signal_mal_info;
 
-        void get_anime_list_async();
+        void get_anime_list_async(std::function<void (int_fast64_t bytes)> progress_cb = nullptr,
+                                  std::function<void ()> complete_cb = nullptr);
         void get_manga_list_async();
         void get_anime_details_async(const std::shared_ptr<const Anime>& anime);
         void get_manga_details_async(const std::shared_ptr<const Manga>& manga);
@@ -127,11 +128,15 @@ namespace MAL {
 		const std::string MANGA_UPDATED_BASE_URL = "http://myanimelist.net/api/mangalist/update/";
 		const std::string MANGA_ADD_BASE_URL     = "http://myanimelist.net/api/mangalist/add/";
 
+        CallbackDispatcher cb_dispatcher;
+
 		/** Returns the anime list for username. As slow as the
 		 * internet.
 		 * Safe to call from multiple threads.
 		 */
-		void get_anime_list_sync();
+
+        void get_anime_list_sync(std::function<void (int_fast64_t bytes)> progress_cb = nullptr,
+                                 std::function<void ()> complete_cb = nullptr);
 
 		/** Returns the manga list for username. As slow as the
 		 * internet.
@@ -139,7 +144,7 @@ namespace MAL {
 		 */
 		void get_manga_list_sync();
 
-        std::unique_ptr<std::string> get_sync(const std::string& url);
+        std::unique_ptr<std::string> get_sync(const std::string& url, std::function<void (int_fast64_t bytes)> progress_cb = nullptr);
         void get_anime_details_sync(const std::shared_ptr<const Anime>& anime);
         void get_manga_details_sync(const std::shared_ptr<const Manga>& manga);
 

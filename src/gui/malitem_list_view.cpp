@@ -926,7 +926,8 @@ namespace MAL {
 		m_list_view(list_view),
         m_detail_view(detail_view),
         m_button_row(Gtk::manage(new Gtk::Grid())),
-        m_refresh_button(Gtk::manage(new Gtk::Button("")))
+        m_refresh_button(Gtk::manage(new Gtk::Button(""))),
+        m_progressbar(Gtk::manage(new Gtk::ProgressBar()))
 	{
 		set_orientation(Gtk::ORIENTATION_VERTICAL);
 		m_refresh_button->set_always_show_image(true);
@@ -951,13 +952,14 @@ namespace MAL {
 		m_refresh_button->set_related_action(action);
         m_refresh_button->set_can_default(true);
         m_refresh_button->set_receives_default(true);
-
+        m_progressbar->set_show_text(true);
 		if (m_detail_view) attach(*m_detail_view, 0, 0, 1, 1);
         attach(*m_button_row, 0, 1, 1, 1);
 		m_button_row->attach(*m_refresh_button, 0, 0, 1, 1);
 		attach(*list_view, 0, 2, 1, 1);
-
+        m_button_row->attach_next_to(*m_progressbar, *m_refresh_button, Gtk::POS_RIGHT, 1, 1);
 		show_all();
 		if (m_detail_view) m_detail_view->hide();
+        m_progressbar->hide();
 	}
 }

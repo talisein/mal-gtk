@@ -194,10 +194,6 @@ namespace MAL {
 		if (code != CURLE_OK) {
 			print_curl_error(code, curl_ebuffer);
 		}
-		code = curl_easy_setopt(easy, CURLOPT_TIMEOUT, 7);
-		if (code != CURLE_OK) {
-			print_curl_error(code, curl_ebuffer);
-		}
 		code = curl_easy_setopt(easy, CURLOPT_URL, url.c_str());
 		if (code != CURLE_OK) {
 			print_curl_error(code, curl_ebuffer);
@@ -208,14 +204,17 @@ namespace MAL {
 		}
 	}
 
-    void MAL::get_anime_list_async()
+    void MAL::get_anime_list_async(std::function<void (int_fast64_t bytes)> progress_cb,
+                                   std::function<void ()> complete_cb)
     {
-        active.send( [this](){ this->get_anime_list_sync(); } );
+        active.send( [=] { this->get_anime_list_sync(progress_cb, complete_cb); } );
     }
 
-	void MAL::get_anime_list_sync() {
+    void MAL::get_anime_list_sync(std::function<void (int_fast64_t bytes)> progress_cb,
+                                  std::function<void ()> complete_cb)
+    {
 		const std::string url = LIST_BASE_URL + user_info->get_username().get() + "&status=all&type=anime";
-        auto buf = get_sync(url);
+        auto buf = get_sync(url, progress_cb);
         if (buf) {
             text_util->parse_html_entities(*buf);
             auto anime_list = serializer.deserialize(*buf);
@@ -235,7 +234,12 @@ namespace MAL {
 
             signal_anime_added();
             signal_mal_info("Refreshed anime list from myanimelist.net");
+        } else {
+            signal_mal_info("Refresh of anime list failed");
         }
+
+        if (complete_cb)
+            cb_dispatcher.send(complete_cb);
 	}
 
     void MAL::get_manga_list_async()
@@ -304,7 +308,21 @@ namespace MAL {
         }
     }
 
-    std::unique_ptr<std::string> MAL::get_sync(const std::string& url)
+    namespace {
+        int curl_progress_fn(void *clientp,
+                             double,// dltotal,
+                             double dlnow,
+                             double,// upload total
+                             double)// upload now
+        {
+            auto progress_cb = static_cast<std::function<void (int_fast64_t bytes)>*>(clientp);
+            (*progress_cb)(static_cast<int_fast64_t>(dlnow));
+            return 0;
+        }
+    }
+
+    std::unique_ptr<std::string> MAL::get_sync(const std::string& url,
+                                               std::function<void (int_fast64_t bytes)> progress_cb)
     {
 		if (!user_info->get_username()) {
             signal_mal_error("No username provided");
@@ -315,12 +333,31 @@ namespace MAL {
 		std::unique_ptr<std::string> buf(new std::string());
 		setup_curl_easy(curl.get(), url, buf.get());
         curl_setup_httpauth(curl, user_info);
-        
+        std::function<void (int_fast64_t)> bound_cb = [this, &progress_cb] (int_fast64_t progress) {
+            cb_dispatcher.send( std::bind(progress_cb, progress) );
+        };
+
+        if (progress_cb) {
+            CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSFUNCTION, &curl_progress_fn);
+            if (code != CURLE_OK) {
+                print_curl_error(code, curl_ebuffer);
+            }
+            code = curl_easy_setopt(curl.get(), CURLOPT_NOPROGRESS, 0);
+            if (code != CURLE_OK) {
+                print_curl_error(code, curl_ebuffer);
+            }
+            code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSDATA, &bound_cb);
+            if (code != CURLE_OK) {
+                print_curl_error(code, curl_ebuffer);
+            }
+        }
+
 		CURLcode code = curl_easy_perform(curl.get());
 		if (code != CURLE_OK) {
             signal_mal_error(std::string("Error communicating with myanimelist.net: ") + curl_ebuffer.get());
             return nullptr;
 		}
+
         if (buf->find("Error: You must first login to see this page.") == std::string::npos) {
             return buf;
         } else {
@@ -330,6 +367,7 @@ namespace MAL {
                 return nullptr;
             } else {
                 buf->clear();
+
                 code = curl_easy_setopt(curl.get(), CURLOPT_HTTPGET, 1);
                 if (code != CURLE_OK) {
                     print_curl_error(code, curl_ebuffer);
@@ -338,6 +376,23 @@ namespace MAL {
                 if (code != CURLE_OK) {
                     print_curl_error(code, curl_ebuffer);
                 }
+
+                if (progress_cb) {
+
+                    code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSFUNCTION, &curl_progress_fn);
+                    if (code != CURLE_OK) {
+                        print_curl_error(code, curl_ebuffer);
+                    }
+                    code = curl_easy_setopt(curl.get(), CURLOPT_NOPROGRESS, 0);
+                    if (code != CURLE_OK) {
+                        print_curl_error(code, curl_ebuffer);
+                    }
+                    code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSDATA, &bound_cb);
+                    if (code != CURLE_OK) {
+                        print_curl_error(code, curl_ebuffer);
+                    }
+                }
+                
                 code = curl_easy_perform(curl.get());
                 if (code != CURLE_OK) {
                     signal_mal_error(std::string("Error communicating with myanimelist.net: ") + curl_ebuffer.get());
