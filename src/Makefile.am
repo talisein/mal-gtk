@@ -21,6 +21,7 @@ mal_gtk_SOURCES = main.cpp                                            \
 		  		  text_util.cpp             text_util.hpp             \
 		  		                            active.hpp                \
 		  		                            message_dispatcher.hpp    \
+		  		                            callback_dispatcher.hpp   \
 		  		  gui/main_window.cpp       gui/main_window.hpp       \
 		  		  gui/password_dialog.cpp   gui/password_dialog.hpp   \
 		  		  gui/malitem_list_view.cpp gui/malitem_list_view.hpp \
