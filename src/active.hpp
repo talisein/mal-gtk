@@ -16,6 +16,7 @@
  */
 
 #pragma once
+#include <type_traits>
 #include <memory>
 #include <thread>
 #include <condition_variable>
@@ -25,29 +26,45 @@
 
 namespace MAL {
 
+    /** A thread-safe queue that blocks on pop().
+     */
     template <typename T> class message_queue {
     public:
         message_queue<T>() = default;
-        void push(const T& t) {
-            std::lock_guard<std::mutex> lock(m);
-            queue.push(t);
-            cond.notify_one();
-        };
 
-        void push(T&& t) {
+        /** Adds an element to the queue, waking a thread that is
+         * waiting on pop().
+         */
+        template <typename U>
+        void push(U&& u) {
             std::lock_guard<std::mutex> lock(m);
-            queue.push(std::forward(t));
+            queue.push(std::forward<U>(u));
             cond.notify_one();
-        };
+        }
 
+        /** Returns the first element of the queue.
+         *
+         * If the queue is empty, the operation will block until an
+         * element is pushed from a separate thread.
+         *
+         * Could potentially throw an exception, since std::function
+         * isn't nothrow move/copy assignable.
+         */
         T pop() {
             std::unique_lock<std::mutex> lock(m);
             while (queue.empty()) {
                 cond.wait(lock);
             }
-            auto front = queue.front();
-            queue.pop();
-            return front;
+
+            if (std::is_move_assignable<T>::value) {
+                auto front = std::move(queue.front());
+                queue.pop();
+                return front;
+            } else {
+                auto front = queue.front();
+                queue.pop();
+                return front;
+            }
         };
 
     private:
@@ -56,6 +73,12 @@ namespace MAL {
         std::condition_variable cond;
     };
 
+    /* An object that manages its own thread.
+     *
+     * Construction spins up a new thread, destruction joins the
+     * thread. Thus any queued functors are executed before the object
+     * is destroyed.
+     */
     class Active {
     public:
         typedef std::function<void()> Message;
@@ -75,20 +98,22 @@ namespace MAL {
         }
  
     public:
- 
         Active() : done(false) {
             thd = std::unique_ptr<std::thread>(
                 new std::thread( [=]{ this->Run(); } ) );
         }
- 
+
         ~Active() {
             send( [&]{ done = true; } ); ;
             thd->join();
         }
  
+        /** Sends a functor to be executed on a separate thread.
+         *
+         * Functors are executed sequentially.
+         */
         void send( Message m ) {
             mq.push( m );
         }
     };
-
 }
