@@ -24,42 +24,42 @@
 #include "malitem.hpp"
 
 namespace MAL {
-	enum class AnimeStatus : std::int8_t {
+	enum class AnimeStatus : std::int_fast8_t {
             INVALID     = -1,
-            NONE        = 0,
-            WATCHING    = 1,
-            COMPLETED   = 2,
-            ONHOLD      = 3,
-            DROPPED     = 4,
-            PLANTOWATCH = 6,
+            NONE        =  0,
+            WATCHING    =  1,
+            COMPLETED   =  2,
+            ONHOLD      =  3,
+            DROPPED     =  4,
+            PLANTOWATCH =  6,
 	};
 
-	enum class SeriesStatus : std::int8_t {
+	enum class SeriesStatus : std::int_fast8_t {
             INVALID     = -1,
-            AIRING      = 1,
-            FINISHED    = 2,
-            NOTYETAIRED = 3,
+            AIRING      =  1,
+            FINISHED    =  2,
+            NOTYETAIRED =  3,
 	};
 
-	enum class SeriesType : std::int8_t {
+	enum class SeriesType : std::int_fast8_t {
             INVALID     = -1,
-	        TV          = 1,
-	        OVA         = 2,
-	        MOVIE       = 3,
-	        SPECIAL     = 4,
-	        ONA         = 5,
-            MUSIC       = 6,
+	        TV          =  1,
+	        OVA         =  2,
+	        MOVIE       =  3,
+	        SPECIAL     =  4,
+	        ONA         =  5,
+            MUSIC       =  6,
 	};
 	                  
-	enum class AnimeStorageType : std::int8_t {
-            INVALID     = 0,
-            HARDDRIVE   = 1,
-            DVDCD       = 2,
-            NONE        = 3,
-            RETAILDVD   = 4,
-            VHS         = 5,
-            EXTERNALHD  = 6,
-            NAS         = 7,
+	enum class AnimeStorageType : std::int_fast8_t {
+            INVALID     =  0,
+            HARDDRIVE   =  1,
+            DVDCD       =  2,
+            NONE        =  3,
+            RETAILDVD   =  4,
+            VHS         =  5,
+            EXTERNALHD  =  6,
+            NAS         =  7,
     };
 
     Glib::ustring to_string(const SeriesType s);
@@ -76,6 +76,7 @@ namespace MAL {
 	AnimeStatus anime_status(const int i);
 	AnimeStatus anime_status(const Glib::ustring& s);
 
+    AnimeStorageType anime_storage_type(const int i);
     AnimeStorageType anime_storage_type(const Glib::ustring& s);
 
 	class Anime final : public MALItem {
