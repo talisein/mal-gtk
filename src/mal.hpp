@@ -32,6 +32,7 @@
 #include "text_util.hpp"
 #include "active.hpp"
 #include "message_dispatcher.hpp"
+#include "callback_dispatcher.hpp"
 
 namespace MAL {
 
