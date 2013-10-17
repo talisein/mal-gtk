@@ -91,9 +91,11 @@ namespace MAL {
     {
     public:
         Gtk::TreeModelColumn<Glib::ustring> status;
+        Gtk::TreeModelColumn<bool> status_editable;
 
         AnimeModelColumnsStatic() {
             add(status);
+            add(status_editable);
         }
     };
 

@@ -24,6 +24,10 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/eventbox.h>
 
+namespace sigc {
+    SIGC_FUNCTORS_DEDUCE_RESULT_TYPE_WITH_DECLTYPE
+}
+
 namespace MAL {
 
 	AnimeStatusCellRendererCombo::AnimeStatusCellRendererCombo() :
@@ -229,8 +233,9 @@ namespace MAL {
 		auto status_cellrenderer = Gtk::manage(new AnimeStatusCellRendererCombo());
 		m_status_column->pack_start(*status_cellrenderer);
 		m_status_column->add_attribute(status_cellrenderer->property_text(), columns->status);
+        m_status_column->add_attribute(status_cellrenderer->property_editable(), columns->status_editable);
 		status_cellrenderer->signal_edited().connect(sigc::mem_fun(*this, &AnimeListViewStatic::on_status_cr_changed));
-		status_cellrenderer->property_editable() = true;
+//		status_cellrenderer->property_editable() = true;
 		m_treeview->append_column(*m_status_column);
     }
 
@@ -245,11 +250,20 @@ namespace MAL {
 
         auto columns = std::dynamic_pointer_cast<AnimeModelColumnsStatic>(m_columns);
         auto anime = std::static_pointer_cast<Anime>(item);
+
+        auto my_anime = m_mal->find_anime(anime);
+        if (my_anime) {
+            anime->status = my_anime->status;
+        }
+
         auto status = anime->status;
-        if (status == AnimeStatus::INVALID || status == AnimeStatus::NONE)
+        if (status == AnimeStatus::INVALID || status == AnimeStatus::NONE) {
             row.set_value(columns->status, Glib::ustring("Add To My Anime List..."));
-        else
+            row.set_value(columns->status_editable, true);
+        } else {
             row.set_value(columns->status, Glib::ustring(to_string(anime->status)));
+            row.set_value(columns->status_editable, false);
+        }
     }
 
 	void AnimeListViewStatic::on_status_cr_changed(const Glib::ustring& path,
@@ -273,8 +287,24 @@ namespace MAL {
                 }
 
                 if (new_anime->status != AnimeStatus::INVALID) {
-                    m_mal->add_anime_async(*new_anime);
+                    auto fn = [this, new_anime, columns](bool success) {
+                        m_model->foreach_iter([this, new_anime, columns, success](const Gtk::TreeModel::iterator& iter)->bool {
+                                auto walked_anime = iter->get_value(columns->anime);
+                                if (walked_anime->series_itemdb_id == new_anime->series_itemdb_id) {
+                                    if (success) {
+                                        iter->set_value(columns->status_editable, false);
+                                    } else {
+                                        iter->set_value(columns->status, Glib::ustring("Add To My Anime List..."));
+                                        iter->set_value(columns->status_editable, true);
+                                    }
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            });
+                    };
 
+                    m_mal->add_anime_async(*new_anime, fn);
                     iter->set_value(columns->status, Glib::ustring(to_string(status)));
                     iter->set_value(columns->anime, new_anime);
                 }
@@ -455,11 +485,14 @@ namespace MAL {
 
     void AnimeFilteredListPage::refresh()
     {
-        auto complete_cb = [this] { 
+        auto complete_cb = [this](bool success) { 
             m_refresh_button->set_sensitive(true);
             m_refresh_button->show();
             m_progressbar->hide();
+            if (success)
+                on_mal_update();
         };
+
         auto prog_cb = [this](int_fast64_t bytes) {
             m_progressbar->set_text(std::to_string(bytes) + " bytes");
             m_progressbar->pulse();
@@ -474,11 +507,11 @@ namespace MAL {
     void AnimeFilteredListPage::on_mal_update()
     {
         /* Because MAL::for_each_anime is implemented as a template,
-         * we can't use std::mem_fn. Instead we need to use a lambda
-         * so that there is a definite type.
+         * we can't use std::mem_fn to address it. Instead we need to
+         * use a lambda so that there is a definite type.
          */
         m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<MALItem>&)>&& f)->void {
-                m_mal->for_each_anime(std::forward<std::function<void (const std::shared_ptr<MALItem>&)>>(f));
+                m_mal->for_each_anime(std::move(f));
             }
             );
     }
