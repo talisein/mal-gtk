@@ -26,7 +26,12 @@
 
 namespace {
 	extern "C" {
-		static size_t curl_write_function(void *buffer, size_t size, size_t nmemb, void *userp) {
+		static size_t
+        curl_write_function(void *buffer,
+                            size_t size,
+                            size_t nmemb,
+                            void *userp)
+        {
 			auto const data = std::string(static_cast<char*>(buffer), size*nmemb);
 			auto const buf = static_cast<std::string*>(userp);
 			buf->append(std::move(data));
@@ -34,30 +39,58 @@ namespace {
 			return size*nmemb;
 		}
 
-		static void mal_curl_lock_function(CURL* curl, curl_lock_data data, curl_lock_access access, void* userp) {
+		static void
+        mal_curl_lock_function(CURL* curl,
+                               curl_lock_data data,
+                               curl_lock_access access,
+                               void* userp)
+        {
 			auto functor_pair_p = static_cast<MAL::MAL::pair_lock_functor_t*>(userp);
 			functor_pair_p->first(curl, data, access);
 		}
 
-		static void mal_curl_unlock_function(CURL* curl, curl_lock_data data, void* userp) {
+		static void
+        mal_curl_unlock_function(CURL* curl,
+                                 curl_lock_data data,
+                                 void* userp)
+        {
 			auto functor_pair_p = static_cast<MAL::MAL::pair_lock_functor_t*>(userp);
 			functor_pair_p->second(curl, data);
-		}
-	}
+        }
 
-    void print_curl_error(CURLcode code, const std::unique_ptr<char[]>& curl_ebuffer) {
+        static int
+        mal_curl_progress_function(void *clientp,
+                                   double,// dltotal,
+                                   double dlnow,
+                                   double,// upload total
+                                   double)// upload now
+        {
+            auto progress_cb = static_cast<MAL::MAL::DownloadProgressCb_t*>(clientp);
+            (*progress_cb)(static_cast<int_fast64_t>(dlnow));
+
+            return 0;
+        }
+    }
+
+    static void
+    print_curl_error(CURLcode code,
+                     const std::unique_ptr<char[]>& curl_ebuffer)
+    {
         std::cerr << "Error: " << curl_easy_strerror(code);
         if (curl_ebuffer)
             std::cerr << ", " << curl_ebuffer.get();
         std::cerr << std::endl;
     }
 
-    void print_curl_share_error(CURLSHcode code) {
+    static void
+    print_curl_share_error(CURLSHcode code)
+    {
         std::cerr << "Error: " << curl_share_strerror(code) << std::endl;
     }
 
-    void curl_setup_httpauth(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
-                             std::unique_ptr<MAL::UserInfo>& user_info)
+    static void
+    curl_setup_httpauth(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
+                        std::unique_ptr<MAL::UserInfo>& user_info)
     {
         CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         if (G_UNLIKELY(code != CURLE_OK)) {
@@ -73,28 +106,52 @@ namespace {
         }
     }
 
-    void curl_setup_post(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
-                         const std::string& fields)
+    static void
+    curl_setup_progress(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
+                        MAL::MAL::DownloadProgressCb_t& bound_cb)
     {
-		CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
-		if (code != CURLE_OK) {
-			print_curl_error(code, nullptr);
-		}
+        CURLcode code = curl_easy_setopt(curl.get(),
+                                         CURLOPT_PROGRESSFUNCTION,
+                                         &mal_curl_progress_function);
+        if (code != CURLE_OK) {
+            print_curl_error(code, nullptr);
+        }
 
-		code = curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(fields.size()));
-		if (code != CURLE_OK) {
-			print_curl_error(code, nullptr);
-		}
+        code = curl_easy_setopt(curl.get(), CURLOPT_NOPROGRESS, 0);
+        if (code != CURLE_OK) {
+            print_curl_error(code, nullptr);
+        }
 
-		code = curl_easy_setopt(curl.get(), CURLOPT_COPYPOSTFIELDS, fields.c_str());
-		if (code != CURLE_OK) {
-			print_curl_error(code, nullptr);
-		}
+        code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSDATA, &bound_cb);
+        if (code != CURLE_OK) {
+            print_curl_error(code, nullptr);
+        }
     }
 
-    CURLcode curl_do_html_login(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
-                           const std::string& username,
-                           const std::string& password)
+    static void
+    curl_setup_post(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
+                    const std::string& fields)
+    {
+        CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
+        if (code != CURLE_OK) {
+            print_curl_error(code, nullptr);
+        }
+
+        code = curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(fields.size()));
+        if (code != CURLE_OK) {
+            print_curl_error(code, nullptr);
+        }
+
+        code = curl_easy_setopt(curl.get(), CURLOPT_COPYPOSTFIELDS, fields.c_str());
+        if (code != CURLE_OK) {
+            print_curl_error(code, nullptr);
+        }
+    }
+
+    static CURLcode
+    curl_do_html_login(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
+                       const std::string& username,
+                       const std::string& password)
     {
         std::string fields = "username=";
         fields += username;
@@ -106,7 +163,7 @@ namespace {
         return curl_easy_perform(curl.get());
     }
 }
-
+    
 namespace MAL {
 	MAL::MAL(std::unique_ptr<UserInfo>&& info) :
 		user_info(std::move(info)),
@@ -204,14 +261,14 @@ namespace MAL {
 		}
 	}
 
-    void MAL::get_anime_list_async(std::function<void (int_fast64_t bytes)> progress_cb,
-                                   std::function<void ()> complete_cb)
+    void MAL::get_anime_list_async(DownloadProgressCb_t progress_cb,
+                                   OperationCompleteCb_t complete_cb)
     {
         active.send( [=] { this->get_anime_list_sync(progress_cb, complete_cb); } );
     }
 
-    void MAL::get_anime_list_sync(std::function<void (int_fast64_t bytes)> progress_cb,
-                                  std::function<void ()> complete_cb)
+    void MAL::get_anime_list_sync(DownloadProgressCb_t progress_cb,
+                                  OperationCompleteCb_t complete_cb)
     {
 		const std::string url = LIST_BASE_URL + user_info->get_username().get() + "&status=all&type=anime";
         auto buf = get_sync(url, progress_cb);
@@ -232,14 +289,16 @@ namespace MAL {
                               });
             }
 
-            signal_anime_added();
+            if (complete_cb)
+                cb_dispatcher.send(std::bind(complete_cb, true));
+
             signal_mal_info("Refreshed anime list from myanimelist.net");
         } else {
+            if (complete_cb)
+                cb_dispatcher.send(std::bind(complete_cb, false));
+
             signal_mal_info("Refresh of anime list failed");
         }
-
-        if (complete_cb)
-            cb_dispatcher.send(complete_cb);
 	}
 
     void MAL::get_manga_list_async()
@@ -308,21 +367,8 @@ namespace MAL {
         }
     }
 
-    namespace {
-        int curl_progress_fn(void *clientp,
-                             double,// dltotal,
-                             double dlnow,
-                             double,// upload total
-                             double)// upload now
-        {
-            auto progress_cb = static_cast<std::function<void (int_fast64_t bytes)>*>(clientp);
-            (*progress_cb)(static_cast<int_fast64_t>(dlnow));
-            return 0;
-        }
-    }
-
     std::unique_ptr<std::string> MAL::get_sync(const std::string& url,
-                                               std::function<void (int_fast64_t bytes)> progress_cb)
+                                               DownloadProgressCb_t progress_cb)
     {
 		if (!user_info->get_username()) {
             signal_mal_error("No username provided");
@@ -333,23 +379,12 @@ namespace MAL {
 		std::unique_ptr<std::string> buf(new std::string());
 		setup_curl_easy(curl.get(), url, buf.get());
         curl_setup_httpauth(curl, user_info);
-        std::function<void (int_fast64_t)> bound_cb = [this, &progress_cb] (int_fast64_t progress) {
+        DownloadProgressCb_t bound_cb = [this, &progress_cb] (int_fast64_t progress) {
             cb_dispatcher.send( std::bind(progress_cb, progress) );
         };
 
         if (progress_cb) {
-            CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSFUNCTION, &curl_progress_fn);
-            if (code != CURLE_OK) {
-                print_curl_error(code, curl_ebuffer);
-            }
-            code = curl_easy_setopt(curl.get(), CURLOPT_NOPROGRESS, 0);
-            if (code != CURLE_OK) {
-                print_curl_error(code, curl_ebuffer);
-            }
-            code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSDATA, &bound_cb);
-            if (code != CURLE_OK) {
-                print_curl_error(code, curl_ebuffer);
-            }
+            curl_setup_progress(curl, bound_cb);
         }
 
 		CURLcode code = curl_easy_perform(curl.get());
@@ -378,19 +413,7 @@ namespace MAL {
                 }
 
                 if (progress_cb) {
-
-                    code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSFUNCTION, &curl_progress_fn);
-                    if (code != CURLE_OK) {
-                        print_curl_error(code, curl_ebuffer);
-                    }
-                    code = curl_easy_setopt(curl.get(), CURLOPT_NOPROGRESS, 0);
-                    if (code != CURLE_OK) {
-                        print_curl_error(code, curl_ebuffer);
-                    }
-                    code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSDATA, &bound_cb);
-                    if (code != CURLE_OK) {
-                        print_curl_error(code, curl_ebuffer);
-                    }
+                    curl_setup_progress(curl, bound_cb);
                 }
                 
                 code = curl_easy_perform(curl.get());
@@ -644,11 +667,17 @@ namespace MAL {
         }
 	}
 
-    void MAL::add_anime_async(const Anime& anime) {
-        active.send( [this, anime](){ this->add_anime_sync(anime); } );
+    void
+    MAL::add_anime_async(const Anime& anime,
+                         OperationCompleteCb_t complete_cb)
+    {
+        active.send( [=] { this->add_anime_sync(anime, complete_cb); } );
     }
 
-	bool MAL::add_anime_sync(const Anime& anime) {
+	bool
+    MAL::add_anime_sync(const Anime& anime,
+                        OperationCompleteCb_t complete_cb)
+    {
 		const std::string url = ADD_BASE_URL + std::to_string(anime.series_itemdb_id) + ".xml";
 		std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
 		std::unique_ptr<std::string> buf(new std::string());
@@ -669,10 +698,27 @@ namespace MAL {
 		}
 
 		if (code == CURLE_OK) {
+            {
+                auto anime_p = std::static_pointer_cast<Anime>(anime.clone());
+                std::lock_guard<std::mutex> lock(m_anime_list_mutex);
+                auto iter = m_anime_list.find(anime_p);
+                if (iter != m_anime_list.end()) {
+                    (**iter).update_from_list(anime_p);
+                } else {
+                    m_anime_list.insert(anime_p);
+                }
+            }
+
+            if (complete_cb)
+                cb_dispatcher.send(std::bind(complete_cb, true));
+
 			signal_anime_added();
             signal_mal_info(anime.series_title + " successfully added");
 			return true;
 		} else {
+            if (complete_cb)
+                cb_dispatcher.send(std::bind(complete_cb, false));
+
             signal_mal_error(anime.series_title + " could not be added due to myanimelist.net error: " + *buf);
 			return false;
 		}
@@ -763,6 +809,7 @@ namespace MAL {
                             break;
                     }
                 }
+
             signal_anime_added();
             signal_manga_added();
             signal_mal_info("Loaded anime and manga list from local storage.");

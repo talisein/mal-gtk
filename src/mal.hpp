@@ -36,6 +36,7 @@
 
 namespace MAL {
 
+    /* Deleters for libcurl */
 	struct CURLEscapeDeleter {
 		void operator()(char* str) const {
 			curl_free(str);
@@ -58,42 +59,94 @@ namespace MAL {
 		}
 	};
 
+    /** Interface to myanimelist.net.
+     *
+     * Includes a local cache of lists downloaded. Network operations
+     * performed in worker thread using libcurl.
+     */
 	class MAL {
 		typedef std::function<void (CURL*, curl_lock_data, curl_lock_access)> lock_functor_t;
 		typedef std::function<void (CURL*, curl_lock_data)> unlock_functor_t;
+
 	public:
 		MAL(std::unique_ptr<UserInfo>&& info);
 		~MAL();
 
+        /** Applies the given functor object f to all anime.
+         *
+         * Used because the anime list is behind a mutex.
+         */
         template <class UnaryFunction>
         UnaryFunction for_each_anime(UnaryFunction&& f) {
             std::lock_guard<std::mutex> lock(m_anime_list_mutex);
-            return std::for_each(m_anime_list.begin(), m_anime_list.end(), std::forward<UnaryFunction>(f));
+            return std::for_each(m_anime_list.cbegin(), m_anime_list.cend(), std::forward<UnaryFunction>(f));
         }
 
+        /** Applies the given functor object f to all manga.
+         *
+         * Used because the manga list is behind a mutex.
+         */
         template <class UnaryFunction>
         UnaryFunction for_each_manga(UnaryFunction&& f) {
             std::lock_guard<std::mutex> lock(m_manga_list_mutex);
-            return std::for_each(m_manga_list.begin(), m_manga_list.end(), std::forward<UnaryFunction>(f));
+            return std::for_each(m_manga_list.cbegin(), m_manga_list.cend(), std::forward<UnaryFunction>(f));
         }
 
+        /** Applies the given functor object f to all anime search results.
+         *
+         * TODO: Migrate to using CallbackDispatcher and remove.
+         */
         template <class UnaryFunction>
         UnaryFunction for_each_anime_search_result(UnaryFunction&& f) {
             std::lock_guard<std::mutex> lock(m_anime_search_results_mutex);
-            return std::for_each(m_anime_search_results.begin(), m_anime_search_results.end(), std::forward<UnaryFunction>(f));
+            return std::for_each(m_anime_search_results.cbegin(), m_anime_search_results.cend(), std::forward<UnaryFunction>(f));
         }
 
+        /** Applies the given functor object f to all manga search results.
+         *
+         * TODO: Migrate to using CallbackDispatcher and remove.
+         */
         template <class UnaryFunction>
         UnaryFunction for_each_manga_search_result(UnaryFunction&& f) {
             std::lock_guard<std::mutex> lock(m_manga_search_results_mutex);
-            return std::for_each(m_manga_search_results.begin(), m_manga_search_results.end(), std::forward<UnaryFunction>(f));
+            return std::for_each(m_manga_search_results.cbegin(), m_manga_search_results.cend(), std::forward<UnaryFunction>(f));
         }
 
+        std::shared_ptr<Anime>
+        find_anime(const std::shared_ptr<Anime>& anime)
+        {
+            std::lock_guard<std::mutex> lock(m_anime_list_mutex);
+            auto iter = m_anime_list.find(anime);
+            if (iter == m_anime_list.end())
+                return nullptr;
+            else
+                return std::static_pointer_cast<Anime>((**iter).clone());
+        }
+
+        /** Provides a callback on GTK+ Main Thread when an error occurs.
+         */
         MessageDispatcher<Glib::ustring> signal_mal_error;
+
+        /** Provides a callback on GTK+ Main Thread with info a user
+         * may like.
+         *
+         * Messages are like "Anime 'Kill la Kill' added" or "Manga
+         * list fetched"
+         */
         MessageDispatcher<Glib::ustring> signal_mal_info;
 
-        void get_anime_list_async(std::function<void (int_fast64_t bytes)> progress_cb = nullptr,
-                                  std::function<void ()> complete_cb = nullptr);
+        typedef std::function<void (int_fast64_t bytes)> DownloadProgressCb_t;
+        typedef std::function<void (bool success)> OperationCompleteCb_t;
+
+        /** Fetches anime list from MAL.net.
+         *
+         * Callbacks are delivered on the GTK+ main thread.
+         *
+         * @progress_cb: Called multiple times with download progress.
+         * @complete_cb: Called once when the operation is finished.
+         */
+        void get_anime_list_async(DownloadProgressCb_t progress_cb = nullptr,
+                                  OperationCompleteCb_t complete_cb = nullptr);
         void get_manga_list_async();
         void get_anime_details_async(const std::shared_ptr<const Anime>& anime);
         void get_manga_details_async(const std::shared_ptr<const Manga>& manga);
@@ -101,7 +154,9 @@ namespace MAL {
         void search_manga_async(const std::string&);
         void update_anime_async(const std::shared_ptr<Anime>&);
         void update_manga_async(const std::shared_ptr<Manga>&);
-        void add_anime_async(const Anime&);
+
+        void add_anime_async(const Anime&,
+                             OperationCompleteCb_t = nullptr);
         void add_manga_async(const Manga&);
 
 		Glib::Dispatcher signal_anime_added;
@@ -135,8 +190,8 @@ namespace MAL {
 		 * Safe to call from multiple threads.
 		 */
 
-        void get_anime_list_sync(std::function<void (int_fast64_t bytes)> progress_cb = nullptr,
-                                 std::function<void ()> complete_cb = nullptr);
+        void get_anime_list_sync(DownloadProgressCb_t progress_cb = nullptr,
+                                 OperationCompleteCb_t complete_cb = nullptr);
 
 		/** Returns the manga list for username. As slow as the
 		 * internet.
@@ -144,7 +199,7 @@ namespace MAL {
 		 */
 		void get_manga_list_sync();
 
-        std::unique_ptr<std::string> get_sync(const std::string& url, std::function<void (int_fast64_t bytes)> progress_cb = nullptr);
+        std::unique_ptr<std::string> get_sync(const std::string& url, DownloadProgressCb_t progress_cb = nullptr);
         void get_anime_details_sync(const std::shared_ptr<const Anime>& anime);
         void get_manga_details_sync(const std::shared_ptr<const Manga>& manga);
 
@@ -174,7 +229,8 @@ namespace MAL {
 		 * Internet.
 		 * Safe to call from multiple threads.
 		 */
-		bool add_anime_sync(const Anime& anime);
+		bool add_anime_sync(const Anime& anime,
+                            OperationCompleteCb_t = nullptr);
 
 		/** Adds an anime to the MAL.net anime list. As slow as the
 		 * Internet.
