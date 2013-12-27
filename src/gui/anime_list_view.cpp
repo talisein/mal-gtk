@@ -172,19 +172,30 @@ namespace MAL {
         MALItemDetailViewEditable::update_list_model(row);
         auto columns = std::dynamic_pointer_cast<AnimeModelColumnsEditable>(m_notify_columns);
 
-        try {
-            auto episodes = std::stoi(m_episodes_entry->get_entry_text());
-            if (episodes != row.get_value(columns->episodes))
-                row.set_value(columns->episodes, episodes);
-        } catch (std::exception e) {
-            auto anime = std::static_pointer_cast<Anime>(m_item);
-            m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
-        }
-
         auto const status = m_anime_status_combo->get_anime_status();
         auto const row_status = anime_status(row.get_value(columns->status));
         if ( status != row_status ) {
             row.set_value(columns->status, Glib::ustring(to_string(status)));
+        }
+
+        try {
+            auto episodes = std::stoi(m_episodes_entry->get_entry_text());
+            if ((status == AnimeStatus::COMPLETED) && (row_status != status)) {
+                /* User just set status to Completed, so set episodes
+                 * to series_episodes */
+                auto anime = std::static_pointer_cast<Anime>(m_item);
+                if (anime->series_episodes > 0) {
+                    m_episodes_entry->set_entry_text(std::to_string(anime->series_episodes));
+                    row.set_value(columns->episodes, static_cast<int>(anime->series_episodes));
+                }
+            } else {
+                if (episodes != row.get_value(columns->episodes)) {
+                    row.set_value(columns->episodes, episodes);
+                }
+            }
+        } catch (std::exception e) {
+            auto anime = std::static_pointer_cast<Anime>(m_item);
+            m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
         }
 
         return true;
@@ -273,14 +284,14 @@ namespace MAL {
 		Gtk::TreeModel::iterator iter = m_model->get_iter(path);
 
 		if (iter) {
-			auto status = anime_status(new_text);
+			auto const status = anime_status(new_text);
             auto anime = iter->get_value(columns->anime);
 
 			if (status != anime->status) {
                 auto new_anime = std::static_pointer_cast<Anime>(anime->clone());
 				new_anime->status = status;
                 new_anime->score = 0.0f;
-                if (anime->status == AnimeStatus::COMPLETED) {
+                if (status == AnimeStatus::COMPLETED) {
                     new_anime->episodes = new_anime->series_episodes;
                 } else {
                     new_anime->episodes = 0;
@@ -376,18 +387,15 @@ namespace MAL {
         if (episodes != anime->episodes) {
             is_changed = true;
             new_anime->episodes = episodes;
-            item = anime = new_anime;
-            row.set_value(columns->item, item);
-            row.set_value(columns->anime, anime);
+            row.set_value(columns->item, std::static_pointer_cast<MALItem>(new_anime));
+            row.set_value(columns->anime, new_anime);
         }
-
         auto const status = anime_status(row.get_value(columns->status));
         if (status != anime->status) {
             is_changed = true;
             new_anime->status = status;
-            item = anime = new_anime;
-            row.set_value(columns->item, item);
-            row.set_value(columns->anime, anime);
+            row.set_value(columns->item, std::static_pointer_cast<MALItem>(new_anime));
+            row.set_value(columns->anime, new_anime);
         }
 
         return is_changed || mal_changed;
