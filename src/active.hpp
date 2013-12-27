@@ -1,4 +1,4 @@
-/*
+/* -*- mode: c++; c-file-style: "linux"; c-basic-offset: 4; indent-tabs-mode: nil; -*-
  *  This file is part of mal-gtk.
  *
  *  mal-gtk is free software: you can redistribute it and/or modify
