@@ -26,16 +26,11 @@ Usage Notes
   will only save this field locally; I don't want to overwrite any
   value you have on MAL.
 
-- Entry boxes (E.g. Fansub Group or Begin Date) in the Detail View
+- Entry boxes (e.g. Fansub Group or Begin Date) in the Detail View
   will not be saved until you press enter, or you edit a different
   field. Pressing the + button on the episode count will automatically
   save the change, but if you manually modify the episode count you'll
   need to press enter.
-
-- Presently the Search view does not know if you already have an
-  anime/manga in your list, and if you try to set an entry to
-  'Watching' or 'Completed' when its already in your list, it will
-  silently fail. This is a bug that will be addressed soon.
 
 Goals
 -----
@@ -46,7 +41,6 @@ Goals
 Screenshots
 -----------
 ### Anime List
-
 ![Anime List](http://github.com/talisein/mal-gtk/blob/master/images/animelist.jpg?raw=true)
 
 ### Manga Search
