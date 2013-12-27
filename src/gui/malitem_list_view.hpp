@@ -242,7 +242,15 @@ namespace MAL {
         void set_filter_func(const sigc::slot<bool, const std::shared_ptr<MALItem>&>& slot);
 
 
-        void refresh_items(std::function<void (std::function<void (const std::shared_ptr<MALItem>&)>&& )>&& for_each_functor);
+        void refresh_items(const std::function<void (const std::function<void (const std::shared_ptr<MALItem>&)>& )>& for_each_functor);
+        /*template<typename UnaryForeachFunctor>
+        UnaryForeachFunctor refresh_items(UnaryForeachFunctor&& for_each_functor) {
+            m_model->clear();
+            m_model_changed_connection.block();
+            auto ret = for_each_functor(std::bind(&MALItemListViewBase::append_item, this, std::placeholders::_1));
+            m_model_changed_connection.unblock();
+            return ret;
+        }*/
 
 		void do_model_foreach(const Gtk::TreeModel::SlotForeachPathAndIter& slot) {m_model->foreach(slot);};
 		void set_row_activated_cb(sigc::slot<void, const std::shared_ptr<MALItem>&> slot) { m_row_activated_cb = slot;} ;

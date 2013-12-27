@@ -463,14 +463,8 @@ namespace MAL {
 
     void MangaSearchListPage::on_mal_update()
     {
-        /* Because MAL::for_each_manga is implemented as a template,
-         * we can't use std::mem_fn. Instead we need to use a lambda
-         * so that there is a definite type.
-         */
-        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<MALItem>&)>&& f)->void {
-                m_mal->for_each_manga_search_result(std::forward<std::function<void (const std::shared_ptr<MALItem>&)>>(f));
-            }
-            );
+        using std::placeholders::_1;
+        m_list_view->refresh_items(std::bind(&MAL::for_each_manga_search_result, m_mal, _1));
     }
 
     MangaFilteredListPage::MangaFilteredListPage(const std::shared_ptr<MAL>& mal,
@@ -505,13 +499,7 @@ namespace MAL {
 
     void MangaFilteredListPage::on_mal_update()
     {
-        /* Because MAL::for_each_manga is implemented as a template,
-         * we can't use std::mem_fn. Instead we need to use a lambda
-         * so that there is a definite type.
-         */
-        m_list_view->refresh_items([&](std::function<void (const std::shared_ptr<MALItem>&)>&& f)->void {
-                m_mal->for_each_manga(std::forward<std::function<void (const std::shared_ptr<MALItem>&)>>(f));
-            }
-            );
+        using std::placeholders::_1;
+        m_list_view->refresh_items(std::bind(&MAL::for_each_manga, m_mal, _1));
     }
 }

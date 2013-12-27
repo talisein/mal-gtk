@@ -77,46 +77,36 @@ namespace MAL {
          *
          * Used because the anime list is behind a mutex.
          */
-        template <class UnaryFunction>
-        UnaryFunction for_each_anime(UnaryFunction&& f) {
+        void for_each_anime(const std::function<void (const std::shared_ptr<Anime>& item)>& f) {
             std::lock_guard<std::mutex> lock(m_anime_list_mutex);
-            return std::for_each(m_anime_list.cbegin(), m_anime_list.cend(), std::forward<UnaryFunction>(f));
+            std::for_each(m_anime_list.cbegin(), m_anime_list.cend(), f);
         }
-
-        std::function<void (const std::shared_ptr<Anime>&)>
-        for_each_anime(std::function<void (const std::shared_ptr<Anime>&)>& f)
-            {
-                
-            }
 
         /** Applies the given functor object f to all manga.
          *
          * Used because the manga list is behind a mutex.
          */
-        template <class UnaryFunction>
-        UnaryFunction for_each_manga(UnaryFunction&& f) {
+        void for_each_manga(const std::function<void (const std::shared_ptr<Manga>& item)>& f) {
             std::lock_guard<std::mutex> lock(m_manga_list_mutex);
-            return std::for_each(m_manga_list.cbegin(), m_manga_list.cend(), std::forward<UnaryFunction>(f));
+            std::for_each(m_manga_list.cbegin(), m_manga_list.cend(), f);
         }
 
         /** Applies the given functor object f to all anime search results.
          *
          * TODO: Migrate to using CallbackDispatcher and remove.
          */
-        template <class UnaryFunction>
-        UnaryFunction for_each_anime_search_result(UnaryFunction&& f) {
+        void for_each_anime_search_result(const std::function<void (const std::shared_ptr<Anime>& item)>& f) {
             std::lock_guard<std::mutex> lock(m_anime_search_results_mutex);
-            return std::for_each(m_anime_search_results.cbegin(), m_anime_search_results.cend(), std::forward<UnaryFunction>(f));
+            std::for_each(m_anime_search_results.cbegin(), m_anime_search_results.cend(), f);
         }
 
         /** Applies the given functor object f to all manga search results.
          *
          * TODO: Migrate to using CallbackDispatcher and remove.
          */
-        template <class UnaryFunction>
-        UnaryFunction for_each_manga_search_result(UnaryFunction&& f) {
+        void for_each_manga_search_result(const std::function<void (const std::shared_ptr<Manga>& item)>& f) {
             std::lock_guard<std::mutex> lock(m_manga_search_results_mutex);
-            return std::for_each(m_manga_search_results.cbegin(), m_manga_search_results.cend(), std::forward<UnaryFunction>(f));
+            std::for_each(m_manga_search_results.cbegin(), m_manga_search_results.cend(), f);
         }
 
         std::shared_ptr<Anime>

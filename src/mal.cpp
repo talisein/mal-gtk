@@ -586,7 +586,7 @@ namespace MAL {
     }
 
     void MAL::update_anime_async(const std::shared_ptr<Anime>& anime) {
-        active.send( [this, anime](){ this->update_anime_sync(anime); } );
+        active.send( [=] { update_anime_sync(anime); } );
     }
     
     bool MAL::update_anime_sync(const std::shared_ptr<Anime>& anime) {
@@ -595,6 +595,7 @@ namespace MAL {
         std::unique_ptr<std::string> buf(new std::string());
         setup_curl_easy(curl.get(), url, buf.get());
         auto xml = serializer.serialize(*anime);
+//        std::cerr << "Sending: " << xml << std::endl;
         xml.insert(0, "data=");
         curl_setup_post(curl, xml);
         curl_setup_httpauth(curl, user_info);
@@ -694,6 +695,8 @@ namespace MAL {
         std::unique_ptr<std::string> buf(new std::string());
         setup_curl_easy(curl.get(), url, buf.get());
         auto xml = serializer.serialize(anime);
+//        std::cerr << "Adding anime " << anime.series_title << " with status = " << to_string(anime.status) << std::endl;
+//        std::cerr << "The xml we are sending is: " << xml << std::endl;
         xml.insert(0, "data=");
         curl_setup_post(curl, xml);
         curl_setup_httpauth(curl, user_info);

@@ -554,8 +554,9 @@ namespace MAL {
         if (row.get_value(m_columns->item)->series_itemdb_id != m_item->series_itemdb_id)
             return false;
 
-        auto score = m_score->get_score();
         auto columns = std::dynamic_pointer_cast<MALItemModelColumnsEditable>(m_notify_columns);
+
+        auto score = m_score->get_score();
         if (score != row.get_value(columns->score))
             row.set_value(columns->score, score);
 
@@ -634,11 +635,8 @@ namespace MAL {
         m_treeview->set_rules_hint(true);
         m_model->set_default_sort_func(sigc::mem_fun(*this, &MALItemListViewBase::malitem_comparitor));
         m_model->set_sort_column(Gtk::TreeSortable::DEFAULT_SORT_COLUMN_ID, Gtk::SORT_DESCENDING);
-#if GLIB_CHECK_VERSION(3,36,0)
-        Glib::Value<bool> sc_val;
-        sc_val.init(Glib::Value<bool>::value_type());
-        sc_val.set(true);
-        m_treeview->set_property_value("activate-on-single-click", sc_val);
+#if GTK_CHECK_VERSION(3,8,0)
+        m_treeview->set_activate_on_single_click(true);
 #endif
 	}
 
@@ -682,7 +680,7 @@ namespace MAL {
      *
      * @for_each_functor: functor to a std::for_each-like function
      */
-    void MALItemListViewBase::refresh_items(std::function<void (std::function<void (const std::shared_ptr<MALItem>&)>&& )>&& for_each_functor)
+    void MALItemListViewBase::refresh_items(const std::function<void (const std::function<void (const std::shared_ptr<MALItem>&)>&)>& for_each_functor)
     {
         m_model->clear();
         m_model_changed_connection.block();
@@ -797,12 +795,13 @@ namespace MAL {
 
     void MALItemListViewEditable::on_model_changed(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator& iter)
     {
-        auto original_item = iter->get_value(m_columns->item);
-        auto item = original_item;
         bool is_changed = false;
+        auto item = iter->get_value(m_columns->item);
         is_changed = model_changed_cb(item, *iter); // May change item!
 
         if (is_changed) {
+            // model_changed_cb has set an updated item into the model.
+            item = iter->get_value(m_columns->item);
             if (!m_detailed_item || m_detailed_item->series_itemdb_id == item->series_itemdb_id)
                 m_row_activated_cb(item);
             send_item_update(item);
