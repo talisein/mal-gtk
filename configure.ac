@@ -11,6 +11,7 @@ AM_INIT_AUTOMAKE([foreign subdir-objects -Wportability])
 AC_PROG_CXX
 AC_PROG_CC
 AC_LANG([C++])
+AM_PROG_CC_C_O
 
 AX_CXX_COMPILE_STDCXX_11([noext])
 

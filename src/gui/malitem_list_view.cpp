@@ -119,10 +119,8 @@ namespace MAL {
     }
 
     ScoreCellRendererCombo::ScoreCellRendererCombo() :
-		Glib::ObjectBase( typeid(ScoreCellRendererCombo) ),
         m_columns(),
-        m_model(Gtk::ListStore::create(m_columns)),
-		m_score_property( *this, "score", 0 )
+        m_model(Gtk::ListStore::create(m_columns))
     {
         const std::array< const std::pair<const int, const Glib::ustring>, 11> score_list = {{
             {0,  "\u2012"},
@@ -153,7 +151,7 @@ namespace MAL {
 
     void ScoreCellRendererCombo::score_changed_cb()
     {
-        auto const score = m_score_property.get_value();
+        auto const score = get_score();
         m_model->foreach_iter([&](const Gtk::TreeModel::iterator& iter)->bool {
                 if (iter->get_value(m_columns.score) == score) {
                     property_text() = iter->get_value(m_columns.text);
@@ -161,11 +159,6 @@ namespace MAL {
                 }
                 return false;
             });
-    }
-
-    Glib::PropertyProxy<gint> ScoreCellRendererCombo::property_score()
-    {
-        return m_score_property.get_proxy();
     }
 
     gint ScoreCellRendererCombo::get_score_from_string(const Glib::ustring& str) const

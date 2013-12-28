@@ -36,6 +36,7 @@
 #include "mal.hpp"
 #include "increment_entry.hpp"
 #include "date_widgets.hpp"
+#include "cellrendererscore.hpp"
 
 namespace MAL {
 	class MALItemPriorityComboBox final : public Gtk::ComboBoxText {
@@ -72,18 +73,16 @@ namespace MAL {
          Glib::RefPtr<Gtk::ListStore>       m_model;
 	};
 
-    class ScoreCellRendererCombo final : public Gtk::CellRendererCombo {
+    class ScoreCellRendererCombo final : public CellRendererScore {
     public:
         ScoreCellRendererCombo();
 
-        Glib::PropertyProxy<gint> property_score();
         gint get_score_from_string(const Glib::ustring&) const;
     private:
         ScoreColumns m_columns;
         Glib::RefPtr<Gtk::ListStore> m_model;
 
         void score_changed_cb();
-        Glib::Property<gint> m_score_property;
     };
 
     class MALItemModelColumns : public Gtk::TreeModel::ColumnRecord
