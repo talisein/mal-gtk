@@ -307,10 +307,14 @@ namespace MAL {
 
     Anime::Anime() :
         MALItem(),
-        series_type   (SeriesType::INVALID),
-        series_status (SeriesStatus::INVALID),
-        status        (AnimeStatus::INVALID),
-        storage_type  (AnimeStorageType::INVALID)
+        series_type     {SeriesType::INVALID},
+        series_status   {SeriesStatus::INVALID},
+        series_episodes {0},
+        status          {AnimeStatus::INVALID},
+        episodes        {0},
+        rewatch_episode {0},
+        storage_type    {AnimeStorageType::INVALID},
+        storage_value   {0.}
     {
     }
 
@@ -488,7 +492,11 @@ namespace MAL {
     void
     Anime::set_rewatch_episode(const std::string&& str)
     {
-        rewatch_episode = std::stoi(str);
+        try {
+            rewatch_episode = std::stoi(str);
+        } catch (std::exception e) {
+            rewatch_episode = 0;
+        }
     }
 
     void

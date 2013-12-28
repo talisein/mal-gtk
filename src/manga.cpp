@@ -304,10 +304,16 @@ namespace MAL {
 
     Manga::Manga() :
         MALItem(),
-        series_type(MANGASERIESTYPE_INVALID),
-        series_status(MANGASERIESSTATUS_INVALID),
-        status(MANGASTATUS_INVALID),
-        storage_type(MANGA_STORAGE_INVALID)
+        series_type       {MANGASERIESTYPE_INVALID},
+        series_status     {MANGASERIESSTATUS_INVALID},
+        series_chapters   {0},
+        series_volumes    {0},
+        status            {MANGASTATUS_INVALID},
+        chapters          {0},
+        volumes           {0},
+        rereading_chapter {0},
+        retail_volumes    {0},
+        storage_type      {MANGA_STORAGE_INVALID}
     {
     }
 

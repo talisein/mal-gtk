@@ -162,17 +162,16 @@ namespace MAL {
 	}
 
     MALItem::MALItem() :
-        series_itemdb_id(0),
-        id(0),
-        score(0.f),
-        enable_reconsuming(false),
-        fansub_group(),
-        downloaded_items(0),
-        times_consumed(0),
-        reconsume_value(RECONSUME_VALUE_INVALID),
-        priority(PRIORITY_INVALID),
-        enable_discussion(false),
-        has_details(false)
+        series_itemdb_id   {0},
+        id                 {0},
+        score              {0.},
+        enable_reconsuming {false},
+        downloaded_items   {0},
+        times_consumed     {0},
+        reconsume_value    {RECONSUME_VALUE_INVALID},
+        priority           {PRIORITY_INVALID},
+        enable_discussion  {false},
+        has_details        {false}
     {
     }
 
