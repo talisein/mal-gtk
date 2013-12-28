@@ -34,10 +34,10 @@ enum {
     N_COLUMNS
 };
 
-#define SCORE_ARRAY_SIZE 11
-static const char *malgtk_cell_renderer_score_array[SCORE_ARRAY_SIZE] = { "\u2012", "1", "2", "3",
+static const char *malgtk_cell_renderer_score_array[] = { "\u2012", "1", "2", "3",
                                               "4", "5", "6", "7", "8",
                                               "9", "10" };
+#define SCORE_ARRAY_SIZE (G_N_ELEMENTS(malgtk_cell_renderer_score_array))
 
 static void
 malgtk_cell_renderer_score_init (MalgtkCellRendererScore *cellrendererscore)
