@@ -103,4 +103,9 @@ namespace MAL {
     {
         return malgtk_cell_renderer_score_get_score(gobj());
     }
+
+    int CellRendererScore::get_score_from_string(const Glib::ustring& str) const
+    {
+        return malgtk_cell_renderer_score_get_score_from_string(str.c_str());
+    }
 }

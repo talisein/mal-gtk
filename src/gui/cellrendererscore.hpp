@@ -45,6 +45,7 @@ namespace MAL {
         Glib::PropertyProxy< int > property_score();
 
         int get_score() const;
+        int get_score_from_string(const Glib::ustring& str) const;
     };
 }
 
