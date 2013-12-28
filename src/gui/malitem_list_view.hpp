@@ -73,18 +73,6 @@ namespace MAL {
          Glib::RefPtr<Gtk::ListStore>       m_model;
 	};
 
-    class ScoreCellRendererCombo final : public CellRendererScore {
-    public:
-        ScoreCellRendererCombo();
-
-        gint get_score_from_string(const Glib::ustring&) const;
-    private:
-        ScoreColumns m_columns;
-        Glib::RefPtr<Gtk::ListStore> m_model;
-
-        void score_changed_cb();
-    };
-
     class MALItemModelColumns : public Gtk::TreeModel::ColumnRecord
     {
     public:
@@ -305,7 +293,7 @@ namespace MAL {
 
     protected:
         Gtk::TreeViewColumn *m_score_column;
-        ScoreCellRendererCombo *m_score_cellrenderer;
+        CellRendererScore *m_score_cellrenderer;
 
         /* 
          * Should be implemented as calling e.g. MAL::get_detailed_anime_async

@@ -118,63 +118,6 @@ namespace MAL {
             });
     }
 
-    ScoreCellRendererCombo::ScoreCellRendererCombo() :
-        m_columns(),
-        m_model(Gtk::ListStore::create(m_columns))
-    {
-        const std::array< const std::pair<const int, const Glib::ustring>, 11> score_list = {{
-            {0,  "\u2012"},
-            {10, "10"},
-            {9,  "9"},
-            {8,  "8"},
-            {7,  "7"},
-            {6,  "6"},
-            {5,  "5"},
-            {4,  "4"},
-            {3,  "3"},
-            {2,  "2"},
-            {1,  "1"}
-            }};
-        std::for_each(std::begin(score_list), std::end(score_list),
-                      [&](const std::pair<const int, const Glib::ustring>& pair) {
-                          auto iter = m_model->append();
-                          iter->set_value(m_columns.score, pair.first);
-                          iter->set_value(m_columns.text, pair.second);
-                      });
-        property_model() = m_model;
-        property_text_column() = m_columns.text.index();
-        property_has_entry() = false;
-        property_editable() = true;
-        set_alignment(.5, .5);
-        property_score().signal_changed().connect(sigc::mem_fun(*this, &ScoreCellRendererCombo::score_changed_cb));
-    }
-
-    void ScoreCellRendererCombo::score_changed_cb()
-    {
-        auto const score = get_score();
-        m_model->foreach_iter([&](const Gtk::TreeModel::iterator& iter)->bool {
-                if (iter->get_value(m_columns.score) == score) {
-                    property_text() = iter->get_value(m_columns.text);
-                    return true;
-                }
-                return false;
-            });
-    }
-
-    gint ScoreCellRendererCombo::get_score_from_string(const Glib::ustring& str) const
-    {
-        gint score = -1;
-        m_model->foreach_iter([&](const Gtk::TreeModel::iterator& iter)->bool {
-                if (iter->get_value(m_columns.text) == str) {
-                    score = iter->get_value(m_columns.score);
-                    return true;
-                }
-                return false;
-            });
-
-        return score;
-    }
-
     MALItemListViewNotifier::MALItemListViewNotifier(const std::shared_ptr<MALItemModelColumns> &columns,
                                                      const sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&> &cb) :
         m_notify_columns(columns),
@@ -722,7 +665,7 @@ namespace MAL {
                                                      const std::shared_ptr<MALItemModelColumnsEditable>& columns) :
         MALItemListViewBase(mal, columns),
         m_score_column(Gtk::manage(new Gtk::TreeViewColumn("Score"))),
-        m_score_cellrenderer(Gtk::manage(new ScoreCellRendererCombo()))
+        m_score_cellrenderer(Gtk::manage(new CellRendererScore()))
     {
         m_score_column->pack_start(*m_score_cellrenderer);
         m_score_column->add_attribute(m_score_cellrenderer->property_score(), columns->score);

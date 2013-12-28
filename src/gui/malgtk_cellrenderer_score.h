@@ -22,6 +22,7 @@ struct _MalgtkCellRendererScore
     GtkCellRendererCombo   parent;
 
     gint           score;
+    GtkListStore *liststore;
 };
 
 
@@ -36,5 +37,7 @@ GType                malgtk_cell_renderer_score_get_type (void) G_GNUC_CONST;
 GtkCellRenderer     *malgtk_cell_renderer_score_new (void);
 
 gint malgtk_cell_renderer_score_get_score(const MalgtkCellRendererScore* cellscore);
+
+gint malgtk_cell_renderer_score_get_score_from_string(const gchar *str);
 
 G_END_DECLS
