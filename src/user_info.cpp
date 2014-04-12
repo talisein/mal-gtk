@@ -15,7 +15,6 @@
  *  along with mal-gtk.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
 #include "user_info.hpp"
 
 namespace {
@@ -43,25 +42,22 @@ namespace {
 
     std::unique_ptr<SecretSchema, SchemaDeleter> make_password_schema()
     {
-        return std::unique_ptr<SecretSchema, SchemaDeleter>(
+        return std::unique_ptr<SecretSchema, SchemaDeleter>{
             secret_schema_new("com.malgtk.password",
                               SECRET_SCHEMA_NONE,
                               "NULL", SECRET_SCHEMA_ATTRIBUTE_STRING,
                               nullptr)
-            );
+                };
     }
-
-
 }
 
 namespace MAL {
-    class UserInfo::UserInfoPrivate {
+    class MAL::UserInfo::UserInfoPrivate {
     public:
         UserInfoPrivate() :
             username_schema(make_username_schema()),
-            password_schema(make_password_schema())
-            {
-            };
+            password_schema(make_password_schema()) { }
+
         ~UserInfoPrivate() = default;
 
         std::shared_ptr<gchar> username;
@@ -69,7 +65,6 @@ namespace MAL {
         std::unique_ptr<SecretSchema, SchemaDeleter> username_schema;
         std::unique_ptr<SecretSchema, SchemaDeleter> password_schema;
     };
-
 
     UserInfo::UserInfo() :
         pimpl{new UserInfoPrivate()}
