@@ -19,74 +19,118 @@
 #include "user_info.hpp"
 
 namespace {
-	extern "C" {
-		static const SecretSchema* get_username_schema() {
-			static const SecretSchema username_schema = {
-				"com.malgtk.username", SECRET_SCHEMA_NONE,
-				{
-					{ "NULL", SECRET_SCHEMA_ATTRIBUTE_STRING },
-				}
-			};
-			return &username_schema;
-		}
+    struct SecretDeleter {
+        void operator()(gchar* str) const {
+            secret_password_free(str);
+        }
+    };
 
-		static const SecretSchema* get_password_schema() {
-			static const SecretSchema password_schema = {
-				"com.malgtk.password", SECRET_SCHEMA_NONE,
-				{
-					{ "NULL", SECRET_SCHEMA_ATTRIBUTE_STRING },
-				}
-			};
-			return &password_schema;
-		}
-	}
+    struct SchemaDeleter {
+        void operator()(SecretSchema *ptr) const {
+            secret_schema_unref(ptr);
+        }
+    };
+
+    std::unique_ptr<SecretSchema, SchemaDeleter> make_username_schema()
+    {
+        return std::unique_ptr<SecretSchema, SchemaDeleter>(
+            secret_schema_new("com.malgtk.username",
+                              SECRET_SCHEMA_NONE,
+                              "NULL", SECRET_SCHEMA_ATTRIBUTE_STRING,
+                              nullptr)
+            );
+    }
+
+    std::unique_ptr<SecretSchema, SchemaDeleter> make_password_schema()
+    {
+        return std::unique_ptr<SecretSchema, SchemaDeleter>(
+            secret_schema_new("com.malgtk.password",
+                              SECRET_SCHEMA_NONE,
+                              "NULL", SECRET_SCHEMA_ATTRIBUTE_STRING,
+                              nullptr)
+            );
+    }
+
+
 }
 
 namespace MAL {
+    class UserInfo::UserInfoPrivate {
+    public:
+        UserInfoPrivate() :
+            username_schema(make_username_schema()),
+            password_schema(make_password_schema())
+            {
+            };
+        ~UserInfoPrivate() = default;
 
-	UserInfo::UserInfo()
-	{
-		lookup_details();
-	}
+        std::shared_ptr<gchar> username;
+        std::shared_ptr<gchar> password;
+        std::unique_ptr<SecretSchema, SchemaDeleter> username_schema;
+        std::unique_ptr<SecretSchema, SchemaDeleter> password_schema;
+    };
 
-	void UserInfo::lookup_details() {
-		gchar *cu = secret_password_lookup_nonpageable_sync(get_username_schema(),
-		                                                    nullptr,
-		                                                    nullptr,
-		                                                    NULL);
-		if (cu) {
-			std::shared_ptr<gchar> u(cu, SecretDeleter());
-			username = u;
-		};
 
-		gchar *cp = secret_password_lookup_nonpageable_sync(get_password_schema(),
-		                                        nullptr,
-		                                        nullptr,
-		                                        NULL);
-		if (cp) {
-			std::shared_ptr<gchar> p(cp, SecretDeleter());
-			password = p;
-		};
-	}
+    UserInfo::UserInfo() :
+        pimpl{new UserInfoPrivate()}
+    {
+        lookup_details();
+    }
 
-	void UserInfo::set_details(const std::string& username, const std::string& password) {
-		gboolean user_result = secret_password_store_sync(get_username_schema(),
-		                                                  nullptr,
-		                                                  "MAL Username",
-		                                                  username.c_str(),
-		                                                  nullptr,
-		                                                  nullptr,
-		                                                  NULL);
+    UserInfo::~UserInfo() = default;
 
-		gboolean pass_result = secret_password_store_sync(get_password_schema(),
-		                                                  nullptr,
-		                                                  "MAL Password",
-		                                                  password.c_str(),
-		                                                  nullptr,
-		                                                  nullptr,
-		                                                  NULL);
-		if (user_result && pass_result)
-			lookup_details();
-	}
+    void UserInfo::lookup_details() {
+        gchar *cu = secret_password_lookup_nonpageable_sync(pimpl->username_schema.get(),
+                                                            nullptr,
+                                                            nullptr,
+                                                            NULL);
+        if (cu) {
+            std::shared_ptr<gchar> u(cu, SecretDeleter());
+            pimpl->username = u;
+        };
 
+        gchar *cp = secret_password_lookup_nonpageable_sync(pimpl->password_schema.get(),
+                                                nullptr,
+                                                nullptr,
+                                                NULL);
+        if (cp) {
+            std::shared_ptr<gchar> p(cp, SecretDeleter());
+            pimpl->password = p;
+        };
+    }
+
+    void UserInfo::set_details(const std::string& username, const std::string& password) {
+        gboolean user_result = secret_password_store_sync(pimpl->username_schema.get(),
+                                                          SECRET_COLLECTION_SESSION,
+                                                          "MAL Username",
+                                                          username.c_str(),
+                                                          nullptr,
+                                                          nullptr,
+                                                          NULL);
+
+        gboolean pass_result = secret_password_store_sync(pimpl->password_schema.get(),
+                                                          SECRET_COLLECTION_SESSION,
+                                                          "MAL Password",
+                                                          password.c_str(),
+                                                          nullptr,
+                                                          nullptr,
+                                                          NULL);
+        if (user_result && pass_result)
+            lookup_details();
+    }
+
+    bool UserInfo::has_details() const
+    {
+        return pimpl->username && pimpl->password;
+    }
+
+    std::shared_ptr<gchar> UserInfo::get_username() const
+    {
+        return pimpl->username;
+    }
+
+    std::shared_ptr<gchar> UserInfo::get_password() const
+    {
+        return pimpl->password;
+    }
 }
