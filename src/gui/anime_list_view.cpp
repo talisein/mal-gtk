@@ -461,6 +461,11 @@ namespace MAL {
         m_list_view->refresh_items(std::bind(&MAL::for_each_anime_search_result, m_mal, _1));
     }
 
+    namespace {
+        constexpr gint64 usec_per_sec = G_USEC_PER_SEC;
+        constexpr gint64 sixty_fps_in_us = usec_per_sec / 60;
+    }
+
     AnimeFilteredListPage::AnimeFilteredListPage(const std::shared_ptr<MAL>& mal,
                                                  AnimeListViewEditable*      list_view,
                                                  AnimeDetailViewEditable*    detail_view) :
@@ -485,11 +490,6 @@ namespace MAL {
     {
         auto anime = std::static_pointer_cast<Anime>(item);
         return anime->status == m_status_combo->get_anime_status();
-    }
-
-    namespace {
-        constexpr gint64 microsecs_per_sec = 1000000;
-        constexpr gint64 sixty_fps_in_us = microsecs_per_sec / 60;
     }
 
     void AnimeFilteredListPage::refresh()
