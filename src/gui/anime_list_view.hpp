@@ -247,6 +247,7 @@ namespace MAL {
         AnimeListViewEditable* m_list_view;
         AnimeDetailViewEditable* m_detail_view;
         AnimeStatusComboBox *m_status_combo;
+        gint64 last_pulse;
 
         bool m_filter_func(const std::shared_ptr<MALItem>&) const;
     };

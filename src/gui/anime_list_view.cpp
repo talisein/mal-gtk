@@ -467,7 +467,8 @@ namespace MAL {
         MALItemListPage(mal, list_view, detail_view),
         m_list_view(list_view),
         m_detail_view(detail_view),
-        m_status_combo(Gtk::manage(new AnimeStatusComboBox()))
+        m_status_combo(Gtk::manage(new AnimeStatusComboBox())),
+        last_pulse(g_get_monotonic_time())
     {
         m_status_combo->signal_changed().connect(sigc::mem_fun(this, &AnimeFilteredListPage::on_mal_update));
         auto label = Gtk::manage(new Gtk::Label("Filter: "));
@@ -486,6 +487,11 @@ namespace MAL {
         return anime->status == m_status_combo->get_anime_status();
     }
 
+    namespace {
+        constexpr gint64 microsecs_per_sec = 1000000;
+        constexpr gint64 sixty_fps_in_us = microsecs_per_sec / 60;
+    }
+
     void AnimeFilteredListPage::refresh()
     {
         auto complete_cb = [this](bool success) { 
@@ -497,8 +503,12 @@ namespace MAL {
         };
 
         auto prog_cb = [this](int_fast64_t bytes) {
-            m_progressbar->set_text(std::to_string(bytes) + " bytes");
-            m_progressbar->pulse();
+            gint64 now = g_get_monotonic_time();
+            if ((now - last_pulse) >= sixty_fps_in_us) {
+                last_pulse = now;
+                m_progressbar->set_text(std::to_string(bytes) + " bytes");
+                m_progressbar->pulse();
+            }
         };
 
         m_refresh_button->set_sensitive(false);
