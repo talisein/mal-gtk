@@ -163,6 +163,7 @@ namespace MAL {
         Glib::Dispatcher signal_anime_detailed;
         Glib::Dispatcher signal_manga_detailed;
 
+        void get_image_async(const MALItem& item, const std::function<void (const std::string&)>& cb);
         std::string get_image_sync(const MALItem& item);
         std::string get_manga_image_sync(const Manga& manga);
 
@@ -283,7 +284,5 @@ namespace MAL {
 
         std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
         Active active; /* Must be destroyed before curl_share */
-        
-
     };
 }

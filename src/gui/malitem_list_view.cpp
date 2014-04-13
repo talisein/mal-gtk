@@ -285,8 +285,7 @@ namespace MAL {
         if (item->series_synopsis.size() == 0) m_synopsis_frame->hide();
 
         if (oldid == 0 || oldid != m_item->series_itemdb_id) {
-            std::thread t(&MALItemDetailViewBase::do_fetch_image, this);
-            t.detach();
+            do_fetch_image();
         }
 
         if (!m_series_start_date_label->set_date(item->series_date_begin)) {
@@ -307,12 +306,13 @@ namespace MAL {
 	}
 
 	void MALItemDetailViewBase::do_fetch_image() {
-		auto str     = m_mal->get_image_sync(*m_item);
-		image_stream = Gio::MemoryInputStream::create();
-		auto buf = g_malloc(str.size());
-		std::memcpy(buf, str.c_str(), str.size());
-		image_stream->add_data(buf, str.size(), g_free);
-		m_signal_image_available();
+		m_mal->get_image_async(*m_item, [this](const std::string &str) {
+                image_stream = Gio::MemoryInputStream::create();
+                auto buf = g_malloc(str.size());
+                std::memcpy(buf, str.c_str(), str.size());
+                image_stream->add_data(buf, str.size(), g_free);
+                on_image_available();
+            });
 	}
 
 	void MALItemDetailViewBase::on_image_available() {

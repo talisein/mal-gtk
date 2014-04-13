@@ -464,6 +464,15 @@ namespace MAL {
         }
     }
 
+    void MAL::get_image_async(const MALItem& item,
+                              const std::function<void(const std::string&)>& cb)
+    {
+        active.send([this, item, cb] {
+                auto img = get_image_sync(item);
+                cb_dispatcher.send(std::bind(cb, img));
+            });
+    }
+
     std::string MAL::get_image_sync(const MALItem& item) {
         auto iter = image_cache.find(item.image_url);
         if (iter == std::end(image_cache)) {
