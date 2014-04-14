@@ -229,11 +229,11 @@ namespace MAL {
         void set_filter_func(const sigc::slot<bool, const std::shared_ptr<MALItem>&>& slot);
 
         void set_visible_func(const Gtk::TreeModelFilter::SlotVisible &slot) {
-            m_model->set_visible_func(slot);
+            m_filter_model->set_visible_func(slot);
         }
 
         void refilter() {
-            m_model->refilter();
+            m_filter_model->refilter();
         }
 
 
@@ -254,7 +254,8 @@ namespace MAL {
 	protected:
 		std::shared_ptr<MAL>                        m_mal;
 		Glib::RefPtr<Gtk::ListStore>                m_root_model;
-        Glib::RefPtr<Gtk::TreeModelFilter>          m_model;
+        Glib::RefPtr<Gtk::TreeModelFilter>          m_filter_model;
+        Glib::RefPtr<Gtk::TreeModelSort>            m_model;
 		Gtk::TreeView                              *m_treeview;
         std::shared_ptr<MALItem>                    m_detailed_item;
         Gtk::TreeViewColumn                        *m_title_column;

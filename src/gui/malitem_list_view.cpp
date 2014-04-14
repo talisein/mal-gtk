@@ -541,12 +541,13 @@ namespace MAL {
 
 	MALItemListViewBase::MALItemListViewBase(const std::shared_ptr<MAL>& mal,
                                              const std::shared_ptr<MALItemModelColumns>& columns) :
-		Gtk::Grid    (),
-        m_columns    (columns),
-		m_mal        (mal),
-		m_root_model (Gtk::ListStore::create(*m_columns)),
-        m_model      (Gtk::TreeModelFilter::create(m_root_model)),
-		m_treeview   (Gtk::manage(new Gtk::TreeView(m_model)))
+		Gtk::Grid      (),
+        m_columns      (columns),
+		m_mal          (mal),
+		m_root_model   (Gtk::ListStore::create(*m_columns)),
+        m_filter_model (Gtk::TreeModelFilter::create(m_root_model)),
+        m_model        (Gtk::TreeModelSort::create(m_filter_model)),
+		m_treeview     (Gtk::manage(new Gtk::TreeView(m_model)))
 	{
 		Gtk::ScrolledWindow *sw = Gtk::manage(new Gtk::ScrolledWindow());
 		sw->add(*m_treeview);
