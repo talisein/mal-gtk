@@ -30,42 +30,67 @@ namespace sigc {
 
 namespace MAL {
 
+    namespace {
+        void populate_anime_status_model(Glib::RefPtr<Gtk::ListStore>& model, const AnimeStatusColumns& columns ) {
+            auto iter = model->append();
+            iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::WATCHING)));
+            iter->set_value(columns.status, AnimeStatus::WATCHING);
+            iter = model->append();
+            iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::COMPLETED)));
+            iter->set_value(columns.status, AnimeStatus::COMPLETED);
+            iter = model->append();
+            iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::ONHOLD)));
+            iter->set_value(columns.status, AnimeStatus::ONHOLD);
+            iter = model->append();
+            iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::DROPPED)));
+            iter->set_value(columns.status, AnimeStatus::DROPPED);
+            iter = model->append();
+            iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::PLANTOWATCH)));
+            iter->set_value(columns.status, AnimeStatus::PLANTOWATCH);
+        }
+    }
+
 	AnimeStatusCellRendererCombo::AnimeStatusCellRendererCombo() :
 		Gtk::CellRendererCombo(),
 		model(Gtk::ListStore::create(columns))
 	{
-		auto iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::WATCHING)));
-		iter->set_value(columns.status, AnimeStatus::WATCHING);
-		iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::COMPLETED)));
-		iter->set_value(columns.status, AnimeStatus::COMPLETED);
-		iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::ONHOLD)));
-		iter->set_value(columns.status, AnimeStatus::ONHOLD);
-		iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::DROPPED)));
-		iter->set_value(columns.status, AnimeStatus::DROPPED);
-		iter = model->append();
-		iter->set_value(columns.text, Glib::ustring(to_string(AnimeStatus::PLANTOWATCH)));
-		iter->set_value(columns.status, AnimeStatus::PLANTOWATCH);
+        populate_anime_status_model(model, columns);
 		property_model() = model;
 		property_text_column() = columns.text.index();
 		property_has_entry() = false;
 	}
 
-	AnimeStatusComboBox::AnimeStatusComboBox() {
-        append(to_string(AnimeStatus::WATCHING));
-        append(to_string(AnimeStatus::COMPLETED));
-        append(to_string(AnimeStatus::ONHOLD));
-        append(to_string(AnimeStatus::DROPPED));
-        append(to_string(AnimeStatus::PLANTOWATCH));
-        set_active_text(to_string(AnimeStatus::WATCHING));
+	AnimeStatusComboBox::AnimeStatusComboBox(bool with_none) :
+		Gtk::ComboBox(),
+		model(Gtk::ListStore::create(columns))
+    {
+        if (with_none) {
+            auto iter = model->append();
+            iter->set_value(columns.text, Glib::ustring("All"));
+            iter->set_value(columns.status, AnimeStatus::NONE);
+        }
+        populate_anime_status_model(model, columns);
+        set_model(model);
+        pack_start(columns.text);
+        set_anime_status(AnimeStatus::WATCHING);
 	}
 
-	AnimeStatus AnimeStatusComboBox::get_anime_status() const {
-        return anime_status(get_active_text());
+	AnimeStatus AnimeStatusComboBox::get_anime_status() const
+    {
+        auto iter = get_active();
+        return iter->get_value(columns.status);
 	}
+
+    void AnimeStatusComboBox::set_anime_status(AnimeStatus status)
+    {
+        model->foreach_iter([this, status](const Gtk::TreeModel::iterator& iter) {
+                if (iter->get_value(columns.status) == status) {
+                    set_active(iter);
+                    return true;
+                }
+                return false;
+            });
+    }
 
     AnimeDetailViewBase::AnimeDetailViewBase(const std::shared_ptr<MAL>& mal) :
         MALItemDetailViewBase(mal),
@@ -151,7 +176,7 @@ namespace MAL {
             AnimeDetailViewBase::display_item(item);
             m_episodes_entry->set_label("/ " + std::to_string(anime->series_episodes) + " Episodes");
             m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
-            m_anime_status_combo->set_active_text(to_string(anime->status));
+            m_anime_status_combo->set_anime_status(anime->status);
         }
 
         if (anime->status == AnimeStatus::COMPLETED) {
@@ -474,16 +499,17 @@ namespace MAL {
         m_columns(columns),
         m_list_view(list_view),
         m_detail_view(detail_view),
-        m_status_combo(Gtk::manage(new AnimeStatusComboBox())),
+        m_status_combo(Gtk::manage(new AnimeStatusComboBox(true))),
         last_pulse(g_get_monotonic_time())
     {
         m_list_view->set_visible_func(sigc::mem_fun(this, &AnimeFilteredListPage::m_visible_func));
         m_status_combo->signal_changed().connect(sigc::mem_fun(static_cast<MALItemListViewBase*>(m_list_view), &MALItemListViewEditable::refilter));
+
         auto label = Gtk::manage(new Gtk::Label("Filter: "));
         m_button_row->attach(*m_status_combo, -1, 0, 1, 1);
         m_button_row->attach(*label, -2, 0, 1, 1);
         m_status_combo->set_hexpand(true);
-        m_status_combo->set_active_text(to_string(AnimeStatus::WATCHING));
+        m_status_combo->set_anime_status(AnimeStatus::WATCHING);
         m_status_combo->show();
         mal->signal_anime_added.connect(sigc::mem_fun(*this, &AnimeFilteredListPage::on_mal_update));
     }
@@ -497,8 +523,12 @@ namespace MAL {
     bool AnimeFilteredListPage::m_visible_func(const Gtk::TreeModel::const_iterator& iter) const
     {
         auto anime = iter->get_value(m_columns->anime);
-        if (anime) {
-            return m_status_combo->get_anime_status() == anime->status;
+        if (G_LIKELY(anime)) {
+            auto status = m_status_combo->get_anime_status();
+            if (G_UNLIKELY(status == AnimeStatus::NONE))
+                return true;
+            else
+                return status == anime->status;
         } else {
             return true;
         }

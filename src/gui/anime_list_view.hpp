@@ -53,10 +53,15 @@ namespace MAL {
 		Glib::RefPtr<Gtk::ListStore> model;
 	};
 
-	class AnimeStatusComboBox final : public Gtk::ComboBoxText {
+	class AnimeStatusComboBox final : public Gtk::ComboBox {
 	public:
-		AnimeStatusComboBox();
+		AnimeStatusComboBox(bool with_none = false);
 		AnimeStatus get_anime_status() const;
+        void set_anime_status(AnimeStatus status);
+
+    private:
+		AnimeStatusColumns columns;
+		Glib::RefPtr<Gtk::ListStore> model;
 	};
 
     class AnimeModelColumnsBase : public virtual MALItemModelColumns
