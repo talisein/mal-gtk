@@ -37,32 +37,32 @@
 #include "fancy_label.hpp"
 
 namespace MAL {
-	class AnimeStatusColumns final : public Gtk::TreeModel::ColumnRecord {
-	public:
+    class AnimeStatusColumns final : public Gtk::TreeModel::ColumnRecord {
+    public:
         Gtk::TreeModelColumn<Glib::ustring> text;
         Gtk::TreeModelColumn<AnimeStatus> status;
-		AnimeStatusColumns() { add(text); add(status); };
-	};
+        AnimeStatusColumns() { add(text); add(status); };
+    };
 
-	class AnimeStatusCellRendererCombo final : public Gtk::CellRendererCombo {
-	public:
-		AnimeStatusCellRendererCombo();
+    class AnimeStatusCellRendererCombo final : public Gtk::CellRendererCombo {
+    public:
+        AnimeStatusCellRendererCombo();
 
-	private:
-		AnimeStatusColumns columns;
-		Glib::RefPtr<Gtk::ListStore> model;
-	};
+    private:
+        AnimeStatusColumns columns;
+        Glib::RefPtr<Gtk::ListStore> model;
+    };
 
-	class AnimeStatusComboBox final : public Gtk::ComboBox {
-	public:
-		AnimeStatusComboBox(bool with_none = false);
-		AnimeStatus get_anime_status() const;
+    class AnimeStatusComboBox final : public Gtk::ComboBox {
+    public:
+        AnimeStatusComboBox(bool with_none = false);
+        AnimeStatus get_anime_status() const;
         void set_anime_status(AnimeStatus status);
 
     private:
-		AnimeStatusColumns columns;
-		Glib::RefPtr<Gtk::ListStore> model;
-	};
+        AnimeStatusColumns columns;
+        Glib::RefPtr<Gtk::ListStore> model;
+    };
 
     class AnimeModelColumnsBase : public virtual MALItemModelColumns
     {
@@ -216,7 +216,7 @@ namespace MAL {
         
     protected:
         IncrementEntry      *m_episodes_entry;
-		AnimeStatusComboBox *m_anime_status_combo;
+        AnimeStatusComboBox *m_anime_status_combo;
 
         /* Chain up */
         virtual bool update_list_model(const Gtk::TreeRow &row) override;
@@ -227,27 +227,27 @@ namespace MAL {
 
     class AnimeSearchListPage final : public MALItemListPage {
     public:
-		AnimeSearchListPage(const std::shared_ptr<MAL>&,
+        AnimeSearchListPage(const std::shared_ptr<MAL>&,
                             AnimeListViewStatic*   list_view,
                             AnimeDetailViewStatic* detail_view);
 
     protected:
         Gtk::Entry *m_search_entry;
-		virtual void refresh() override;
+        virtual void refresh() override;
         virtual void on_mal_update() override;
 
     };
 
     class AnimeFilteredListPage final : public MALItemListPage {
     public:
-		AnimeFilteredListPage(const std::shared_ptr<MAL>& mal,
+        AnimeFilteredListPage(const std::shared_ptr<MAL>& mal,
                               const std::shared_ptr<AnimeModelColumnsEditable>& columns,
                               AnimeListViewEditable*      list_view,
                               AnimeDetailViewEditable*    detail_view);
 
     protected:
-		virtual void refresh() override;
-		virtual void on_mal_update() override;
+        virtual void refresh() override;
+        virtual void on_mal_update() override;
 
     private:
         std::shared_ptr<AnimeModelColumnsEditable> m_columns;

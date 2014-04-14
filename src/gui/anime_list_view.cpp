@@ -50,19 +50,19 @@ namespace MAL {
         }
     }
 
-	AnimeStatusCellRendererCombo::AnimeStatusCellRendererCombo() :
-		Gtk::CellRendererCombo(),
-		model(Gtk::ListStore::create(columns))
-	{
+    AnimeStatusCellRendererCombo::AnimeStatusCellRendererCombo() :
+        Gtk::CellRendererCombo(),
+        model(Gtk::ListStore::create(columns))
+    {
         populate_anime_status_model(model, columns);
-		property_model() = model;
-		property_text_column() = columns.text.index();
-		property_has_entry() = false;
-	}
+        property_model() = model;
+        property_text_column() = columns.text.index();
+        property_has_entry() = false;
+    }
 
-	AnimeStatusComboBox::AnimeStatusComboBox(bool with_none) :
-		Gtk::ComboBox(),
-		model(Gtk::ListStore::create(columns))
+    AnimeStatusComboBox::AnimeStatusComboBox(bool with_none) :
+        Gtk::ComboBox(),
+        model(Gtk::ListStore::create(columns))
     {
         if (with_none) {
             auto iter = model->append();
@@ -73,13 +73,13 @@ namespace MAL {
         set_model(model);
         pack_start(columns.text);
         set_anime_status(AnimeStatus::WATCHING);
-	}
+    }
 
-	AnimeStatus AnimeStatusComboBox::get_anime_status() const
+    AnimeStatus AnimeStatusComboBox::get_anime_status() const
     {
         auto iter = get_active();
         return iter->get_value(columns.status);
-	}
+    }
 
     void AnimeStatusComboBox::set_anime_status(AnimeStatus status)
     {
@@ -266,13 +266,13 @@ namespace MAL {
         AnimeListViewBase(mal, columns),
         m_status_column(Gtk::manage(new Gtk::TreeViewColumn("Viewing Status")))
     {
-		auto status_cellrenderer = Gtk::manage(new AnimeStatusCellRendererCombo());
-		m_status_column->pack_start(*status_cellrenderer);
-		m_status_column->add_attribute(status_cellrenderer->property_text(), columns->status);
+        auto status_cellrenderer = Gtk::manage(new AnimeStatusCellRendererCombo());
+        m_status_column->pack_start(*status_cellrenderer);
+        m_status_column->add_attribute(status_cellrenderer->property_text(), columns->status);
         m_status_column->add_attribute(status_cellrenderer->property_editable(), columns->status_editable);
-		status_cellrenderer->signal_edited().connect(sigc::mem_fun(*this, &AnimeListViewStatic::on_status_cr_changed));
-//		status_cellrenderer->property_editable() = true;
-		m_treeview->append_column(*m_status_column);
+        status_cellrenderer->signal_edited().connect(sigc::mem_fun(*this, &AnimeListViewStatic::on_status_cr_changed));
+//      status_cellrenderer->property_editable() = true;
+        m_treeview->append_column(*m_status_column);
     }
 
     /* Chain up!
@@ -302,19 +302,19 @@ namespace MAL {
         }
     }
 
-	void AnimeListViewStatic::on_status_cr_changed(const Glib::ustring& path,
+    void AnimeListViewStatic::on_status_cr_changed(const Glib::ustring& path,
                                                    const Glib::ustring& new_text)
     {
         auto columns = std::dynamic_pointer_cast<AnimeModelColumnsStatic>(m_columns);
-		Gtk::TreeModel::iterator iter = m_model->get_iter(path);
+        Gtk::TreeModel::iterator iter = m_model->get_iter(path);
 
-		if (iter) {
-			auto const status = anime_status(new_text);
+        if (iter) {
+            auto const status = anime_status(new_text);
             auto anime = iter->get_value(columns->anime);
 
-			if (status != anime->status) {
+            if (status != anime->status) {
                 auto new_anime = std::static_pointer_cast<Anime>(anime->clone());
-				new_anime->status = status;
+                new_anime->status = status;
                 new_anime->score = 0.0f;
                 if (status == AnimeStatus::COMPLETED) {
                     new_anime->episodes = new_anime->series_episodes;
@@ -345,8 +345,8 @@ namespace MAL {
                     iter->set_value(columns->anime, new_anime);
                 }
             }
-		}
-	}
+        }
+    }
 
     AnimeListViewEditable::AnimeListViewEditable(const std::shared_ptr<MAL>& mal,
                                                  const std::shared_ptr<AnimeModelColumnsEditable>& columns) :
@@ -355,12 +355,12 @@ namespace MAL {
         AnimeListViewBase(mal, columns),
         m_status_column(Gtk::manage(new Gtk::TreeViewColumn("Viewing Status")))
     {
-		auto status_cellrenderer = Gtk::manage(new AnimeStatusCellRendererCombo());
-		m_status_column->pack_start(*status_cellrenderer);
-		m_status_column->add_attribute(status_cellrenderer->property_text(), columns->status);
-		status_cellrenderer->signal_edited().connect(sigc::mem_fun(*this, &AnimeListViewEditable::on_status_cr_changed));
-		status_cellrenderer->property_editable() = true;
-		m_treeview->append_column(*m_status_column);
+        auto status_cellrenderer = Gtk::manage(new AnimeStatusCellRendererCombo());
+        m_status_column->pack_start(*status_cellrenderer);
+        m_status_column->add_attribute(status_cellrenderer->property_text(), columns->status);
+        status_cellrenderer->signal_edited().connect(sigc::mem_fun(*this, &AnimeListViewEditable::on_status_cr_changed));
+        status_cellrenderer->property_editable() = true;
+        m_treeview->append_column(*m_status_column);
         auto num = m_treeview->append_column_numeric_editable("Seen", columns->episodes, "%d");
         m_episodes_column = m_treeview->get_column(num - 1);
         m_treeview->move_column_after(*m_episodes_column, *m_series_type_column);
@@ -437,24 +437,24 @@ namespace MAL {
     void AnimeListViewEditable::on_status_cr_changed(const Glib::ustring& path, const Glib::ustring& new_text)
     {
         auto columns = std::dynamic_pointer_cast<AnimeModelColumnsEditable>(m_columns);
-		Gtk::TreeModel::iterator iter = m_model->get_iter(path);
+        Gtk::TreeModel::iterator iter = m_model->get_iter(path);
 
-		if (iter) {
-			auto status = anime_status(new_text);
+        if (iter) {
+            auto status = anime_status(new_text);
             auto anime = iter->get_value(columns->anime);
 
-			if (status != anime->status) {
+            if (status != anime->status) {
                 auto new_anime = std::static_pointer_cast<Anime>(anime->clone());
-				iter->set_value(columns->status, Glib::ustring(to_string(status)));
-				new_anime->status = status;
+                iter->set_value(columns->status, Glib::ustring(to_string(status)));
+                new_anime->status = status;
                 anime = new_anime;
-				iter->set_value(columns->anime, anime);
+                iter->set_value(columns->anime, anime);
 
                 if (status != AnimeStatus::INVALID) {
                     send_item_update(anime);
                 }
             }
-		}
+        }
     }
     
     AnimeSearchListPage::AnimeSearchListPage(const std::shared_ptr<MAL>& mal,
@@ -468,10 +468,10 @@ namespace MAL {
         m_search_entry->set_activates_default(true);
         m_search_entry->show();
 
-		auto icon = m_refresh_button->render_icon_pixbuf(Gtk::Stock::FIND, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
-		auto image = Gtk::manage(new Gtk::Image(icon));
-		m_refresh_button->set_image(*image);
-		m_refresh_button->set_tooltip_text("Search myanimelist.net for anime that maches the entered terms.");
+        auto icon = m_refresh_button->render_icon_pixbuf(Gtk::Stock::FIND, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
+        auto image = Gtk::manage(new Gtk::Image(icon));
+        m_refresh_button->set_image(*image);
+        m_refresh_button->set_tooltip_text("Search myanimelist.net for anime that maches the entered terms.");
         mal->signal_anime_search_completed.connect(sigc::mem_fun(*this, &AnimeSearchListPage::on_mal_update));
     }
 
