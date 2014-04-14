@@ -240,6 +240,7 @@ namespace MAL {
     class MangaFilteredListPage final : public MALItemListPage {
     public:
 		MangaFilteredListPage(const std::shared_ptr<MAL>& mal,
+                              const std::shared_ptr<MangaModelColumnsEditable>& columns,
                               MangaListViewEditable*      list_view,
                               MangaDetailViewEditable*    detail_view);
 
@@ -248,10 +249,12 @@ namespace MAL {
         virtual void on_mal_update() override;
 
     private:
+        std::shared_ptr<MangaModelColumnsEditable> m_columns;
         MangaListViewEditable* m_list_view;
         MangaDetailViewEditable* m_detail_view;
         MangaStatusComboBox *m_status_combo;
 
         bool m_filter_func(const std::shared_ptr<MALItem>&) const;
+        bool m_visible_func(const Gtk::TreeModel::const_iterator& iter) const;
     };
 }

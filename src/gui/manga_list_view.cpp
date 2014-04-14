@@ -468,21 +468,23 @@ namespace MAL {
     }
 
     MangaFilteredListPage::MangaFilteredListPage(const std::shared_ptr<MAL>& mal,
+                                                 const std::shared_ptr<MangaModelColumnsEditable>& columns,
                                                  MangaListViewEditable*      list_view,
                                                  MangaDetailViewEditable*    detail_view) :
         MALItemListPage(mal, list_view, detail_view),
+        m_columns(columns),
         m_list_view(list_view),
         m_detail_view(detail_view),
         m_status_combo(Gtk::manage(new MangaStatusComboBox()))
     {
-        m_status_combo->signal_changed().connect(sigc::mem_fun(this, &MangaFilteredListPage::on_mal_update));
+        m_list_view->set_visible_func(sigc::mem_fun(this, &MangaFilteredListPage::m_visible_func));
+        m_status_combo->signal_changed().connect(sigc::mem_fun(static_cast<MALItemListViewBase*>(m_list_view), &MALItemListViewEditable::refilter));
         auto label = Gtk::manage(new Gtk::Label("Filter: "));
         m_button_row->attach(*m_status_combo, -1, 0, 1, 1);
         m_button_row->attach(*label, -2, 0, 1, 1);
         m_status_combo->set_hexpand(true);
         m_status_combo->set_active_text(to_string(READING));
         m_status_combo->show();
-        list_view->set_filter_func(sigc::mem_fun(*this, &MangaFilteredListPage::m_filter_func));
         mal->signal_manga_added.connect(sigc::mem_fun(*this, &MangaFilteredListPage::on_mal_update));
     }
 
@@ -490,6 +492,16 @@ namespace MAL {
     {
         auto manga = std::static_pointer_cast<Manga>(item);
         return manga->status == m_status_combo->get_manga_status();
+    }
+
+    bool MangaFilteredListPage::m_visible_func(const Gtk::TreeModel::const_iterator& iter) const
+    {
+        auto manga = iter->get_value(m_columns->manga);
+        if (manga) {
+            return m_status_combo->get_manga_status() == manga->status;
+        } else {
+            return true;
+        }
     }
 
     void MangaFilteredListPage::refresh()
