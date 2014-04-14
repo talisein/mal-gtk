@@ -467,22 +467,24 @@ namespace MAL {
     }
 
     AnimeFilteredListPage::AnimeFilteredListPage(const std::shared_ptr<MAL>& mal,
+                                                 const std::shared_ptr<AnimeModelColumnsEditable>& columns,
                                                  AnimeListViewEditable*      list_view,
                                                  AnimeDetailViewEditable*    detail_view) :
         MALItemListPage(mal, list_view, detail_view),
+        m_columns(columns),
         m_list_view(list_view),
         m_detail_view(detail_view),
         m_status_combo(Gtk::manage(new AnimeStatusComboBox())),
         last_pulse(g_get_monotonic_time())
     {
-        m_status_combo->signal_changed().connect(sigc::mem_fun(this, &AnimeFilteredListPage::on_mal_update));
+        m_list_view->set_visible_func(sigc::mem_fun(this, &AnimeFilteredListPage::m_visible_func));
+        m_status_combo->signal_changed().connect(sigc::mem_fun(static_cast<MALItemListViewBase*>(m_list_view), &AnimeListViewEditable::refilter));
         auto label = Gtk::manage(new Gtk::Label("Filter: "));
         m_button_row->attach(*m_status_combo, -1, 0, 1, 1);
         m_button_row->attach(*label, -2, 0, 1, 1);
         m_status_combo->set_hexpand(true);
         m_status_combo->set_active_text(to_string(AnimeStatus::WATCHING));
         m_status_combo->show();
-        list_view->set_filter_func(sigc::mem_fun(*this, &AnimeFilteredListPage::m_filter_func));
         mal->signal_anime_added.connect(sigc::mem_fun(*this, &AnimeFilteredListPage::on_mal_update));
     }
 
@@ -490,6 +492,16 @@ namespace MAL {
     {
         auto anime = std::static_pointer_cast<Anime>(item);
         return anime->status == m_status_combo->get_anime_status();
+    }
+
+    bool AnimeFilteredListPage::m_visible_func(const Gtk::TreeModel::const_iterator& iter) const
+    {
+        auto anime = iter->get_value(m_columns->anime);
+        if (anime) {
+            return m_status_combo->get_anime_status() == anime->status;
+        } else {
+            return true;
+        }
     }
 
     void AnimeFilteredListPage::refresh()

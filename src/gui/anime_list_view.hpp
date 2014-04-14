@@ -236,6 +236,7 @@ namespace MAL {
     class AnimeFilteredListPage final : public MALItemListPage {
     public:
 		AnimeFilteredListPage(const std::shared_ptr<MAL>& mal,
+                              const std::shared_ptr<AnimeModelColumnsEditable>& columns,
                               AnimeListViewEditable*      list_view,
                               AnimeDetailViewEditable*    detail_view);
 
@@ -244,11 +245,14 @@ namespace MAL {
 		virtual void on_mal_update() override;
 
     private:
+        std::shared_ptr<AnimeModelColumnsEditable> m_columns;
         AnimeListViewEditable* m_list_view;
         AnimeDetailViewEditable* m_detail_view;
         AnimeStatusComboBox *m_status_combo;
         gint64 last_pulse;
 
         bool m_filter_func(const std::shared_ptr<MALItem>&) const;
+        bool m_visible_func(const Gtk::TreeModel::const_iterator& iter) const;
+
     };
 }

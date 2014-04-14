@@ -541,11 +541,12 @@ namespace MAL {
 
 	MALItemListViewBase::MALItemListViewBase(const std::shared_ptr<MAL>& mal,
                                              const std::shared_ptr<MALItemModelColumns>& columns) :
-		Gtk::Grid (),
-        m_columns (columns),
-		m_mal     (mal),
-		m_model   (Gtk::ListStore::create(*m_columns)),
-		m_treeview(Gtk::manage(new Gtk::TreeView(m_model)))
+		Gtk::Grid    (),
+        m_columns    (columns),
+		m_mal        (mal),
+		m_root_model (Gtk::ListStore::create(*m_columns)),
+        m_model      (Gtk::TreeModelFilter::create(m_root_model)),
+		m_treeview   (Gtk::manage(new Gtk::TreeView(m_model)))
 	{
 		Gtk::ScrolledWindow *sw = Gtk::manage(new Gtk::ScrolledWindow());
 		sw->add(*m_treeview);
@@ -569,8 +570,8 @@ namespace MAL {
 		show_all();
 		m_treeview->signal_row_activated().connect(sigc::mem_fun(*this, &MALItemListViewBase::on_my_row_activated));
         m_treeview->set_rules_hint(true);
-        m_model->set_default_sort_func(sigc::mem_fun(*this, &MALItemListViewBase::malitem_comparitor));
-        m_model->set_sort_column(Gtk::TreeSortable::DEFAULT_SORT_COLUMN_ID, Gtk::SORT_DESCENDING);
+        m_root_model->set_default_sort_func(sigc::mem_fun(*this, &MALItemListViewBase::malitem_comparitor));
+        m_root_model->set_sort_column(Gtk::TreeSortable::DEFAULT_SORT_COLUMN_ID, Gtk::SORT_DESCENDING);
 #if GTK_CHECK_VERSION(3,8,0)
         m_treeview->set_activate_on_single_click(true);
 #endif
@@ -618,7 +619,7 @@ namespace MAL {
      */
     void MALItemListViewBase::refresh_items(const std::function<void (const std::function<void (const std::shared_ptr<MALItem>&)>&)>& for_each_functor)
     {
-        m_model->clear();
+        m_root_model->clear();
         m_model_changed_connection.block();
         for_each_functor(std::bind(&MALItemListViewBase::append_item, this, std::placeholders::_1));
         m_model_changed_connection.unblock();
@@ -628,11 +629,11 @@ namespace MAL {
     {
         if (m_filter_func) {
             if (m_filter_func(item)) {
-                auto iter = m_model->append();
+                auto iter = m_root_model->append();
                 refresh_item_cb(item, *iter);
             }
         } else {
-            auto iter = m_model->append();
+            auto iter = m_root_model->append();
             refresh_item_cb(item, *iter);
         }
     }
@@ -671,7 +672,7 @@ namespace MAL {
         m_score_column->add_attribute(m_score_cellrenderer->property_score(), columns->score);
         //m_score_column->set_alignment(Pango::ALIGN_CENTER);
         m_score_cellrenderer->signal_edited().connect(sigc::mem_fun(*this, &MALItemListViewEditable::score_edited_cb));
-        m_model_changed_connection = m_model->signal_row_changed().connect(sigc::mem_fun(*this, &MALItemListViewEditable::on_model_changed));
+        m_model_changed_connection = m_root_model->signal_row_changed().connect(sigc::mem_fun(*this, &MALItemListViewEditable::on_model_changed));
         m_treeview->append_column(*m_score_column);
 		m_treeview->signal_row_activated().connect([this](const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*)->void{
                 auto iter = this->m_model->get_iter(path);
@@ -851,7 +852,7 @@ namespace MAL {
 
     void MALItemListViewEditable::do_model_foreach(const Gtk::TreeModel::SlotForeachPathAndIter& slot)
     {
-        m_model->foreach(slot);
+        m_root_model->foreach(slot);
     }
 
 	MALItemListPage::MALItemListPage(const std::shared_ptr<MAL>& mal,

@@ -228,6 +228,14 @@ namespace MAL {
 
         void set_filter_func(const sigc::slot<bool, const std::shared_ptr<MALItem>&>& slot);
 
+        void set_visible_func(const Gtk::TreeModelFilter::SlotVisible &slot) {
+            m_model->set_visible_func(slot);
+        }
+
+        void refilter() {
+            m_model->refilter();
+        }
+
 
         void refresh_items(const std::function<void (const std::function<void (const std::shared_ptr<MALItem>&)>& )>& for_each_functor);
         /*template<typename UnaryForeachFunctor>
@@ -245,7 +253,8 @@ namespace MAL {
 
 	protected:
 		std::shared_ptr<MAL>                        m_mal;
-		Glib::RefPtr<Gtk::ListStore>                m_model;
+		Glib::RefPtr<Gtk::ListStore>                m_root_model;
+        Glib::RefPtr<Gtk::TreeModelFilter>          m_model;
 		Gtk::TreeView                              *m_treeview;
         std::shared_ptr<MALItem>                    m_detailed_item;
         Gtk::TreeViewColumn                        *m_title_column;

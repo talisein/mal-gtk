@@ -48,7 +48,7 @@ namespace MAL {
         auto itemdetailview = Gtk::manage(new AnimeDetailViewEditable(mal,
                                                                       itemcolumns,
                                                                       sigc::mem_fun(*itemlistview, &AnimeListViewEditable::do_model_foreach)));
-        auto itempage = Gtk::manage(new AnimeFilteredListPage(mal, itemlistview, itemdetailview));
+        auto itempage = Gtk::manage(new AnimeFilteredListPage(mal, itemcolumns,  itemlistview, itemdetailview));
         book->append_page(*itempage, "My Anime List");
         }
 
