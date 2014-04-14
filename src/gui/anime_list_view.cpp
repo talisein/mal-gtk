@@ -478,7 +478,7 @@ namespace MAL {
         last_pulse(g_get_monotonic_time())
     {
         m_list_view->set_visible_func(sigc::mem_fun(this, &AnimeFilteredListPage::m_visible_func));
-        m_status_combo->signal_changed().connect(sigc::mem_fun(static_cast<MALItemListViewBase*>(m_list_view), &AnimeListViewEditable::refilter));
+        m_status_combo->signal_changed().connect(sigc::mem_fun(static_cast<MALItemListViewBase*>(m_list_view), &MALItemListViewEditable::refilter));
         auto label = Gtk::manage(new Gtk::Label("Filter: "));
         m_button_row->attach(*m_status_combo, -1, 0, 1, 1);
         m_button_row->attach(*label, -2, 0, 1, 1);
