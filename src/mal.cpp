@@ -706,7 +706,8 @@ namespace MAL {
             }
             return true;
         } else {
-            signal_mal_error(anime->series_title + " not updated due to myanimelist.net error: " + *buf);
+            std::cerr << "Error: Couldn't update: " << *buf << std::endl;
+            signal_mal_error(anime->series_title + " not updated due to myanimelist.net error.");
             return false;
         }
     }
