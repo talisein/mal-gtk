@@ -13,7 +13,7 @@ AC_PROG_CC
 AC_LANG([C++])
 AM_PROG_CC_C_O
 
-AX_CXX_COMPILE_STDCXX_11([noext])
+AX_CXX_COMPILE_STDCXX_14([noext])
 
 # Checks for libraries.
 
