@@ -245,7 +245,7 @@ namespace MAL {
         void involke_unlock_function(CURL*, curl_lock_data);
 
         void setup_curl_easy(CURL* easy, const std::string& url, std::string*);
-        void setup_curl_easy_mis(CURL* easy, const std::string& url, const Glib::RefPtr<Gio::MemoryInputStream>&);
+        void setup_curl_easy_mis(CURL* easy, const std::string& url, GByteArray *);
 
         void serialize_to_disk_sync();
         void deserialize_from_disk_async();
@@ -282,7 +282,6 @@ namespace MAL {
         std::map<curl_lock_data, std::unique_ptr<std::mutex>> map_mutex;
         
         std::map<std::string, Glib::RefPtr<Glib::Bytes> > image_cache;
-        std::map<int_fast64_t, std::unique_ptr<std::string> > manga_image_cache;
 
         std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
         Active active; /* Must be destroyed before curl_share */

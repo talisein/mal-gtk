@@ -46,8 +46,8 @@ namespace {
                                 size_t nmemb,
                                 void *userp)
         {
-            auto buf = static_cast<Gio::MemoryInputStream*>(userp);
-            buf->add_data(g_memdup(buffer, size*nmemb), size*nmemb, g_free);
+            auto ba = static_cast<GByteArray*>(userp);
+            g_byte_array_append(ba, static_cast<guint8*>(buffer), size * nmemb);
 
             return size*nmemb;
         }
@@ -242,14 +242,14 @@ namespace MAL {
         }
     }
 
-    void MAL::setup_curl_easy_mis(CURL* easy, const std::string& url, const Glib::RefPtr<Gio::MemoryInputStream>& mis)
+    void MAL::setup_curl_easy_mis(CURL* easy, const std::string& url, GByteArray *ba)
     {
         CURLcode code;
         code = curl_easy_setopt(easy, CURLOPT_WRITEFUNCTION, &curl_write_function_mis);
         if (code != CURLE_OK) {
             print_curl_error(code, curl_ebuffer);
         }
-        code = curl_easy_setopt(easy, CURLOPT_WRITEDATA, mis.operator->());
+        code = curl_easy_setopt(easy, CURLOPT_WRITEDATA, static_cast<void*>(ba));
         if (code != CURLE_OK) {
             print_curl_error(code, curl_ebuffer);
         }
@@ -532,47 +532,32 @@ namespace MAL {
             });
     }
 
-    namespace {
-        Glib::RefPtr<Glib::Bytes> xform_mis_to_bytes(const Glib::RefPtr<Gio::MemoryInputStream>& mis)
-        {
-            mis->seek(0, Glib::SeekType::SEEK_TYPE_END);
-            goffset size = mis->tell();
-            mis->seek(0, Glib::SeekType::SEEK_TYPE_SET);
-
-            std::unique_ptr<char[]> buf(new char[size]);
-            gsize read;
-            if (!mis->read_all(buf.get(), size, read)) {
-                std::cerr << "Error: Failed to read everything. Size " << size << " read " << read << std::endl;
-                return Glib::RefPtr<Glib::Bytes>();
-            }
-            mis->seek(0, Glib::SeekType::SEEK_TYPE_SET);
-
-            return Glib::Bytes::create(buf.get(), size);
-        }
-    }
-
     Glib::RefPtr<Gio::MemoryInputStream> MAL::get_image_sync(const MALItem& item) {
         auto iter = image_cache.find(item.image_url);
         if (iter == std::end(image_cache)) {
             std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-            Glib::RefPtr<Gio::MemoryInputStream> mis = Gio::MemoryInputStream::create();
-            setup_curl_easy_mis(curl.get(), item.image_url, mis);
+            GByteArray *ba = g_byte_array_new();
+            setup_curl_easy_mis(curl.get(), item.image_url, ba);
             CURLcode code = curl_easy_perform(curl.get());
             
             if (code != CURLE_OK) {
                 print_curl_error(code, curl_ebuffer);
-                signal_mal_error("Unable to fetch image for " + item.series_title + ": " + curl_ebuffer.get());
+                signal_mal_info("Unable to fetch image for " + item.series_title + ": " + curl_ebuffer.get());
+                g_byte_array_free(ba, TRUE);
                 return Glib::RefPtr<Gio::MemoryInputStream>();
             } else {
                 char *url;
                 curl_easy_getinfo(curl.get(), CURLINFO_EFFECTIVE_URL, &url);
                 if (strcmp(url, "http://myanimelist.net/404.php") == 0) {
-                    signal_mal_error("Unable to fetch image for " + item.series_title + ": 404");
+                    signal_mal_info("Unable to fetch image for " + item.series_title + ": 404");
+                    g_byte_array_free(ba, TRUE);
                     return Glib::RefPtr<Gio::MemoryInputStream>();
                 }
 
-                Glib::RefPtr<Glib::Bytes> bytes = xform_mis_to_bytes(mis);
-                image_cache.insert(std::make_pair(item.image_url, bytes));
+                GBytes *gbytes = g_byte_array_free_to_bytes(ba);
+                auto inserted = image_cache.insert(std::make_pair(item.image_url, Glib::wrap(gbytes)));
+                auto mis = Gio::MemoryInputStream::create();
+                g_memory_input_stream_add_bytes(mis->gobj(), inserted.first->second->gobj());
                 return mis;
             }
         } else {

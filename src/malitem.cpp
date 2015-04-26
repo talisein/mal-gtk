@@ -94,6 +94,8 @@ namespace MAL {
 	Priority priority_from_string(const Glib::ustring& s) {
 		if (s.compare(to_string(PRIORITY_INVALID)) == 0)
 			return PRIORITY_INVALID;
+        else if (s.empty())
+            return PRIORITY_INVALID;
 		else if (s.compare(to_string(PRIORITY_LOW)) == 0)
 			return PRIORITY_LOW;
 		else if (s.compare(to_string(PRIORITY_MEDIUM)) == 0)
