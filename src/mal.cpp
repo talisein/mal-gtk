@@ -40,6 +40,18 @@ namespace {
             return size*nmemb;
         }
 
+        static size_t
+        curl_write_function_mis(void *buffer,
+                                size_t size,
+                                size_t nmemb,
+                                void *userp)
+        {
+            auto buf = static_cast<Gio::MemoryInputStream*>(userp);
+            buf->add_data(g_memdup(buffer, size*nmemb), size*nmemb, g_free);
+
+            return size*nmemb;
+        }
+
         static void
         mal_curl_lock_function(CURL* curl,
                                curl_lock_data data,
@@ -79,7 +91,7 @@ namespace {
     {
         std::cerr << "Error: " << curl_easy_strerror(code);
         if (curl_ebuffer)
-            std::cerr << ", " << curl_ebuffer.get();
+            std::cerr << ". " << curl_ebuffer.get();
         std::cerr << std::endl;
     }
 
@@ -227,6 +239,53 @@ namespace MAL {
             }
         } else {
             std::cerr << "Error: Password dialog had unexpected exit." << std::endl;
+        }
+    }
+
+    void MAL::setup_curl_easy_mis(CURL* easy, const std::string& url, const Glib::RefPtr<Gio::MemoryInputStream>& mis)
+    {
+        CURLcode code;
+        code = curl_easy_setopt(easy, CURLOPT_WRITEFUNCTION, &curl_write_function_mis);
+        if (code != CURLE_OK) {
+            print_curl_error(code, curl_ebuffer);
+        }
+        code = curl_easy_setopt(easy, CURLOPT_WRITEDATA, mis.operator->());
+        if (code != CURLE_OK) {
+            print_curl_error(code, curl_ebuffer);
+        }
+        code = curl_easy_setopt(easy, CURLOPT_ERRORBUFFER, curl_ebuffer.get());
+        if (code != CURLE_OK) {
+            print_curl_error(code, curl_ebuffer);
+        }
+        code = curl_easy_setopt(easy, CURLOPT_FAILONERROR, 1);
+        if (code != CURLE_OK) {
+            print_curl_error(code, curl_ebuffer);
+        }
+        code = curl_easy_setopt(easy, CURLOPT_NOSIGNAL, 1);
+        if (code != CURLE_OK) {
+            print_curl_error(code, curl_ebuffer);
+        }
+        code = curl_easy_setopt(easy, CURLOPT_URL, url.c_str());
+        if (code != CURLE_OK) {
+            print_curl_error(code, curl_ebuffer);
+        }
+        code = curl_easy_setopt(easy, CURLOPT_SHARE, curl_share.get());
+        if (code != CURLE_OK) {
+            print_curl_error(code, curl_ebuffer);
+        }
+        code = curl_easy_setopt(easy, CURLOPT_FOLLOWLOCATION, 1);
+        if (code != CURLE_OK) {
+            print_curl_error(code, curl_ebuffer);
+        }
+        std::stringstream user_agent;
+        auto const cvid = curl_version_info(CURLVERSION_NOW);
+        user_agent << "mal-gtk/0.1.0 (linux)" << " "
+                   << "libcurl" << "/"
+                   << cvid->version;
+//        std::cerr << "Setting user agent to " << user_agent.str() << std::endl;
+        code = curl_easy_setopt(easy, CURLOPT_USERAGENT, user_agent.str().c_str());
+        if (code != CURLE_OK) {
+            print_curl_error(code, curl_ebuffer);
         }
     }
 
@@ -465,7 +524,7 @@ namespace MAL {
     }
 
     void MAL::get_image_async(const MALItem& item,
-                              const std::function<void(const std::string&)>& cb)
+                              const std::function<void(const Glib::RefPtr<Gio::MemoryInputStream>&)>& cb)
     {
         active.send([this, item, cb] {
                 auto img = get_image_sync(item);
@@ -473,44 +532,53 @@ namespace MAL {
             });
     }
 
-    std::string MAL::get_image_sync(const MALItem& item) {
+    namespace {
+        Glib::RefPtr<Glib::Bytes> xform_mis_to_bytes(const Glib::RefPtr<Gio::MemoryInputStream>& mis)
+        {
+            mis->seek(0, Glib::SeekType::SEEK_TYPE_END);
+            goffset size = mis->tell();
+            mis->seek(0, Glib::SeekType::SEEK_TYPE_SET);
+
+            std::unique_ptr<char[]> buf(new char[size]);
+            gsize read;
+            if (!mis->read_all(buf.get(), size, read)) {
+                std::cerr << "Error: Failed to read everything. Size " << size << " read " << read << std::endl;
+                return Glib::RefPtr<Glib::Bytes>();
+            }
+            mis->seek(0, Glib::SeekType::SEEK_TYPE_SET);
+
+            return Glib::Bytes::create(buf.get(), size);
+        }
+    }
+
+    Glib::RefPtr<Gio::MemoryInputStream> MAL::get_image_sync(const MALItem& item) {
         auto iter = image_cache.find(item.image_url);
         if (iter == std::end(image_cache)) {
             std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-            std::unique_ptr<std::string> buf(new std::string());
-            setup_curl_easy(curl.get(), item.image_url, buf.get());
+            Glib::RefPtr<Gio::MemoryInputStream> mis = Gio::MemoryInputStream::create();
+            setup_curl_easy_mis(curl.get(), item.image_url, mis);
             CURLcode code = curl_easy_perform(curl.get());
             
             if (code != CURLE_OK) {
                 print_curl_error(code, curl_ebuffer);
                 signal_mal_error("Unable to fetch image for " + item.series_title + ": " + curl_ebuffer.get());
-                return std::string();
+                return Glib::RefPtr<Gio::MemoryInputStream>();
             } else {
-                auto inserted = image_cache.insert(std::make_pair(item.image_url, std::move(buf)));
-                return *inserted.first->second;
-            }
-        } else {
-            return *iter->second;
-        }
-    }
+                char *url;
+                curl_easy_getinfo(curl.get(), CURLINFO_EFFECTIVE_URL, &url);
+                if (strcmp(url, "http://myanimelist.net/404.php") == 0) {
+                    signal_mal_error("Unable to fetch image for " + item.series_title + ": 404");
+                    return Glib::RefPtr<Gio::MemoryInputStream>();
+                }
 
-    std::string MAL::get_manga_image_sync(const Manga& manga) {
-        auto iter = manga_image_cache.find(manga.series_itemdb_id);
-        if (iter == std::end(manga_image_cache)) {
-            std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-            std::unique_ptr<std::string> buf(new std::string());
-            setup_curl_easy(curl.get(), manga.image_url, buf.get());
-            CURLcode code = curl_easy_perform(curl.get());
-            
-            if (code != CURLE_OK) {
-                print_curl_error(code, curl_ebuffer);
-                return std::string();
-            } else {
-                auto inserted = manga_image_cache.insert(std::make_pair(manga.series_itemdb_id, std::move(buf)));
-                return *inserted.first->second;
+                Glib::RefPtr<Glib::Bytes> bytes = xform_mis_to_bytes(mis);
+                image_cache.insert(std::make_pair(item.image_url, bytes));
+                return mis;
             }
         } else {
-            return *iter->second;
+            auto mis = Gio::MemoryInputStream::create();
+            g_memory_input_stream_add_bytes(mis->gobj(), iter->second->gobj());
+            return mis;
         }
     }
 

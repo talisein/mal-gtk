@@ -306,19 +306,36 @@ namespace MAL {
 	}
 
 	void MALItemDetailViewBase::do_fetch_image() {
-		m_mal->get_image_async(*m_item, [this](const std::string &str) {
-                image_stream = Gio::MemoryInputStream::create();
-                auto buf = g_malloc(str.size());
-                std::memcpy(buf, str.c_str(), str.size());
-                image_stream->add_data(buf, str.size(), g_free);
+		m_mal->get_image_async(*m_item, [this](const Glib::RefPtr<Gio::MemoryInputStream> &mis) {
+                image_stream = mis;
                 on_image_available();
             });
 	}
 
 	void MALItemDetailViewBase::on_image_available() {
-		auto pixbuf = Gdk::Pixbuf::create_from_stream(image_stream);
-		m_image->set(pixbuf);
-		m_image->show();
+        if (!image_stream) {
+            m_image->clear();
+            m_image->hide();
+            return;
+        }
+
+        try {
+            auto pixbuf = Gdk::Pixbuf::create_from_stream(image_stream);
+            m_image->set(pixbuf);
+            m_image->show();
+        } catch (Glib::Error e) {
+            std::cerr << "Error: can't create image from the stream: " << e.what() << std::endl;
+/*
+            image_stream->seek(0, Glib::SeekType::SEEK_TYPE_END);
+            auto sz = image_stream->tell();
+            image_stream->seek(0, Glib::SeekType::SEEK_TYPE_SET);
+            std::unique_ptr<char[]> buf { new char[sz+1] };
+            gsize rd;
+            image_stream->read_all(buf.get(), sz, rd);
+            buf[sz] = '\0';
+            std::cerr << "Image data: " << buf.get() << std::endl;
+*/
+        }
 	}
 
     MALItemDetailViewStatic::MALItemDetailViewStatic(const std::shared_ptr<MAL>& mal) :
