@@ -183,7 +183,7 @@ namespace MAL {
         text_util(std::make_shared<TextUtility>()),
         serializer(text_util),
         manga_serializer(text_util),
-        curl_ebuffer(new char[CURL_ERROR_SIZE]),
+        curl_ebuffer(std::make_unique<char[]>(CURL_ERROR_SIZE)),
         share_lock_functors(new pair_lock_functor_t(std::bind(&MAL::involke_lock_function, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
                                                     std::bind(&MAL::involke_unlock_function, this, std::placeholders::_1, std::placeholders::_2))),
         curl_share(curl_share_init())
@@ -278,7 +278,7 @@ namespace MAL {
             print_curl_error(code, curl_ebuffer);
         }
         std::stringstream user_agent;
-        auto const cvid = curl_version_info(CURLVERSION_NOW);
+//        auto const cvid = curl_version_info(CURLVERSION_NOW);
         user_agent << "mal-gtk/0.1.0 (linux)" << " "
                    << "libcurl" << "/7.32.0"; /* Have to lie. */
 //                   << cvid->version;
@@ -320,7 +320,7 @@ namespace MAL {
             print_curl_error(code, curl_ebuffer);
         }
         std::stringstream user_agent;
-        auto const cvid = curl_version_info(CURLVERSION_NOW);
+//        auto const cvid = curl_version_info(CURLVERSION_NOW);
         user_agent << "mal-gtk/0.1.0 (linux)" << " "
                    << "libcurl" << "/7.32.0"; /* Have to lie. */
 //                   << cvid->version;
