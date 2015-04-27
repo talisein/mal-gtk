@@ -445,8 +445,8 @@ namespace MAL {
             return nullptr;
         }
 
-        std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-        std::unique_ptr<std::string> buf(new std::string());
+        std::unique_ptr<CURL, CURLEasyDeleter> curl { curl_easy_init() };
+        std::unique_ptr<std::string> buf = std::make_unique<std::string>();
         setup_curl_easy(curl.get(), url, buf.get());
         curl_setup_httpauth(curl, user_info);
         DownloadProgressCb_t bound_cb = [this, &progress_cb] (int_fast64_t progress) {
@@ -535,7 +535,7 @@ namespace MAL {
     Glib::RefPtr<Gio::MemoryInputStream> MAL::get_image_sync(const MALItem& item) {
         auto iter = image_cache.find(item.image_url);
         if (iter == std::end(image_cache)) {
-            std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
+            std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
             GByteArray *ba = g_byte_array_new();
             setup_curl_easy_mis(curl.get(), item.image_url, ba);
             CURLcode code = curl_easy_perform(curl.get());
@@ -555,7 +555,7 @@ namespace MAL {
                 }
 
                 GBytes *gbytes = g_byte_array_free_to_bytes(ba);
-                auto inserted = image_cache.insert(std::make_pair(item.image_url, Glib::wrap(gbytes)));
+                auto inserted = image_cache.emplace(item.image_url, Glib::wrap(gbytes));
                 auto mis = Gio::MemoryInputStream::create();
                 g_memory_input_stream_add_bytes(mis->gobj(), inserted.first->second->gobj());
                 return mis;
@@ -572,9 +572,9 @@ namespace MAL {
     }
 
     void MAL::search_anime_sync(const std::string& terms) {
-        std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-        std::unique_ptr<std::string> buf(new std::string());
-        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped(curl_easy_escape(curl.get(), terms.c_str(), terms.size()));
+        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        std::unique_ptr<std::string> buf = std::make_unique<std::string>();
+        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped {curl_easy_escape(curl.get(), terms.c_str(), terms.size())};
         const std::string url = SEARCH_BASE_URL + terms_escaped.get();
 
         setup_curl_easy(curl.get(), url, buf.get());
@@ -612,9 +612,9 @@ namespace MAL {
     }
 
     void MAL::search_manga_sync(const std::string& terms) {
-        std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-        std::unique_ptr<std::string> buf(new std::string());
-        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped(curl_easy_escape(curl.get(), terms.c_str(), terms.size()));
+        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        std::unique_ptr<std::string> buf = std::make_unique<std::string>();
+        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped {curl_easy_escape(curl.get(), terms.c_str(), terms.size())};
         const std::string url = MANGA_SEARCH_BASE_URL + terms_escaped.get();
 
         setup_curl_easy(curl.get(), url, buf.get());
@@ -653,8 +653,8 @@ namespace MAL {
     
     bool MAL::update_anime_sync(const std::shared_ptr<Anime>& anime) {
         const std::string url = UPDATED_BASE_URL + std::to_string(anime->series_itemdb_id) + ".xml";
-        std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-        std::unique_ptr<std::string> buf(new std::string());
+        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        std::unique_ptr<std::string> buf = std::make_unique<std::string>();
         setup_curl_easy(curl.get(), url, buf.get());
         auto xml = serializer.serialize(*anime);
 //        std::cerr << "Sending: " << xml << std::endl;
@@ -703,8 +703,8 @@ namespace MAL {
 
     bool MAL::update_manga_sync(const std::shared_ptr<Manga>& manga) {
         const std::string url = MANGA_UPDATED_BASE_URL + std::to_string(manga->series_itemdb_id) + ".xml";
-        std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-        std::unique_ptr<std::string> buf(new std::string());
+        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        std::unique_ptr<std::string> buf = std::make_unique<std::string>();
         setup_curl_easy(curl.get(), url, buf.get());
         auto xml = manga_serializer.serialize(*manga);
         xml.insert(0, "data=");
@@ -754,8 +754,8 @@ namespace MAL {
                         OperationCompleteCb_t complete_cb)
     {
         const std::string url = ADD_BASE_URL + std::to_string(anime.series_itemdb_id) + ".xml";
-        std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-        std::unique_ptr<std::string> buf(new std::string());
+        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        std::unique_ptr<std::string> buf = std::make_unique<std::string>();
         setup_curl_easy(curl.get(), url, buf.get());
         auto xml = serializer.serialize(anime);
 //        std::cerr << "Adding anime " << anime.series_title << " with status = " << to_string(anime.status) << std::endl;
@@ -807,8 +807,8 @@ namespace MAL {
 
     bool MAL::add_manga_sync(const Manga& manga) {
         const std::string url = MANGA_ADD_BASE_URL + std::to_string(manga.series_itemdb_id) + ".xml";
-        std::unique_ptr<CURL, CURLEasyDeleter> curl(curl_easy_init());
-        std::unique_ptr<std::string> buf(new std::string());
+        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        std::unique_ptr<std::string> buf = std::make_unique<std::string>();
         setup_curl_easy(curl.get(), url, buf.get());
         auto xml = manga_serializer.serialize(manga);
         xml.insert(0, "data=");
@@ -840,7 +840,7 @@ namespace MAL {
     void MAL::involke_lock_function(CURL*, curl_lock_data data, curl_lock_access) {
         auto iter = map_mutex.find(data);
         if (iter == map_mutex.end()) {
-            auto res = map_mutex.insert(std::make_pair(data, std::move(std::unique_ptr<std::mutex>(new std::mutex()))));
+            auto res = map_mutex.emplace(std::piecewise_construct, std::forward_as_tuple(data), std::tuple<>());
             if (!res.second) {
                 std::cerr << "Error: Trying to lock curl data but we can't create the mutex" << std::endl;
                 return;
@@ -848,7 +848,7 @@ namespace MAL {
             iter = res.first;
         }
 
-        iter->second->lock();
+        iter->second.lock();
     }
 
     void MAL::involke_unlock_function(CURL*, curl_lock_data data) {
@@ -858,7 +858,7 @@ namespace MAL {
             return;
         }
 
-        iter->second->unlock();
+        iter->second.unlock();
     }
 
     void MAL::deserialize_from_disk_async()

@@ -279,7 +279,7 @@ namespace MAL {
         MangaSerializer manga_serializer;
         std::unique_ptr<char[]> curl_ebuffer;
         std::unique_ptr<pair_lock_functor_t> share_lock_functors;
-        std::map<curl_lock_data, std::unique_ptr<std::mutex>> map_mutex;
+        std::map<curl_lock_data, std::mutex> map_mutex;
         
         std::map<std::string, Glib::RefPtr<Glib::Bytes> > image_cache;
 
