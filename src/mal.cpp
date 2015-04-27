@@ -642,22 +642,28 @@ namespace MAL {
         text_util->parse_html_entities(*buf);
         if (!buf->empty()) {
             auto search_results = serializer.deserialize(*buf);
-            if (search_results.size() != 1) {
-                auto match = std::find_if(std::begin(search_results),
-                                          std::end(search_results),
-                                          [&anime](const auto& fresh_anime) {
-                                              return anime->series_itemdb_id == fresh_anime->series_itemdb_id;
-                                          });
-                if (std::end(search_results) == match) {
-                    std::cerr << "Error: Got " << search_results.size() << " results, but none matched!" << std::endl;
-                    for (auto& a : search_results) {
-                        std::cerr << "\tTitle: " << a->series_title << std::endl;
-                    }
-                    return nullptr;
+
+            auto match = std::find_if(std::begin(search_results),
+                                      std::end(search_results),
+                                      [&anime](const auto& fresh_anime) {
+                                          return anime->series_itemdb_id == fresh_anime->series_itemdb_id;
+                                      });
+            if (std::end(search_results) == match) {
+                std::cerr << "Error: Got " << search_results.size() << " results, but none matched!" << std::endl;
+                for (auto& a : search_results) {
+                    std::cerr << "\tTitle: " << a->series_title << std::endl;
                 }
-                return *match;
+                return nullptr;
             }
-            return *std::begin(search_results);
+
+            {
+                std::lock_guard<std::mutex> lock(m_anime_list_mutex);
+                auto it = m_anime_list.find(*match);
+                if (it != std::end(m_anime_list)) {
+                    (*it)->series_synopsis = std::move((*match)->series_synopsis);
+                    return *it;
+                }
+            }
         }
         return nullptr;
     }
@@ -671,7 +677,8 @@ namespace MAL {
             });
     }
 
-    std::shared_ptr<Manga> MAL::refresh_manga_sync(const std::shared_ptr<Manga>& manga) {
+    std::shared_ptr<Manga> MAL::refresh_manga_sync(const std::shared_ptr<Manga>& manga)
+    {
         std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
         std::unique_ptr<char, CURLEscapeDeleter> terms_escaped {curl_easy_escape(curl.get(), manga->series_title.c_str(), manga->series_title.size())};
@@ -697,23 +704,27 @@ namespace MAL {
         text_util->parse_html_entities(*buf);
         if (!buf->empty()) {
             auto search_results = manga_serializer.deserialize(*buf);
-            if (search_results.size() != 1) {
-                auto match = std::find_if(std::begin(search_results),
-                                          std::end(search_results),
-                                          [&manga](const auto& fresh_manga) {
-                                              return manga->series_itemdb_id == fresh_manga->series_itemdb_id;
-                                          });
-                if (std::end(search_results) == match) {
-                    std::cerr << "Error: Got " << search_results.size() << " results, but none matched!" << std::endl;
-                    for (const auto& a : search_results) {
-                        std::cerr << "\tTitle: " << a->series_title << std::endl;
-                    }
-                    return nullptr;
-                } else {
-                    return *match;
+            auto match = std::find_if(std::begin(search_results),
+                                      std::end(search_results),
+                                      [&manga](const auto& fresh_manga) {
+                                          return manga->series_itemdb_id == fresh_manga->series_itemdb_id;
+                                      });
+            if (std::end(search_results) == match) {
+                std::cerr << "Error: Got " << search_results.size() << " results, but none matched!" << std::endl;
+                for (const auto& a : search_results) {
+                    std::cerr << "\tTitle: " << a->series_title << std::endl;
+                }
+                return nullptr;
+            }
+
+            {
+                std::lock_guard<std::mutex> lock(m_manga_list_mutex);
+                auto it = m_manga_list.find(*match);
+                if (it != std::end(m_manga_list)) {
+                    (*it)->series_synopsis = std::move((*match)->series_synopsis);
+                    return *it;
                 }
             }
-            return *std::begin(search_results);
         }
         return nullptr;
     }

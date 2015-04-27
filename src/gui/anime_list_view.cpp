@@ -139,7 +139,6 @@ namespace MAL {
                         return;
                     }
 
-                    m_item->series_synopsis = new_anime->series_synopsis;
                     m_synopsis_label->set_markup(Glib::Markup::escape_text(m_item->series_synopsis));
                 });
         }
