@@ -280,8 +280,8 @@ namespace MAL {
         std::stringstream user_agent;
         auto const cvid = curl_version_info(CURLVERSION_NOW);
         user_agent << "mal-gtk/0.1.0 (linux)" << " "
-                   << "libcurl" << "/"
-                   << cvid->version;
+                   << "libcurl" << "/7.32.0"; /* Have to lie. */
+//                   << cvid->version;
 //        std::cerr << "Setting user agent to " << user_agent.str() << std::endl;
         code = curl_easy_setopt(easy, CURLOPT_USERAGENT, user_agent.str().c_str());
         if (code != CURLE_OK) {
@@ -322,8 +322,8 @@ namespace MAL {
         std::stringstream user_agent;
         auto const cvid = curl_version_info(CURLVERSION_NOW);
         user_agent << "mal-gtk/0.1.0 (linux)" << " "
-                   << "libcurl" << "/"
-                   << cvid->version;
+                   << "libcurl" << "/7.32.0"; /* Have to lie. */
+//                   << cvid->version;
 //        std::cerr << "Setting user agent to " << user_agent.str() << std::endl;
         code = curl_easy_setopt(easy, CURLOPT_USERAGENT, user_agent.str().c_str());
         if (code != CURLE_OK) {
