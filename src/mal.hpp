@@ -153,6 +153,8 @@ namespace MAL {
         void search_manga_async(const std::string&);
         void update_anime_async(const std::shared_ptr<Anime>&);
         void update_manga_async(const std::shared_ptr<Manga>&);
+        void refresh_anime_async(const std::shared_ptr<Anime>&, const std::function<void (std::shared_ptr<Anime>& fresh_anime)>&);
+        void refresh_manga_async(const std::shared_ptr<Manga>&, const std::function<void (std::shared_ptr<Manga>& fresh_manga)>&);
 
         void add_anime_async(const Anime&,
                              OperationCompleteCb_t = nullptr);
@@ -236,6 +238,9 @@ namespace MAL {
          * Safe to call from multiple threads.
          */
         bool add_manga_sync(const Manga& manga);
+
+        std::shared_ptr<Anime> refresh_anime_sync(const std::shared_ptr<Anime>& item);
+        std::shared_ptr<Manga> refresh_manga_sync(const std::shared_ptr<Manga>& item);
 
         std::unique_ptr<UserInfo> user_info;
         Glib::Dispatcher signal_run_password_dialog;

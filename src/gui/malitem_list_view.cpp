@@ -282,7 +282,9 @@ namespace MAL {
         add_alt_titles(m_alt_title_grid, item);
         m_synopsis_label->set_markup(Glib::Markup::escape_text(item->series_synopsis));
 		show_all();
-        if (item->series_synopsis.size() == 0) m_synopsis_frame->hide();
+        if (item->series_synopsis.empty()) {
+            m_synopsis_frame->hide();
+        }
 
         if (oldid == 0 || oldid != m_item->series_itemdb_id) {
             do_fetch_image();

@@ -126,6 +126,23 @@ namespace MAL {
 
         m_series_status_label->set_label(to_string(anime->series_status));
         m_series_type_label->set_label(to_string(anime->series_type));
+
+        if (anime->series_synopsis.empty()) {
+            m_synopsis_frame->show_all();
+            m_synopsis_label->set_markup("Fetching...");
+            m_mal->refresh_anime_async(anime, [this](const auto& new_anime) {
+                    if (!new_anime) {
+                        m_synopsis_label->set_markup("Failed to fetch synopsis.");
+                        return;
+                    }
+                    if (m_item->series_itemdb_id != new_anime->series_itemdb_id) {
+                        return;
+                    }
+
+                    m_item->series_synopsis = new_anime->series_synopsis;
+                    m_synopsis_label->set_markup(Glib::Markup::escape_text(m_item->series_synopsis));
+                });
+        }
     }
 
     AnimeDetailViewStatic::AnimeDetailViewStatic(const std::shared_ptr<MAL>& mal) :

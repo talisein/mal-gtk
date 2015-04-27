@@ -90,6 +90,23 @@ namespace MAL {
 
         m_series_status_label->set_label(to_string(manga->series_status));
         m_series_type_label->set_label(to_string(manga->series_type));
+
+        if (manga->series_synopsis.empty()) {
+            m_synopsis_frame->show_all();
+            m_synopsis_label->set_markup("Fetching...");
+            m_mal->refresh_manga_async(manga, [this](const auto& new_manga) {
+                    if (!new_manga) {
+                        m_synopsis_label->set_markup("Failed to fetch synopsis.");
+                        return;
+                    }
+                    if (m_item->series_itemdb_id != new_manga->series_itemdb_id) {
+                        return;
+                    }
+
+                    m_item->series_synopsis = new_manga->series_synopsis;
+                    m_synopsis_label->set_markup(Glib::Markup::escape_text(m_item->series_synopsis));
+                });
+        }
     }
 
     MangaDetailViewStatic::MangaDetailViewStatic(const std::shared_ptr<MAL>& mal) :

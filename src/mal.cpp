@@ -607,6 +607,117 @@ namespace MAL {
         signal_anime_search_completed();
     }
 
+    void MAL::refresh_anime_async(const std::shared_ptr<Anime>& anime,
+                                  const std::function<void (std::shared_ptr<Anime>& fresh_anime)>& cb)
+    {
+        active.send( [this, anime, cb]() {
+                auto fresh_anime = refresh_anime_sync(anime);
+                cb_dispatcher.send(std::bind(cb, fresh_anime));
+            });
+    }
+
+    std::shared_ptr<Anime> MAL::refresh_anime_sync(const std::shared_ptr<Anime>& anime) {
+        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        std::unique_ptr<std::string> buf = std::make_unique<std::string>();
+        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped {curl_easy_escape(curl.get(), anime->series_title.c_str(), anime->series_title.size())};
+        const std::string url = SEARCH_BASE_URL + terms_escaped.get();
+
+        setup_curl_easy(curl.get(), url, buf.get());
+        curl_setup_httpauth(curl, user_info);
+
+        CURLcode code = curl_easy_perform(curl.get());
+        if (code != CURLE_OK) {
+            long res = 0;
+            code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
+            if (code != CURLE_OK)
+                print_curl_error(code, curl_ebuffer);
+            else if (res == 401) {
+                signal_run_password_dialog();
+            } else {
+                signal_mal_error(std::string("Error searching myanimelist.net: ") + curl_ebuffer.get());
+            }
+            return nullptr;
+        }
+
+        text_util->parse_html_entities(*buf);
+        if (!buf->empty()) {
+            auto search_results = serializer.deserialize(*buf);
+            if (search_results.size() != 1) {
+                auto match = std::find_if(std::begin(search_results),
+                                          std::end(search_results),
+                                          [&anime](const auto& fresh_anime) {
+                                              return anime->series_itemdb_id == fresh_anime->series_itemdb_id;
+                                          });
+                if (std::end(search_results) == match) {
+                    std::cerr << "Error: Got " << search_results.size() << " results, but none matched!" << std::endl;
+                    for (auto& a : search_results) {
+                        std::cerr << "\tTitle: " << a->series_title << std::endl;
+                    }
+                    return nullptr;
+                }
+                return *match;
+            }
+            return *std::begin(search_results);
+        }
+        return nullptr;
+    }
+
+    void MAL::refresh_manga_async(const std::shared_ptr<Manga>& manga,
+                                  const std::function<void (std::shared_ptr<Manga>& fresh_manga)>& cb)
+    {
+        active.send( [this, manga, cb]() {
+                auto fresh_manga = refresh_manga_sync(manga);
+                cb_dispatcher.send(std::bind(cb, fresh_manga));
+            });
+    }
+
+    std::shared_ptr<Manga> MAL::refresh_manga_sync(const std::shared_ptr<Manga>& manga) {
+        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        std::unique_ptr<std::string> buf = std::make_unique<std::string>();
+        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped {curl_easy_escape(curl.get(), manga->series_title.c_str(), manga->series_title.size())};
+        const std::string url = MANGA_SEARCH_BASE_URL + terms_escaped.get();
+
+        setup_curl_easy(curl.get(), url, buf.get());
+        curl_setup_httpauth(curl, user_info);
+
+        CURLcode code = curl_easy_perform(curl.get());
+        if (code != CURLE_OK) {
+            long res = 0;
+            code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
+            if (code != CURLE_OK)
+                print_curl_error(code, curl_ebuffer);
+            else if (res == 401) {
+                signal_run_password_dialog();
+            } else {
+                signal_mal_error(std::string("Error searching myanimelist.net: ") + curl_ebuffer.get());
+            }
+            return nullptr;
+        }
+
+        text_util->parse_html_entities(*buf);
+        if (!buf->empty()) {
+            auto search_results = manga_serializer.deserialize(*buf);
+            if (search_results.size() != 1) {
+                auto match = std::find_if(std::begin(search_results),
+                                          std::end(search_results),
+                                          [&manga](const auto& fresh_manga) {
+                                              return manga->series_itemdb_id == fresh_manga->series_itemdb_id;
+                                          });
+                if (std::end(search_results) == match) {
+                    std::cerr << "Error: Got " << search_results.size() << " results, but none matched!" << std::endl;
+                    for (const auto& a : search_results) {
+                        std::cerr << "\tTitle: " << a->series_title << std::endl;
+                    }
+                    return nullptr;
+                } else {
+                    return *match;
+                }
+            }
+            return *std::begin(search_results);
+        }
+        return nullptr;
+    }
+
     void MAL::search_manga_async(const std::string& terms) {
         active.send( [this, terms](){ this->search_manga_sync(terms); } );
     }
