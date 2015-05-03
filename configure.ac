@@ -14,6 +14,12 @@ AC_LANG([C++])
 AM_PROG_CC_C_O
 
 AX_CXX_COMPILE_STDCXX_14([noext])
+AX_PTHREAD( [
+            AC_DEFINE(HAVE_PTHREAD,1,[Define if you have POSIX threads libraries and header files.])
+            CLIBS="$PTHREAD_LIBS $LIBS"
+            CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+            LDFLAGS="$LDFLAGS $PTHREAD_CFLAGS"
+            CC="$PTHREAD_CC"],[])
 
 # Checks for libraries.
 
