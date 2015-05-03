@@ -16,7 +16,6 @@
  */
 
 #include <gtkmm/notebook.h>
-#include <gtkmm/stock.h>
 #include "main_window.hpp"
 #include "malitem_list_view.hpp"
 
@@ -35,7 +34,7 @@ namespace MAL {
         Gtk::Container* infoBarContainer = dynamic_cast<Gtk::Container*>(m_infobar->get_content_area());
         if (infoBarContainer) {
             infoBarContainer->add(*m_infobar_label);
-            m_infobar->add_button(Gtk::Stock::OK, 0);
+            m_infobar->add_button("_OK", 0);
         }
         m_infobar->signal_response().connect(sigc::mem_fun(this, &MainWindow::infobar_response_cb));
 

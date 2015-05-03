@@ -23,7 +23,6 @@
 #include <glibmm/markup.h>
 #include <gtkmm/label.h>
 #include <gtkmm/scrolledwindow.h>
-#include <gtkmm/stock.h>
 
 namespace sigc {
     SIGC_FUNCTORS_DEDUCE_RESULT_TYPE_WITH_DECLTYPE
@@ -882,14 +881,15 @@ namespace MAL {
 		m_list_view(list_view),
         m_detail_view(detail_view),
         m_button_row(Gtk::manage(new Gtk::Grid())),
-        m_refresh_button(Gtk::manage(new Gtk::Button(""))),
+        m_refresh_button(Gtk::manage(new Gtk::Button())),
         m_progressbar(Gtk::manage(new Gtk::ProgressBar()))
 	{
 		set_orientation(Gtk::ORIENTATION_VERTICAL);
 		m_refresh_button->set_always_show_image(true);
-		auto icon = m_refresh_button->render_icon_pixbuf(Gtk::Stock::REFRESH, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
-		auto image = Gtk::manage(new Gtk::Image(icon));
-		m_refresh_button->set_image(*image);
+        /* No replacement for this stock icon yet. view-refresh doesn't work for me in Fedora 22 */
+        auto icon = m_refresh_button->render_icon_pixbuf(Gtk::Stock::REFRESH, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
+        auto image = Gtk::manage(new Gtk::Image(icon));
+        m_refresh_button->set_image(*image);
 		m_refresh_button->set_tooltip_text("Refresh data from myanimelist.net\nThis is "
                                            "rarely necessary. If you enter some invalid"
                                            " data here such as a score of 100, refreshi"

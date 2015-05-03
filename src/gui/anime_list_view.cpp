@@ -21,7 +21,6 @@
 #include <glibmm/markup.h>
 #include <gtkmm/label.h>
 #include <gtkmm/scrolledwindow.h>
-#include <gtkmm/stock.h>
 #include <gtkmm/eventbox.h>
 
 namespace sigc {
@@ -484,9 +483,7 @@ namespace MAL {
         m_search_entry->set_activates_default(true);
         m_search_entry->show();
 
-        auto icon = m_refresh_button->render_icon_pixbuf(Gtk::Stock::FIND, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
-        auto image = Gtk::manage(new Gtk::Image(icon));
-        m_refresh_button->set_image(*image);
+        m_refresh_button->set_image_from_icon_name("edit-find");
         m_refresh_button->set_tooltip_text("Search myanimelist.net for anime that maches the entered terms.");
         mal->signal_anime_search_completed.connect(sigc::mem_fun(*this, &AnimeSearchListPage::on_mal_update));
     }

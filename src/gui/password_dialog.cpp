@@ -16,7 +16,6 @@
  */
 
 #include "password_dialog.hpp"
-#include <gtkmm/stock.h>
 #include <gtkmm/label.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/entry.h>
@@ -30,7 +29,7 @@ namespace MAL {
 	{
         password->set_visibility(false);
         password->set_input_purpose(Gtk::INPUT_PURPOSE_PASSWORD);
-		add_button(Gtk::Stock::APPLY, 1);
+        add_button("_Apply", 1);
 		auto box = get_content_area();
 		auto grid = Gtk::manage(new Gtk::Grid());
 		auto il = Gtk::manage(new Gtk::Label("Please enter your credentials for myanimelist.net below:"));

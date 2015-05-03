@@ -17,7 +17,6 @@
 
 #include "increment_entry.hpp"
 #include <iostream>
-#include <gtkmm/stock.h>
 
 namespace {
     static const Glib::SignalProxyInfo IncrementEntry_signal_activate_info =
@@ -55,9 +54,7 @@ namespace MAL {
 
         m_button->signal_clicked().connect(sigc::mem_fun(*this, &IncrementEntry::increment_cb));
         m_button->set_always_show_image(true);
-		auto icon = m_button->render_icon_pixbuf(Gtk::Stock::ADD, Gtk::IconSize(Gtk::ICON_SIZE_BUTTON));
-		auto image = Gtk::manage(new Gtk::Image(icon));
-		m_button->set_image(*image);
+        m_button->set_image_from_icon_name("list-add");
 
         m_entry->set_width_chars(4);
         m_entry->set_alignment(Gtk::ALIGN_END);
