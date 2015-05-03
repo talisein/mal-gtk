@@ -557,12 +557,12 @@ namespace MAL {
                 GBytes *gbytes = g_byte_array_free_to_bytes(ba);
                 auto inserted = image_cache.emplace(item.image_url, Glib::wrap(gbytes));
                 auto mis = Gio::MemoryInputStream::create();
-                g_memory_input_stream_add_bytes(mis->gobj(), inserted.first->second->gobj());
+                mis->add_bytes(inserted.first->second);
                 return mis;
             }
         } else {
             auto mis = Gio::MemoryInputStream::create();
-            g_memory_input_stream_add_bytes(mis->gobj(), iter->second->gobj());
+            mis->add_bytes(iter->second);
             return mis;
         }
     }

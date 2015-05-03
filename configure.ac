@@ -23,7 +23,7 @@ AX_PTHREAD( [
 
 # Checks for libraries.
 
-PKG_CHECK_MODULES([GLIBMM], [glibmm-2.4 >= 2.32.0])
+PKG_CHECK_MODULES([GLIBMM], [glibmm-2.4 >= 2.44.0])
 PKG_CHECK_MODULES([GTKMM], [gtkmm-3.0 >= 3.4.0])
 PKG_CHECK_MODULES([CURL], [libcurl >= 7.24.0])
 PKG_CHECK_MODULES([LIBXML], [libxml-2.0 >= 2.7.8])
