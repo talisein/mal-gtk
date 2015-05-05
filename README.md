@@ -2,8 +2,6 @@ mal-gtk
 =======
 GTK+3 Interface for myanimelist.net
 
-Arch package here: https://aur.archlinux.org/packages/mal-gtk-git/
-
 Requirements
 ------------
 gtkmm3, libsecret, libxml2, libcurl, and a org.freedesktop.secrets
