@@ -39,10 +39,10 @@ Goals
 Screenshots
 -----------
 ### Anime List
-![Anime List](http://github.com/talisein/mal-gtk/blob/master/images/animelist.jpg?raw=true)
+![Anime List](https://github.com/talisein/mal-gtk/blob/master/images/animelist.jpg?raw=true)
 
 ### Manga Search
-![Manga Search](http://github.com/talisein/mal-gtk/blob/master/images/mangasearch.jpg?raw=true)
+![Manga Search](https://github.com/talisein/mal-gtk/blob/master/images/mangasearch.jpg?raw=true)
 
 Features
 --------
