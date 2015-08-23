@@ -102,14 +102,13 @@ Competitors
 These are the GUI MAL updaters I know about. There's a ton of CLI-only
 clients out there, but that's not the same thing. 
 
-- [Taiga](https://code.google.com/p/taiga/) - Mac/Windows Only, but
-  pretty cool.
+- [Taiga](http://taiga.erengy.com/) - Mac/Windows Only, but pretty
+  cool.
 - [MALDECK](http://myanimelist.net/clubs.php?cid=33305) - Mac/Windows
   only.
 - [MALU](http://www.malupdater.com/) - Windows only bloatware.
-- [wMAL](https://github.com/z411/wmal-python) - Python. Enjoy your
-  [GIL](https://en.wikipedia.org/wiki/Global_Interpreter_Lock). But it
-  also has a cool curses interface.
+- [Trackma](https://github.com/z411/trackma) - Python, Gtk2. It has a
+  cool curses interface, and connects to more than just MAL.
 
 IRC
 ---
