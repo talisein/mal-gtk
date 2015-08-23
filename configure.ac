@@ -1,5 +1,7 @@
 AC_PREREQ([2.68])
 AC_INIT([mal-gtk], [0.0.1], [agpotter@gmail.com])
+AX_IS_RELEASE([git-directory])
+
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_MACRO_DIR([m4/])
 
