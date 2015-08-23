@@ -3,7 +3,7 @@ AC_INIT([mal-gtk], [0.0.1], [agpotter@gmail.com])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_MACRO_DIR([m4/])
 
-AM_INIT_AUTOMAKE([foreign subdir-objects -Wportability])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 #AC_CONFIG_HEADERS([config.h])
 
 
@@ -21,8 +21,12 @@ AX_PTHREAD( [
             LDFLAGS="$LDFLAGS $PTHREAD_CFLAGS"
             CC="$PTHREAD_CC"],[])
 
+AC_PATH_PROG([GLIB_MKENUMS], [glib-mkenums])
+
 # Checks for libraries.
 
+PKG_CHECK_MODULES([GOBJECT], [gobject-2.0 >= 2.44.0])
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.44.0])
 PKG_CHECK_MODULES([GLIBMM], [glibmm-2.4 >= 2.44.0])
 PKG_CHECK_MODULES([GTKMM], [gtkmm-3.0 >= 3.4.0])
 PKG_CHECK_MODULES([CURL], [libcurl >= 7.24.0])
@@ -32,6 +36,10 @@ PKG_CHECK_MODULES([LIBSECRET], [libsecret-1 >= 0.12])
 # To use C++11 lambdas with sigc++:
 PKG_CHECK_MODULES([SIGCPP], [sigc++-2.0 >= 2.2.11])
 
+AC_SUBST([GBOJECT_LIBS])
+AC_SUBST([GOBJECT_CFLAGS])
+AC_SUBST([GLIB_LIBS])
+AC_SUBST([GLIB_CFLAGS])
 AC_SUBST([GLIBMM_LIBS])
 AC_SUBST([GLIBMM_CFLAGS])
 AC_SUBST([GTKMM_LIBS])
@@ -44,6 +52,7 @@ AC_SUBST([LIBSECRET_CFLAGS])
 AC_SUBST([LIBSECRET_LIBS])
 
 #GLIB_GSETTINGS
+GLIB_TESTS
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h])
@@ -55,5 +64,6 @@ AC_TYPE_SIZE_T
 AC_FUNC_MALLOC
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+                 tests/Makefile])
 AC_OUTPUT
