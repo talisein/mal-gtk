@@ -8,7 +8,7 @@ AM_CFLAGS=-std=c11 $(GLIB_CFLAGS)
 
 mal_gtk_CFLAGS=-std=c11 $(WARN_CFLAGS)
 mal_gtk_LDFLAGS=$(WARN_LDFLAGS)
-mal_gtk_CXXFLAGS=-Wall -Wextra -pedantic
+mal_gtk_CXXFLAGS=-Wall -Wextra -pedantic $(WARN_CXXFLAGS) -Wno-redundant-decls
 
 mal_gtk_SOURCES = main.cpp                                                   \
                   application.cpp                  application.hpp           \
@@ -39,6 +39,7 @@ mal_gtk_SOURCES = main.cpp                                                   \
                   malgtk_date.c                    malgtk_date.h             \
                   malgtk_malitem.c                 malgtk_malitem.h          \
                   malgtk_anime.c                   malgtk_anime.h            \
+                  malgtk_manga.c                   malgtk_manga.h            \
                   malgtk_enumtypes.c
 
 INST_H_BUILT_FILES = \
@@ -49,7 +50,7 @@ BUILT_SOURCES = malgtk_enumtypes.c malgtk_enumtypes.h
 CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = malgtk_enumtypes.h.template malgtk_enumtypes.c.template
 
-malgtk_enum_headers = malgtk_malitem.h malgtk_anime.h
+malgtk_enum_headers = malgtk_malitem.h malgtk_anime.h malgtk_manga.h
 
 malgtk_enumtypes.h: $(malgtk_enum_headers) malgtk_enumtypes.h.template
 	$(GLIB_MKENUMS) --template $(filter %.template,$^) $(filter-out %.template,$^) > \

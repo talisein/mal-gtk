@@ -188,7 +188,7 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                           0,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    obj_properties[PROP_SERIES_STATUS] =
+    obj_properties[PROP_STATUS] =
         g_param_spec_enum ("status",
                            "Status",
                            "Your status for the series",
