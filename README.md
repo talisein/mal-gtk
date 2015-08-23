@@ -9,10 +9,9 @@ provider such as gnome-keyring-daemon or ksecretservice.
 
 Building
 --------
-        # autoreconf --force --install
-        # ./configure
-        # make
-        # sudo make install
+        # ./autogen.sh
+        # make -j8 # -j8 does 8 parallel compilations
+        # sudo make install # (Or just run src/mal-gtk)
 
 mal-gtk is the executable name.
 
@@ -111,3 +110,7 @@ clients out there, but that's not the same thing.
 - [wMAL](https://github.com/z411/wmal-python) - Python. Enjoy your
   [GIL](https://en.wikipedia.org/wiki/Global_Interpreter_Lock). But it
   also has a cool curses interface.
+
+IRC
+---
+I'm usually alone in #malgtk on Rizon.
