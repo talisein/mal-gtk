@@ -152,11 +152,13 @@ malgtk_date_set_dmy(MalgtkDate *date, GDateDay day, GDateMonth month, GDateYear 
 gchar*
 malgtk_date_get_season(const MalgtkDate *date)
 {
+    GDateYear year;
+
     if (!g_date_valid_year(date->year)) {
         return g_strdup("Unknown");
     }
 
-    GDateYear year = date->year;
+    year = date->year;
     if ( g_date_valid_month(date->month) ) {
         switch (date->month) {
             case G_DATE_DECEMBER:
@@ -177,6 +179,7 @@ malgtk_date_get_season(const MalgtkDate *date)
             case G_DATE_NOVEMBER:
                 return g_strdup_printf("Autumn %u", year);
             case G_DATE_BAD_MONTH:
+            default:
                 break;
         }
     }
@@ -188,24 +191,30 @@ malgtk_date_get_season(const MalgtkDate *date)
 void
 malgtk_date_set_from_string (MalgtkDate *date, const gchar *str)
 {
+    size_t len;
+    GDateYear year;
+    GDateMonth month;
+    GDateDay day;
+
     malgtk_date_clear(date);
-    size_t len = strlen(str);
+
+    len = strlen(str);
     if (len < 4)
         return;
 
-    GDateYear year = g_ascii_strtoll(str, NULL, 10);
+    year = g_ascii_strtoll(str, NULL, 10);
     if (g_date_valid_year(year))
         date->year = year;
     if (len < 6)
         return;
 
-    GDateMonth month = g_ascii_strtoll(str + 5, NULL, 10);
+    month = g_ascii_strtoll(str + 5, NULL, 10);
     if (g_date_valid_month(month))
         date->month = month;
     if (len < 9)
         return;
 
-    GDateDay day = g_ascii_strtoll(str + 8, NULL, 10);
+    day = g_ascii_strtoll(str + 8, NULL, 10);
     if (g_date_valid_day(day))
         date->day = day;
 }

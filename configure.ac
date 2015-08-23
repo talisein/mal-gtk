@@ -8,6 +8,7 @@ AC_CONFIG_MACRO_DIR([m4/])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 #AC_CONFIG_HEADERS([config.h])
 
+AX_CHECK_ENABLE_DEBUG([info])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -16,6 +17,8 @@ AC_LANG([C++])
 AM_PROG_CC_C_O
 
 AX_CXX_COMPILE_STDCXX_14([noext])
+AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])
+
 AX_PTHREAD( [
             AC_DEFINE(HAVE_PTHREAD,1,[Define if you have POSIX threads libraries and header files.])
             CLIBS="$PTHREAD_LIBS $LIBS"

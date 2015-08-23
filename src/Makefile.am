@@ -3,8 +3,12 @@ bin_PROGRAMS = mal-gtk
 AM_CPPFLAGS = $(CURL_CFLAGS) $(GLIBMM_CFLAGS) $(GTKMM_CFLAGS) $(LIBXML_CFLAGS) $(LIBSECRET_CFLAGS)
 mal_gtk_LDADD = $(CURL_LIBS) $(GLIB_LIBS) $(GLIBMM_LIBS) $(GTKMM_LIBS) $(LIBXML_LIBS) $(LIBSECRET_LIBS)
 
-AM_CXXFLAGS=-Wall -Wextra -g -pedantic -fno-omit-frame-pointer 
-AM_CFLAGS=-Wall -std=c11 $(GLIB_CFLAGS)
+AM_CXXFLAGS=-fno-omit-frame-pointer
+AM_CFLAGS=-std=c11 $(GLIB_CFLAGS)
+
+mal_gtk_CFLAGS=-std=c11 $(WARN_CFLAGS)
+mal_gtk_LDFLAGS=$(WARN_LDFLAGS)
+mal_gtk_CXXFLAGS=-Wall -Wextra -pedantic
 
 mal_gtk_SOURCES = main.cpp                                                   \
                   application.cpp                  application.hpp           \

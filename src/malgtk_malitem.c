@@ -572,12 +572,16 @@ malgtk_malitem_new(void)
 void
 malgtk_malitem_add_synonym(MalgtkMalitem *item, const gchar *synonym)
 {
+    MalgtkMalitemPrivate *priv;
+    gpointer p;
+
     g_return_if_fail(MALGTK_IS_MALITEM(item));
     g_return_if_fail(NULL != synonym && 0 != *synonym);
 
-    MalgtkMalitemPrivate *priv = malgtk_malitem_get_instance_private (item);
+    priv = malgtk_malitem_get_instance_private (item);
 
-    gpointer p = g_tree_lookup(priv->series_synonyms, synonym);
+
+    p = g_tree_lookup(priv->series_synonyms, synonym);
     if (p)
         return;
 
@@ -588,14 +592,17 @@ malgtk_malitem_add_synonym(MalgtkMalitem *item, const gchar *synonym)
 }
 
 void
-malgtk_malitem_tag(MalgtkMalitem *item, const gchar *tag)
+malgtk_malitem_add_tag(MalgtkMalitem *item, const gchar *tag)
 {
+    MalgtkMalitemPrivate *priv;
+    gpointer p;
+
     g_return_if_fail(MALGTK_IS_MALITEM(item));
     g_return_if_fail(NULL != tag && 0 != *tag);
 
-    MalgtkMalitemPrivate *priv = malgtk_malitem_get_instance_private (item);
+    priv = malgtk_malitem_get_instance_private (item);
 
-    gpointer p = g_tree_lookup(priv->tags, tag);
+    p = g_tree_lookup(priv->tags, tag);
     if (p)
         return;
 
@@ -620,18 +627,21 @@ _foreach_cb(gpointer key, gpointer value, gpointer data)
 void
 malgtk_malitem_foreach_synonym(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, gpointer user_data)
 {
-    g_return_if_fail(MALGTK_IS_MALITEM(item));
+    MalgtkMalitemPrivate *priv;
     struct _foreach_data data = {cb, user_data};
-    MalgtkMalitemPrivate *priv = malgtk_malitem_get_instance_private (item);
+    g_return_if_fail(MALGTK_IS_MALITEM(item));
+
+    priv = malgtk_malitem_get_instance_private (item);
     g_tree_foreach (priv->series_synonyms, _foreach_cb, &data);
 }
 
 void
 malgtk_malitem_foreach_tag(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, gpointer user_data)
 {
-    g_return_if_fail(MALGTK_IS_MALITEM(item));
+    MalgtkMalitemPrivate *priv;
     struct _foreach_data data = {cb, user_data};
-    MalgtkMalitemPrivate *priv = malgtk_malitem_get_instance_private (item);
+    g_return_if_fail(MALGTK_IS_MALITEM(item));
+    priv = malgtk_malitem_get_instance_private (item);
     g_tree_foreach (priv->tags, _foreach_cb, &data);
 }
 

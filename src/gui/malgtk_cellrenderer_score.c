@@ -11,10 +11,6 @@ G_DEFINE_TYPE_WITH_PRIVATE (MalgtkCellRendererScore, malgtk_cell_renderer_score,
 
 
 /* Some boring function declarations: GObject type system stuff */
-static void     malgtk_cell_renderer_score_init            (MalgtkCellRendererScore      *cellscore);
-
-static void     malgtk_cell_renderer_score_class_init      (MalgtkCellRendererScoreClass *klass);
-
 static void     malgtk_cell_renderer_score_get_property    (GObject                      *object,
                                                             guint                         param_id,
                                                             GValue                       *value,
@@ -55,9 +51,10 @@ static void
 malgtk_cell_renderer_score_init (MalgtkCellRendererScore *cellscore)
 {
     MalgtkCellRendererScorePrivate *priv = malgtk_cell_renderer_score_get_instance_private(cellscore);
+    GtkListStore *store;
+    store = priv->liststore;
     priv->score = 0;
     priv->liststore = gtk_list_store_new(N_COLUMNS, G_TYPE_INT, G_TYPE_STRING);
-    GtkListStore *store = priv->liststore;
 
     for (unsigned int i = 0; i < SCORE_ARRAY_SIZE; ++i) {
         gtk_list_store_insert_with_values(store, NULL, -1,
@@ -108,23 +105,23 @@ malgtk_cell_renderer_score_get_score_from_string(const gchar *str)
 static void
 malgtk_cell_renderer_score_class_init (MalgtkCellRendererScoreClass *klass)
 {
-  GObjectClass         *object_class = G_OBJECT_CLASS(klass);
-  object_class->finalize = malgtk_cell_renderer_score_finalize;
-  object_class->dispose = malgtk_cell_renderer_score_dispose;
+    GObjectClass         *object_class = G_OBJECT_CLASS(klass);
+    object_class->finalize = malgtk_cell_renderer_score_finalize;
+    object_class->dispose = malgtk_cell_renderer_score_dispose;
 
-  /* Hook up functions to set and get our
-   *   malgtk cell renderer properties */
-  object_class->get_property = malgtk_cell_renderer_score_get_property;
-  object_class->set_property = malgtk_cell_renderer_score_set_property;
+    /* Hook up functions to set and get our
+     *   malgtk cell renderer properties */
+    object_class->get_property = malgtk_cell_renderer_score_get_property;
+    object_class->set_property = malgtk_cell_renderer_score_set_property;
 
-  /* Install our very own properties */
-  g_object_class_install_property (object_class,
-                                   PROP_SCORE,
-                                   g_param_spec_int ("score",
-                                                        "Score",
-                                                         "The score to display",
-                                                         0, 10, 0,
-                                                         G_PARAM_READWRITE));
+    /* Install our very own properties */
+    g_object_class_install_property (object_class,
+                                     PROP_SCORE,
+                                     g_param_spec_int ("score",
+                                                       "Score",
+                                                       "The score to display",
+                                                       0, 10, 0,
+                                                       G_PARAM_READWRITE));
 }
 
 

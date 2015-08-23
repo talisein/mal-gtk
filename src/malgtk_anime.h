@@ -70,6 +70,6 @@ struct _MalgtkAnimeClass
     MalgtkMalitemClass  parent_class;
 };
 
-MalgtkMalitem     *malgtk_malitem_new (void);
+MalgtkAnime     *malgtk_anime_new (void);
 
 G_END_DECLS
