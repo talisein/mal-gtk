@@ -17,58 +17,54 @@
 
 #pragma once
 #include <glib-object.h>
+#include "malgtk_malitem.h"
 
 G_BEGIN_DECLS
 
 typedef enum /*< prefix=MALGTK_ANIME >*/
 {
-    MALGTK_ANIME_STATUS_INVALID       = -1,
-    MALGTK_ANIME_STATUS_NONE          = 0,
-    MALGTK_ANIME_STATUS_WATCHING      = 1,
-    MALGTK_ANIME_STATUS_COMPLETED     = 2,
-    MALGTK_ANIME_STATUS_ON_HOLD       = 3,
-    MALGTK_ANIME_STATUS_DROPPED       = 4,
-    MALGTK_ANIME_STATUS_PLAN_TO_WATCH = 6,
+    MALGTK_ANIME_STATUS_INVALID       = -1, /*< nick=Unknown >*/
+    MALGTK_ANIME_STATUS_NONE          = 0,  /*< skip >*/
+    MALGTK_ANIME_STATUS_WATCHING      = 1,  /*< nick=Watching >*/
+    MALGTK_ANIME_STATUS_COMPLETED     = 2,  /*< nick=Completed >*/
+    MALGTK_ANIME_STATUS_ON_HOLD       = 3,  /*< nick=On Hold >*/
+    MALGTK_ANIME_STATUS_DROPPED       = 4,  /*< nick=Dropped >*/
+    MALGTK_ANIME_STATUS_PLAN_TO_WATCH = 6,  /*< nick=Plan To Watch >*/
 } MalgtkAnimeStatus;
 
 typedef enum /*< prefix=MALGTK_ANIME >*/
 {
-    MALGTK_ANIME_SERIES_STATUS_INVALID     = -1,
-    MALGTK_ANIME_SERIES_STATUS_AIRING      = 1,
-    MALGTK_ANIME_SERIES_STATUS_FINISHED    = 2,
-    MALGTK_ANIME_SERIES_STATUS_NOTYETAIRED = 3,
+    MALGTK_ANIME_SERIES_STATUS_INVALID     = -1, /*< nick=Unknown >*/
+    MALGTK_ANIME_SERIES_STATUS_AIRING      = 1,  /*< nick=Airing >*/
+    MALGTK_ANIME_SERIES_STATUS_FINISHED    = 2,  /*< nick=Finished >*/
+    MALGTK_ANIME_SERIES_STATUS_NOTYETAIRED = 3,  /*< nick=Not Yet Aired >*/
 } MalgtkAnimeSeriesStatus;
 
 typedef enum /*< prefix=MALGTK_ANIME >*/
 {
-    MALGTK_ANIME_SERIES_TYPE_INVALID = -1,
-    MALGTK_ANIME_SERIES_TYPE_TV      = 1, 
-    MALGTK_ANIME_SERIES_TYPE_OVA     = 2,
-    MALGTK_ANIME_SERIES_TYPE_MOVIE   = 3,
-    MALGTK_ANIME_SERIES_TYPE_SPECIAL = 4,
-    MALGTK_ANIME_SERIES_TYPE_ONA     = 5,
-    MALGTK_ANIME_SERIES_TYPE_MUSIC   = 6
+    MALGTK_ANIME_SERIES_TYPE_INVALID = -1, /*< nick=Unknown >*/
+    MALGTK_ANIME_SERIES_TYPE_TV      = 1,  /*< nick=TV >*/
+    MALGTK_ANIME_SERIES_TYPE_OVA     = 2,  /*< nick=OVA >*/
+    MALGTK_ANIME_SERIES_TYPE_MOVIE   = 3,  /*< nick=Movie >*/
+    MALGTK_ANIME_SERIES_TYPE_SPECIAL = 4,  /*< nick=Special >*/
+    MALGTK_ANIME_SERIES_TYPE_ONA     = 5,  /*< nick=ONA >*/
+    MALGTK_ANIME_SERIES_TYPE_MUSIC   = 6,  /*< nick=Music >*/
 } MalgtkAnimeSeriesType;
 
 typedef enum /*< prefix=MALGTK_ANIME >*/
 {
-    MALGTK_ANIME_STORAGE_TYPE_INVALID     = 0,
-    MALGTK_ANIME_STORAGE_TYPE_HARD_DRIVE  = 1,
-    MALGTK_ANIME_STORAGE_TYPE_DVDCD       = 2,
-    MALGTK_ANIME_STORAGE_TYPE_NONE        = 3,
-    MALGTK_ANIME_STORAGE_TYPE_RETAIL_DVD  = 4,
-    MALGTK_ANIME_STORAGE_TYPE_VHS         = 5,
-    MALGTK_ANIME_STORAGE_TYPE_EXTERNAL_HD = 6,
-    MALGTK_ANIME_STORAGE_TYPE_NAS         = 7,
+    MALGTK_ANIME_STORAGE_TYPE_INVALID     = 0, /*< nick=Invalid Anime Storage >*/
+    MALGTK_ANIME_STORAGE_TYPE_HARD_DRIVE  = 1, /*< nick=Hard Drive >*/
+    MALGTK_ANIME_STORAGE_TYPE_DVDCD       = 2, /*< nick=DVD/CD >*/
+    MALGTK_ANIME_STORAGE_TYPE_NONE        = 3, /*< nick=None >*/
+    MALGTK_ANIME_STORAGE_TYPE_RETAIL_DVD  = 4, /*< nick=Retail DVD >*/
+    MALGTK_ANIME_STORAGE_TYPE_VHS         = 5, /*< nick=VHS >*/
+    MALGTK_ANIME_STORAGE_TYPE_EXTERNAL_HD = 6, /*< nick=External HD >*/
+    MALGTK_ANIME_STORAGE_TYPE_NAS         = 7, /*< nick=NAS >*/
 } MalgtkAnimeStorageType;
 
 #define MALGTK_TYPE_ANIME             (malgtk_anime_get_type ())
-G_DECLARE_DERIVABLE_TYPE(MalgtkAnime, malgtk_anime, MALGTK, ANIME, MalgtkMalitem)
-
-struct _MalgtkAnimeClass
-{
-    MalgtkMalitemClass  parent_class;
-};
+G_DECLARE_FINAL_TYPE(MalgtkAnime, malgtk_anime, MALGTK, ANIME, MalgtkMalitem)
 
 MalgtkAnime     *malgtk_anime_new (void);
 

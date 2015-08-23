@@ -38,6 +38,7 @@ mal_gtk_SOURCES = main.cpp                                                   \
                   gui/date_widgets.cpp             gui/date_widgets.hpp      \
                   malgtk_date.c                    malgtk_date.h             \
                   malgtk_malitem.c                 malgtk_malitem.h          \
+                  malgtk_anime.c                   malgtk_anime.h            \
                   malgtk_enumtypes.c
 
 INST_H_BUILT_FILES = \

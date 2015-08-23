@@ -1,9 +1,9 @@
 AC_PREREQ([2.68])
-AC_INIT([mal-gtk], [0.0.1], [agpotter@gmail.com])
+AC_INIT([mal-gtk], [0.3.25], [agpotter@gmail.com])
 AX_IS_RELEASE([git-directory])
 
-AC_CONFIG_SRCDIR([src/])
-AC_CONFIG_MACRO_DIR([m4/])
+AC_CONFIG_SRCDIR([src])
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 #AC_CONFIG_HEADERS([config.h])
@@ -14,7 +14,6 @@ AX_CHECK_ENABLE_DEBUG([info])
 AC_PROG_CXX
 AC_PROG_CC
 AC_LANG([C++])
-AM_PROG_CC_C_O
 
 AX_CXX_COMPILE_STDCXX_14([noext])
 AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])

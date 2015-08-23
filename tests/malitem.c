@@ -31,7 +31,8 @@ static void
 test_malitem_test1 (MalitemFixture *fixture,
                     gconstpointer user_data)
 {
-    gchar *begin = NULL, *end = NULL;
+    g_autofree gchar *begin = NULL;
+    g_autofree gchar *end   = NULL;
 
     malgtk_date_set_dmy(&fixture->begin, 1, 1, 2012);
     malgtk_date_set_dmy(&fixture->end, 1, 6, 2012);
@@ -53,9 +54,6 @@ test_malitem_test1 (MalitemFixture *fixture,
     g_object_get(fixture->item, "season-begin", &begin, "season-end", &end, NULL);
     g_assert_cmpstr (begin, ==, "Unknown");
     g_assert_cmpstr (end, ==, "Unknown");
-
-    g_free (begin);
-    g_free (end);
 }
 
 static void
@@ -67,13 +65,13 @@ test_malitem_test2 (MalitemFixture *fixture,
     malgtk_malitem_add_synonym(item, "Second");
     malgtk_malitem_add_synonym(item, "Second");
     malgtk_malitem_add_synonym(item, "Another");
-    gchar **strv = NULL;
+
+    g_auto(GStrv) strv = NULL;
     g_object_get(item, "series-synonyms", &strv, NULL);
     g_assert_cmpstr (strv[0], ==, "Another");
     g_assert_cmpstr (strv[1], ==, "First");
     g_assert_cmpstr (strv[2], ==, "Second");
     g_assert_null (strv[3]);
-    g_strfreev(strv);
 }
 
 static void
@@ -81,21 +79,20 @@ test_malitem_test3 (MalitemFixture *fixture,
                     gconstpointer user_data)
 {
     MalgtkMalitem *item = fixture->item;
-    gchar **strv = g_malloc(sizeof(gchar*)*4);
+    g_auto(GStrv) strv = g_malloc(sizeof(gchar*)*4);
     strv[0] = g_strdup("Bee");
     strv[1] = g_strdup("Apple");
     strv[2] = g_strdup("Apple");
     strv[3] = NULL;
 
     g_object_set(item, "series-synonyms", strv, NULL);
+
     g_strfreev(strv);
     strv = NULL;
-    
     g_object_get(item, "series-synonyms", &strv, NULL);
     g_assert_cmpstr (strv[0], ==, "Apple");
     g_assert_cmpstr (strv[1], ==, "Bee");
     g_assert_null (strv[2]);
-    g_strfreev(strv);
 }
 
 static void
@@ -119,7 +116,7 @@ test_malitem_test4 (MalitemFixture *fixture,
     g_date_set_dmy (&date_start, 3, 1, 2014);
     g_date_set_dmy (&date_finish, 6, 1, 2015);
     gint64 id = G_MININT64;
-    GDateTime *last_updated = g_date_time_new_now_local();
+    g_autoptr(GDateTime) last_updated = g_date_time_new_now_local();
     double score = 9.6;
     gboolean enable_reconsuming = TRUE;
     gchar *fansub_group = "Nutbladder";
@@ -158,24 +155,24 @@ test_malitem_test4 (MalitemFixture *fixture,
                   NULL);
 
     gint64 _mal_db_id;
-    gchar *_series_title;
-    gchar *_preferred_title;
-    MalgtkDate *_series_begin;
-    MalgtkDate *_series_end;
-    gchar *_season_begin;
-    gchar *_season_end;
-    gchar *_image_url;
-    gchar **_synonyms;
-    gchar *_synopsis;
-    gchar **_tags;
-    GDate *_date_start;
-    GDate *_date_finish;
+    g_autofree gchar *_series_title     = NULL;
+    g_autofree gchar *_preferred_title  = NULL;
+    g_autoptr(MalgtkDate) _series_begin = NULL;
+    g_autoptr(MalgtkDate) _series_end   = NULL;
+    g_autofree gchar *_season_begin     = NULL;
+    g_autofree gchar *_season_end       = NULL;
+    g_autofree gchar *_image_url        = NULL;
+    g_auto (GStrv) _synonyms            = NULL;
+    g_autofree gchar *_synopsis         = NULL;
+    g_auto (GStrv) _tags                = NULL;
+    GDate *_date_start                  = NULL;
+    GDate *_date_finish                 = NULL;
     gint64 _id;
-    GDateTime *_last_updated;
+    g_autoptr(GDateTime) _last_updated;
     double _score;
     gboolean _enable_reconsuming;
-    gchar *_fansub_group;
-    gchar *_comments;
+    g_autofree gchar *_fansub_group     = NULL;
+    g_autofree gchar *_comments         = NULL;
     gint _downloaded_items;
     gint _times_consumed;
     MalgtkMalitemReconsumeValue _reconsume_value;
@@ -242,23 +239,8 @@ test_malitem_test4 (MalitemFixture *fixture,
     g_assert_cmpint (enable_discussion, ==, _enable_discussion);
     g_assert_cmpint (has_details, ==, _has_details);
 
-    g_free (_series_title);
-    g_free (_preferred_title);
-    malgtk_date_free (_series_begin);
-    malgtk_date_free (_series_end);
-    g_free (_season_begin);
-    g_free (_season_end);
-    g_free (_image_url);
-    g_strfreev (_synonyms);
-    g_free (_synopsis);
-    g_strfreev (_tags);
     g_date_free (_date_start);
     g_date_free (_date_finish);
-    g_date_time_unref (_last_updated);
-    g_free (_fansub_group);
-    g_free (_comments);
-    
-    g_date_time_unref (last_updated);
 }
 
 int main(int argc, char *argv[])
@@ -283,7 +265,7 @@ int main(int argc, char *argv[])
                 malitem_fixture_tear_down);
 
     int res = g_test_run ();
-    g_mem_profile();
+
     return res;
 }
 
