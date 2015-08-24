@@ -217,6 +217,7 @@ namespace MAL {
             return "ONA";
         case SeriesType::MUSIC:
             return "Music";
+        case SeriesType::INVALID:
         default:
             return "Unknown";
         }
@@ -232,6 +233,7 @@ namespace MAL {
             return "Finished";
         case SeriesStatus::NOTYETAIRED:
             return "Not Yet Aired";
+        case SeriesStatus::INVALID:
         default:
             return "Unknown";
         }
@@ -251,6 +253,8 @@ namespace MAL {
             return "Dropped";
         case AnimeStatus::PLANTOWATCH:
             return "Plan To Watch";
+        case AnimeStatus::INVALID:
+        case AnimeStatus::NONE:
         default:
             return "Unknown";
         }
@@ -442,21 +446,21 @@ namespace MAL {
     {
         constexpr int status_invalid = static_cast<int>(SeriesStatus::INVALID);
         if (str.size() == 1) {
-            int status = status_invalid;
+            int s = status_invalid;
             try {
-                status = std::stoi(str);
+                s = std::stoi(str);
             } catch (std::invalid_argument e) {
                 std::cerr << "Error: Invalid argument converting series type \""
                           << str << "\" to an integer: "
                           << e.what() << std::endl;
-                status = status_invalid;
+                s = status_invalid;
             } catch (std::out_of_range e) {
                 std::cerr << "Error: Converting \"" << str
                           << "\" to int falls outside the expected range: "
                           << e.what() << std::endl;
-                status = status_invalid;
+                s = status_invalid;
             }
-            series_status = anime_series_status(status);
+            series_status = anime_series_status(s);
         } else {
             series_status = anime_series_status(str);
         }

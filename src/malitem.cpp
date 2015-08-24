@@ -385,9 +385,9 @@ namespace MAL {
         }
     }
 
-	void MALItem::set_series_itemdb_id(std::string&& id)
+	void MALItem::set_series_itemdb_id(std::string&& itemdb_id)
 	{
-		series_itemdb_id = std::stoll(id);
+		series_itemdb_id = std::stoll(itemdb_id);
 	}
 
 	void MALItem::set_series_title(std::string&& title)

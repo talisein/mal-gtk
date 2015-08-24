@@ -149,7 +149,7 @@ namespace MAL {
         }
     }
 
-    MangaStorageType manga_storage_type_from_string(const std::string& s) {
+    MangaStorageType manga_storage_type_from_string(const Glib::ustring& s) {
         if (s == to_string(MANGA_STORAGE_INVALID))
             return MANGA_STORAGE_INVALID;
         else if (s == to_string(MANGA_STORAGE_NONE))
@@ -189,7 +189,8 @@ namespace MAL {
 			return "Manhua";
 		case OEL:
 			return "OEL";
-		default:
+        case MANGASERIESTYPE_INVALID:
+        default:
 			return "Invalid Type";
 		}
 	}
@@ -202,7 +203,8 @@ namespace MAL {
 			return "Finished";
 		case NOTYETPUBLISHED:
 			return "Not Yet Published";
-		default:
+        case MANGASERIESSTATUS_INVALID:
+        default:
 			return "Invalid Status";
 		}
 	}
@@ -219,7 +221,8 @@ namespace MAL {
 			return "Dropped";
 		case PLANTOREAD:
 			return "Plan To Read";
-		default:
+        case MANGASTATUS_INVALID:
+        default:
 			return "Invalid Status";
 		}
 	}

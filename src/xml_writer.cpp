@@ -25,9 +25,9 @@ namespace MAL {
     {
     }
 
-    XmlWriter::XmlWriter(XmlWriter&& writer) :
-        buffer(std::move(writer.buffer)),
-        writer(std::move(writer.writer))
+    XmlWriter::XmlWriter(XmlWriter&& w) :
+        buffer(std::move(w.buffer)),
+        writer(std::move(w.writer))
     {
     }
 

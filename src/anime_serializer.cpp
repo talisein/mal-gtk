@@ -306,6 +306,7 @@ namespace MAL {
                         case COMMENTS:
                             res->set_comments(std::string(textbuf));
                             break;
+                        case NONE:
                         default:
                             break;
                     }
@@ -337,6 +338,7 @@ namespace MAL {
                         case DISCUSS:
                             res->set_enable_discussion(xmlchar_to_str(value.get()));
                             break;
+                        case SELECTOR_NONE:
                         default:
                             break;
                     }

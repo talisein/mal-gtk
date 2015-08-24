@@ -72,7 +72,7 @@ namespace MAL {
 	MangaStatus manga_status_from_int(const int i);
 	MangaStatus manga_status_from_string(const Glib::ustring& s);
 
-    MangaStorageType manga_storage_type_from_int(const Glib::ustring& s);
+    MangaStorageType manga_storage_type_from_int(const int i);
     MangaStorageType manga_storage_type_from_string(const Glib::ustring& s);
 
 	class Manga final : public MALItem {

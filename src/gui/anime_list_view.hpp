@@ -21,11 +21,14 @@
 #include <sigc++/slot.h>
 #include <glibmm/dispatcher.h>
 #include <giomm/memoryinputstream.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#include <gtkmm/treeview.h>
+#pragma GCC diagnostic pop
 #include <gtkmm/grid.h>
 #include <gtkmm/label.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/comboboxtext.h>
-#include <gtkmm/treeview.h>
 #include <gtkmm/sizegroup.h>
 #include <gtkmm/treemodel.h>
 #include <gtkmm/cellrenderercombo.h>

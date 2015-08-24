@@ -23,7 +23,10 @@
 #include <gtkmm/bin.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/switch.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #include <gtkmm/treeview.h>
+#pragma GCC diagnostic pop
 #include <gtkmm/frame.h>
 #include <gtkmm/treemodel.h>
 #include <gtkmm/liststore.h>

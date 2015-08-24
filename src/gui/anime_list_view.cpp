@@ -339,14 +339,14 @@ namespace MAL {
 
                 if (new_anime->status != AnimeStatus::INVALID) {
                     auto fn = [this, new_anime, columns](bool success) {
-                        m_model->foreach_iter([this, new_anime, columns, success](const Gtk::TreeModel::iterator& iter)->bool {
-                                auto walked_anime = iter->get_value(columns->anime);
+                        m_model->foreach_iter([this, new_anime, columns, success](const Gtk::TreeModel::iterator& it)->bool {
+                                auto walked_anime = it->get_value(columns->anime);
                                 if (walked_anime->series_itemdb_id == new_anime->series_itemdb_id) {
                                     if (success) {
-                                        iter->set_value(columns->status_editable, false);
+                                        it->set_value(columns->status_editable, false);
                                     } else {
-                                        iter->set_value(columns->status, Glib::ustring("Add To My Anime List..."));
-                                        iter->set_value(columns->status_editable, true);
+                                        it->set_value(columns->status, Glib::ustring("Add To My Anime List..."));
+                                        it->set_value(columns->status_editable, true);
                                     }
                                     return true;
                                 } else {

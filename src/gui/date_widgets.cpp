@@ -32,17 +32,17 @@ namespace {
         
         if (year > 0 && month > 0 && day > 0) {
             if (Glib::Date::valid_dmy(day, static_cast<Glib::Date::Month>(month), year)) {
-                const Glib::Date date(day, static_cast<Glib::Date::Month>(month), year);
-                return date.format_string("%F");
+                const Glib::Date d(day, static_cast<Glib::Date::Month>(month), year);
+                return d.format_string("%F");
             } else {
                 return Glib::ustring::compose("%1-%2-%3", year, month, day);
             }
         } else if (year > 0 && month > 0) {
-            const Glib::Date date(1, static_cast<Glib::Date::Month>(month), year);
-            return date.format_string("%B, %Y");
+            const Glib::Date d(1, static_cast<Glib::Date::Month>(month), year);
+            return d.format_string("%B, %Y");
         } else if (year > 0) {
-            const Glib::Date date(1, Glib::Date::JANUARY, year);
-            return date.format_string("%Y");
+            const Glib::Date d(1, Glib::Date::JANUARY, year);
+            return d.format_string("%Y");
         } else {
             return "Unknown";
         }
