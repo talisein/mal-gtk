@@ -52,9 +52,8 @@ malgtk_cell_renderer_score_init (MalgtkCellRendererScore *cellscore)
 {
     MalgtkCellRendererScorePrivate *priv = malgtk_cell_renderer_score_get_instance_private(cellscore);
     GtkListStore *store;
-    store = priv->liststore;
     priv->score = 0;
-    priv->liststore = gtk_list_store_new(N_COLUMNS, G_TYPE_INT, G_TYPE_STRING);
+    store = priv->liststore = gtk_list_store_new(N_COLUMNS, G_TYPE_INT, G_TYPE_STRING);
 
     for (unsigned int i = 0; i < SCORE_ARRAY_SIZE; ++i) {
         gtk_list_store_insert_with_values(store, NULL, -1,
