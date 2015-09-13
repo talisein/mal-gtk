@@ -46,13 +46,17 @@ namespace MAL {
 	public:
 		MALItemPriorityComboBox();
 		Priority get_priority() const;
+        void set_priority(Priority value);
+
+    private:
+        const Glib::ustring invalid_text;
 	};
 
 	class MALItemReconsumeValueComboBox final : public Gtk::ComboBoxText {
 	public:
 		MALItemReconsumeValueComboBox();
 		ReconsumeValue get_reconsume_value() const;
-        void set_reconsume_value(const ReconsumeValue value);
+        void set_reconsume_value(ReconsumeValue value);
 
     private:
         const Glib::ustring invalid_text;

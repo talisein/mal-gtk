@@ -363,7 +363,7 @@ namespace MAL {
             writer.writeElement("storage_type",    std::to_string(static_cast<int>(anime.storage_type)));
             writer.writeElement("storage_value",   std::to_string(anime.storage_value));
             writer.writeElement("times_rewatched", std::to_string(anime.times_consumed));
-            writer.writeElement("rewatch_value",   std::to_string(anime.reconsume_value));
+            writer.writeElement("rewatch_value",   std::to_string(static_cast<int>(anime.reconsume_value)));
         }
         auto start = Glib::Date();
         start.set_parse(anime.date_start);
@@ -378,8 +378,8 @@ namespace MAL {
         }
 
         if (anime.has_details) {
-        writer.writeElement("priority", std::to_string(anime.priority));
-        writer.writeElement("enable_discussion", anime.enable_discussion?"1":"0");
+            writer.writeElement("priority", std::to_string(static_cast<int>(anime.priority)));
+            writer.writeElement("enable_discussion", anime.enable_discussion?"1":"0");
         }
         writer.writeElement("enable_rewatching", anime.enable_reconsuming?"1":"0");
         if (anime.has_details) {

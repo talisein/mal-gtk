@@ -30,42 +30,55 @@ namespace sigc {
 
 namespace MAL {
 
-    MALItemPriorityComboBox::MALItemPriorityComboBox()
+    MALItemPriorityComboBox::MALItemPriorityComboBox() :
+        invalid_text("Select...")
     {
-        append(to_string(PRIORITY_LOW));
-        append(to_string(PRIORITY_MEDIUM));
-        append(to_string(PRIORITY_HIGH));
-        set_active_text(to_string(PRIORITY_LOW));
+        append(invalid_text);
+        append(to_string(Priority::LOW));
+        append(to_string(Priority::MEDIUM));
+        append(to_string(Priority::HIGH));
     }
 
     Priority MALItemPriorityComboBox::get_priority() const
     {
-        return priority_from_string(get_active_text());
+        auto const text = get_active_text();
+        if (text == invalid_text)
+            return Priority::INVALID;
+        else
+            return priority_from_string(text);
+    }
+
+    void MALItemPriorityComboBox::set_priority(Priority value)
+    {
+        if (value == Priority::INVALID)
+            set_active_text(invalid_text);
+        else
+            set_active_text(to_string(value));
     }
 
     MALItemReconsumeValueComboBox::MALItemReconsumeValueComboBox() :
         invalid_text("Select...")
     {
         append(invalid_text);
-        append(to_string(RECONSUME_VALUE_VERYLOW));
-        append(to_string(RECONSUME_VALUE_LOW));
-        append(to_string(RECONSUME_VALUE_MEDIUM));
-        append(to_string(RECONSUME_VALUE_HIGH));
-        append(to_string(RECONSUME_VALUE_VERYHIGH));
+        append(to_string(ReconsumeValue::VERY_LOW));
+        append(to_string(ReconsumeValue::LOW));
+        append(to_string(ReconsumeValue::MEDIUM));
+        append(to_string(ReconsumeValue::HIGH));
+        append(to_string(ReconsumeValue::VERY_HIGH));
     }
 
     ReconsumeValue MALItemReconsumeValueComboBox::get_reconsume_value() const
     {
         auto const text = get_active_text();
         if (text == invalid_text)
-            return RECONSUME_VALUE_INVALID;
+            return ReconsumeValue::INVALID;
         else
             return reconsume_value_from_string(text);
     }
 
-    void MALItemReconsumeValueComboBox::set_reconsume_value(const ReconsumeValue value)
+    void MALItemReconsumeValueComboBox::set_reconsume_value(ReconsumeValue value)
     {
-        if (value == RECONSUME_VALUE_INVALID)
+        if (value == ReconsumeValue::INVALID)
             set_active_text(invalid_text);
         else
             set_active_text(to_string(value));
@@ -481,7 +494,7 @@ namespace MAL {
             m_fansub_group_entry->set_text(m_item->fansub_group);
             m_downloaded_items_entry->set_entry_text(std::to_string(item->downloaded_items));
             m_times_consumed_entry->set_entry_text(std::to_string(item->times_consumed));
-            m_priority_combo->set_active_text(to_string(item->priority));
+            m_priority_combo->set_priority(item->priority);
             m_reconsume_value_combo->set_reconsume_value(item->reconsume_value);
         } else {
             m_fansub_group_entry->set_sensitive(false);

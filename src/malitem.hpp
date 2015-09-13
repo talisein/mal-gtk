@@ -23,23 +23,24 @@
 #include <glibmm/date.h>
 #include "xml_writer.hpp"
 #include "xml_reader.hpp"
+#include "malgtk_malitem.h"
 
 namespace MAL {
 
-    enum Priority {
-        PRIORITY_INVALID = -1,
-        PRIORITY_LOW     = 0,
-        PRIORITY_MEDIUM  = 1,
-        PRIORITY_HIGH    = 2
+    enum class Priority : int {
+        INVALID = MALGTK_MALITEM_PRIORITY_INVALID,
+        LOW     = MALGTK_MALITEM_PRIORITY_LOW,
+        MEDIUM  = MALGTK_MALITEM_PRIORITY_MEDIUM,
+        HIGH    = MALGTK_MALITEM_PRIORITY_HIGH
     };
 
-    enum ReconsumeValue {
-        RECONSUME_VALUE_INVALID  = -1,
-        RECONSUME_VALUE_VERYLOW  = 1,
-        RECONSUME_VALUE_LOW      = 2,
-        RECONSUME_VALUE_MEDIUM   = 3,
-        RECONSUME_VALUE_HIGH     = 4,
-        RECONSUME_VALUE_VERYHIGH = 5,
+    enum class ReconsumeValue : int {
+        INVALID   = MALGTK_MALITEM_RECONSUME_VALUE_INVALID,
+        VERY_LOW  = MALGTK_MALITEM_RECONSUME_VALUE_VERY_LOW,
+        LOW       = MALGTK_MALITEM_RECONSUME_VALUE_LOW,
+        MEDIUM    = MALGTK_MALITEM_RECONSUME_VALUE_MEDIUM,
+        HIGH      = MALGTK_MALITEM_RECONSUME_VALUE_HIGH,
+        VERY_HIGH = MALGTK_MALITEM_RECONSUME_VALUE_VERY_HIGH,
     };
 
     Priority priority_from_int(const int i);

@@ -61,12 +61,12 @@ namespace MAL {
     Priority priority_from_int(const int i)
     {
         switch (i) {
-            case 0: return PRIORITY_LOW;
-            case 1: return PRIORITY_MEDIUM;
-            case 2: return PRIORITY_HIGH;
+            case 0: return Priority::LOW;
+            case 1: return Priority::MEDIUM;
+            case 2: return Priority::HIGH;
             default:
                 std::cerr << "Error: Unknown priority (" << i << ")" << std::endl;
-                return PRIORITY_INVALID;
+                return Priority::INVALID;
         }
     }
     
@@ -74,92 +74,92 @@ namespace MAL {
     {
         switch (i) {
             case 1:
-                return RECONSUME_VALUE_VERYLOW;
+                return ReconsumeValue::VERY_LOW;
             case 2:
-                return RECONSUME_VALUE_LOW;
+                return ReconsumeValue::LOW;
             case 3:
-                return RECONSUME_VALUE_MEDIUM;
+                return ReconsumeValue::MEDIUM;
             case 4:
-                return RECONSUME_VALUE_HIGH;
+                return ReconsumeValue::HIGH;
             case 5:
-                return RECONSUME_VALUE_VERYHIGH;
+                return ReconsumeValue::VERY_HIGH;
             case 0:
-                return RECONSUME_VALUE_INVALID;
+                return ReconsumeValue::INVALID;
             default:
                 std::cerr << "Error: Unknown reconsume value (" << i << ")" << std::endl;
-                return RECONSUME_VALUE_INVALID;
+                return ReconsumeValue::INVALID;
         }
     }
 
 	Priority priority_from_string(const Glib::ustring& s) {
-		if (s.compare(to_string(PRIORITY_INVALID)) == 0)
-			return PRIORITY_INVALID;
+		if (s.compare(to_string(Priority::INVALID)) == 0)
+			return Priority::INVALID;
         else if (s.empty())
-            return PRIORITY_INVALID;
-		else if (s.compare(to_string(PRIORITY_LOW)) == 0)
-			return PRIORITY_LOW;
-		else if (s.compare(to_string(PRIORITY_MEDIUM)) == 0)
-			return PRIORITY_MEDIUM;
-		else if (s.compare(to_string(PRIORITY_HIGH)) == 0)
-			return PRIORITY_HIGH;
+            return Priority::INVALID;
+		else if (s.compare(to_string(Priority::LOW)) == 0)
+			return Priority::LOW;
+		else if (s.compare(to_string(Priority::MEDIUM)) == 0)
+			return Priority::MEDIUM;
+		else if (s.compare(to_string(Priority::HIGH)) == 0)
+			return Priority::HIGH;
 		else {
 			std::cerr << "Error: Unknown Priority (" << s << ")" << std::endl;
-			return PRIORITY_INVALID;
+			return Priority::INVALID;
 		}
 	}
 
 	ReconsumeValue reconsume_value_from_string(const Glib::ustring& s) {
-		if (s == to_string(RECONSUME_VALUE_INVALID))
-			return RECONSUME_VALUE_INVALID;
-		else if (s == to_string(RECONSUME_VALUE_VERYLOW))
-			return RECONSUME_VALUE_VERYLOW;
-		else if (s == to_string(RECONSUME_VALUE_LOW))
-			return RECONSUME_VALUE_LOW;
-		else if (s == to_string(RECONSUME_VALUE_MEDIUM))
-			return RECONSUME_VALUE_MEDIUM;
-		else if (s == to_string(RECONSUME_VALUE_HIGH))
-			return RECONSUME_VALUE_HIGH;
-		else if (s == to_string(RECONSUME_VALUE_VERYHIGH))
-			return RECONSUME_VALUE_VERYHIGH;
+		if (s == to_string(ReconsumeValue::INVALID))
+			return ReconsumeValue::INVALID;
+		else if (s == to_string(ReconsumeValue::VERY_LOW))
+			return ReconsumeValue::VERY_LOW;
+		else if (s == to_string(ReconsumeValue::LOW))
+			return ReconsumeValue::LOW;
+		else if (s == to_string(ReconsumeValue::MEDIUM))
+			return ReconsumeValue::MEDIUM;
+		else if (s == to_string(ReconsumeValue::HIGH))
+			return ReconsumeValue::HIGH;
+		else if (s == to_string(ReconsumeValue::VERY_HIGH))
+			return ReconsumeValue::VERY_HIGH;
 		else {
 			std::cerr << "Error: Unknown Reconsume Value (" << s << ")" << std::endl;
-			return RECONSUME_VALUE_INVALID;
+			return ReconsumeValue::INVALID;
 		}
 	}
 
 	Glib::ustring to_string(const Priority p) {
 		switch (p) {
-		case PRIORITY_INVALID:
-			return "Invalid Priority";
-		case PRIORITY_LOW:
-			return "Low";
-		case PRIORITY_MEDIUM:
-			return "Medium";
-		case PRIORITY_HIGH:
-			return "High";
-		default:
-            std::cerr << "Error: Unknown priority (" << p << ")" << std::endl;
-			return "Unknown";
+            case Priority::INVALID:
+                return "Invalid Priority";
+            case Priority::LOW:
+                return "Low";
+            case Priority::MEDIUM:
+                return "Medium";
+            case Priority::HIGH:
+                return "High";
+            default:
+                std::cerr << "Error: Unknown priority (" << static_cast<int>(p) << ")" << std::endl;
+                return "Unknown";
 		}
 	}
 
 	Glib::ustring to_string(const ReconsumeValue r) {
 		switch (r) {
-		case RECONSUME_VALUE_INVALID:
-			return "Invalid Reconsume Value";
-		case RECONSUME_VALUE_VERYLOW:
-			return "Very Low";
-		case RECONSUME_VALUE_LOW:
-			return "Low";
-		case RECONSUME_VALUE_MEDIUM:
-			return "Medium";
-		case RECONSUME_VALUE_HIGH:
-			return "High";
-		case RECONSUME_VALUE_VERYHIGH:
-			return "Very High";
-		default:
-            std::cerr << "Error: Unknown reconsume value (" << r << ")" << std::endl;
-			return "Unknown Reconsume Value";
+            case ReconsumeValue::INVALID:
+                return "Invalid Reconsume Value";
+            case ReconsumeValue::VERY_LOW:
+                return "Very Low";
+            case ReconsumeValue::LOW:
+                return "Low";
+            case ReconsumeValue::MEDIUM:
+                return "Medium";
+            case ReconsumeValue::HIGH:
+                return "High";
+            case ReconsumeValue::VERY_HIGH:
+                return "Very High";
+            default:
+                std::cerr << "Error: Unknown reconsume value (" << static_cast<int>(r) << ")" << std::endl;
+                return "Unknown Reconsume Value";
 		}
 	}
 
@@ -170,8 +170,8 @@ namespace MAL {
         enable_reconsuming {false},
         downloaded_items   {0},
         times_consumed     {0},
-        reconsume_value    {RECONSUME_VALUE_INVALID},
-        priority           {PRIORITY_INVALID},
+        reconsume_value    {ReconsumeValue::INVALID},
+        priority           {Priority::INVALID},
         enable_discussion  {false},
         has_details        {false}
     {
@@ -245,8 +245,8 @@ namespace MAL {
     }
 
     MALItem::MALItem(XmlReader& reader) :
-        reconsume_value(RECONSUME_VALUE_INVALID),
-        priority(PRIORITY_INVALID)
+        reconsume_value(ReconsumeValue::INVALID),
+        priority(Priority::INVALID)
     {
         reader.read();
         if (reader.get_name() != "MALitem") {
