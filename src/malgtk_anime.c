@@ -20,6 +20,7 @@
 
 typedef struct _MalgtkAnime
 {
+    MalgtkMalitem parent_instance;
 } MalgtkAnime;
 
 typedef struct _MalgtkAnimePrivate

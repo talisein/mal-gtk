@@ -66,6 +66,11 @@ typedef enum /*< prefix=MALGTK_MANGA >*/
 #define MALGTK_TYPE_MANGA             (malgtk_manga_get_type ())
 G_DECLARE_FINAL_TYPE(MalgtkManga, malgtk_manga, MALGTK, MANGA, MalgtkMalitem)
 
+struct _MalgtkMangaClass
+{
+    MalgtkMalitemClass parent_class;
+};
+
 MalgtkManga     *malgtk_manga_new (void);
 
 G_END_DECLS

@@ -101,6 +101,7 @@ malgtk_malitem_set_property (GObject      *object,
     MalgtkMalitem *self = MALGTK_MALITEM (object);
     MalgtkMalitemPrivate *priv = malgtk_malitem_get_instance_private (self);
     gchar **strv;
+
     switch (property_id)
     {
         case PROP_SERIES_MALDB_ID:
@@ -500,7 +501,7 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                            "How rewatchable or rereadable the series is",
                            MALGTK_TYPE_MALITEM_RECONSUME_VALUE,
                            MALGTK_MALITEM_RECONSUME_VALUE_INVALID,
-                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
         
     obj_properties[PROP_PRIORITY] =
         g_param_spec_enum ("priority",
@@ -508,7 +509,7 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                            "Priority for watching or reading this series",
                            MALGTK_TYPE_MALITEM_PRIORITY,
                            MALGTK_MALITEM_PRIORITY_INVALID,
-                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
         
     obj_properties[PROP_ENABLE_DISCUSSION] = 
         g_param_spec_boolean ("enable-discussion",

@@ -15,11 +15,14 @@
  *  along with mal-gtk.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include "malgtk_manga.h"
 #include "malgtk_enumtypes.h"
+typedef struct _MalgtkManga MalgtkManga;
 
 typedef struct _MalgtkManga
 {
+    MalgtkMalitem parent_instance;
 } MalgtkManga;
 
 typedef struct _MalgtkMangaPrivate
@@ -39,7 +42,7 @@ typedef struct _MalgtkMangaPrivate
     MalgtkMangaStorageType storage_type;
 } MalgtkMangaPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (MalgtkManga, malgtk_manga, MALGTK_TYPE_MANGA)
+G_DEFINE_TYPE_WITH_PRIVATE (MalgtkManga, malgtk_manga, MALGTK_TYPE_MALITEM);
 
 enum
 {
@@ -58,6 +61,7 @@ enum
 };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL, };
+
 static void
 malgtk_manga_set_property (GObject      *object,
                            guint         property_id,
@@ -160,6 +164,7 @@ static void
 malgtk_manga_class_init (MalgtkMangaClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
     gobject_class->set_property = malgtk_manga_set_property;
     gobject_class->get_property = malgtk_manga_get_property;
 
@@ -224,7 +229,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     obj_properties[PROP_REREADING_CHAPTER] =
-        g_param_spec_int ("rereading_chapter",
+        g_param_spec_int ("rereading-chapter",
                           "Rereading Chapter",
                           "Which chapter you are rereading",
                           0,
@@ -256,8 +261,9 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
 static void
 malgtk_manga_init (MalgtkManga *self)
 {
-    MalgtkMangaPrivate *priv = malgtk_manga_get_instance_private (self);
-    (void)priv;
+    (void)self;
+    //MalgtkMangaPrivate *priv = malgtk_manga_get_instance_private (self);
+    //(void)priv;
 }
 
 MalgtkManga *
