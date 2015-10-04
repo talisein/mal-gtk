@@ -34,7 +34,7 @@ typedef struct _MalgtkAnimePrivate
     gint rewatch_episode;
 
     MalgtkAnimeStorageType storage_type;
-    double storage_value;
+    gdouble storage_value;
 } MalgtkAnimePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (MalgtkAnime, malgtk_anime, MALGTK_TYPE_MALITEM)
@@ -132,6 +132,7 @@ malgtk_anime_get_property (GObject    *object,
             break;
         case PROP_STORAGE_VALUE:
             g_value_set_double (value, priv->storage_value);
+            break;
         default:
             /* We don't have any other property... */
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -223,8 +224,8 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                            MALGTK_ANIME_STORAGE_TYPE_INVALID,
                            G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    obj_properties[PROP_REWATCH_EPISODE] =
-        g_param_spec_double ("storage_value",
+    obj_properties[PROP_STORAGE_VALUE] =
+        g_param_spec_double ("storage-value",
                              "Storage Value",
                              "How many bytes of storage are used",
                              0.0,

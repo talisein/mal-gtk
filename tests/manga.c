@@ -72,7 +72,8 @@ test_manga_getset(void)
     g_assert_cmpstr (series_title, ==, _series_title);
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     setlocale (LC_ALL, "");
     g_test_init (&argc, &argv, NULL);

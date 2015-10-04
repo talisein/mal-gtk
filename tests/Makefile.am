@@ -1,17 +1,20 @@
 include $(top_srcdir)/glib-tap.mk
 
-AM_CFLAGS = -g $(MALGTK_CFLAGS) $(MAINTAINER_CFLAGS)
-LDADD = $(GLIB_LIBS) $(GOBJECT_LIBS) $(top_srcdir)/src/malgtk_manga.o $(top_srcdir)/src/malgtk_malitem.o $(top_srcdir)/src/malgtk_enumtypes.o $(top_srcdir)/src/malgtk_date.o
+AM_CFLAGS = -g $(MALGTK_CFLAGS) $(MAINTAINER_CFLAGS) $(GLIB_CFLAGS) $(GOBJECT_CFLAGS)
+LDADD = $(GLIB_LIBS) $(GOBJECT_LIBS) $(top_srcdir)/src/malgtk_manga.o $(top_srcdir)/src/malgtk_malitem.o $(top_srcdir)/src/malgtk_enumtypes.o $(top_srcdir)/src/malgtk_date.o $(top_srcdir)/src/malgtk_anime.o
 
 AM_CPPFLAGS = \
 	$(MALGTK_DEBUG_CFLAGS) \
-	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	-I$(top_srcdir)/src
+	-I$(top_srcdir)	\
+	-I$(top_builddir) \
+	-I$(top_srcdir)/src \
+	$(NULL)
+
 
 test_programs = \
 	malitem \
 	manga \
+	anime \
 	$(NULL)
 
 
