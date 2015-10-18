@@ -39,6 +39,8 @@
 
 m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody], [[
   #include <memory>
+  #include <locale>
+  #include <codecvt>
   template <typename T>
     struct check
     {
@@ -65,6 +67,8 @@ m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody], [[
 
     auto d = a;
     auto l = [](){};
+
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> ucs4conv;
 
     auto u = std::make_unique<Base>();
     int bj = 0b1101'0010'1111'0000;

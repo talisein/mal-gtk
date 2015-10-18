@@ -17,6 +17,8 @@
 
 #include "text_util.hpp"
 #include <iostream>
+#include <codecvt>
+#include <locale>
 #include <glib.h>
 
 namespace {
@@ -93,84 +95,47 @@ namespace {
 namespace MAL {
 
     TextUtility::TextUtility() :
-        locale("en_US.UTF-8"),
         html_entities(initialize_entities())
     {
     }
 
-    std::string TextUtility::wchar_to_utf8(const std::wstring& wstr) const
-    {
-        if (std::has_facet<codecvt_t>(locale)) {
-            auto& facet = std::use_facet<codecvt_t>(locale);
-            std::mbstate_t state = std::mbstate_t();
-            std::string out(wstr.size()*3+1, '\0');
-            const wchar_t *wstr_last;
-            char *str_last;
-            auto result = facet.out(state, &*wstr.cbegin(), &*wstr.cend(),
-                                    wstr_last, &*std::begin(out), &*std::end(out),
-                                    str_last);
-            if ( G_LIKELY((result == codecvt_t::ok)) ) {
-                return out.substr(0, str_last - &*out.cbegin());
-            } else if (result == codecvt_t::partial) {
-                std::cerr << "Warning: Partial UCS-4->UTF-8 conversion. "
-                          << "Please report to developer" << std::endl;
-                return out;
-            } else if (result == codecvt_t::error) {
-                std::cerr << "Warning: Error during UCS-4->UTF-8 conversion. "
-                          << "Please report to developer." << std::endl;
-                return std::string();
-            } else if (result == codecvt_t::noconv) {
-                std::cerr << "Warning: Noconv during UCS-4->UTF-8 conversion? "
-                          << "Please report to developer." << std::endl;
-                return std::string();
-            } else {
-                std::cerr << "Warning: Unexpected error during UCS-4->UTF-8 "
-                          << " conversion. Please report to developer." 
-                          << std::endl;
-                return std::string();
-            }
-        } else {
-            std::cerr << "Error: UCS4->UTF8 facet unavailable." << std::endl;
-            return std::string();
-        }
-    }
-
     void TextUtility::parse_html_entities(std::string& str) const
     {
-		auto pos = str.find("&");
-		decltype(pos) start = 0;
-		while (pos != std::string::npos) {
-			auto end_pos = str.find(";", pos);
-			if (end_pos == std::string::npos)
-				break;
+        auto pos = str.find("&");
+        decltype(pos) start = 0;
+        while (pos != std::string::npos) {
+            auto end_pos = str.find(";", pos);
+            if (end_pos == std::string::npos)
+                break;
             std::string replacement;
-			auto iter = html_entities.find(str.substr(pos+1, end_pos - pos));
+            auto iter = html_entities.find(str.substr(pos+1, end_pos - pos));
             auto this_substring = str.substr(pos+1, end_pos - pos);
-			if (iter == std::end(html_entities)) {
+            if (iter != std::end(html_entities)) {
+                replacement = iter->second;
+            } else {
                 if ( *std::begin(this_substring) == '#' ) {
                     try {
-                        wchar_t val;
+                        char32_t val;
                         if ( (pos+2) == 'x' ) {
                             val = std::stol(this_substring.substr(2), nullptr, 16);
                         } else {
                             val = std::stol(this_substring.substr(1), nullptr, 10);
                         }
-                        replacement = wchar_to_utf8(std::wstring(1, val));
-
+                        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> ucs4conv;
+                        replacement = ucs4conv.to_bytes(val);
                     } catch (std::exception& e) {
                         std::cerr << "Error converting html integer entity to UTF-8: " 
                                   << e.what() << std::endl;
                     }
                 }
-            } else {
-                replacement = iter->second;
-			}
+            }
+
             if (replacement.size() > 0) {
-				str.replace(pos, end_pos - pos + 1, replacement);
+                str.replace(pos, end_pos - pos + 1, replacement);
             }
 
             start = pos + 1;
-			pos = str.find("&", start);
-		}
+            pos = str.find("&", start);
+        }
     }
 }
