@@ -18,6 +18,8 @@
 #include "malitem_list_view.hpp"
 #include <array>
 #include <iostream>
+#include <iomanip>
+#include <ios>
 #include <cstring>
 #include <functional>
 #include <glibmm/markup.h>
@@ -364,11 +366,9 @@ namespace MAL {
     void MALItemDetailViewStatic::display_item(const std::shared_ptr<MALItem>& item)
     {
         MALItemDetailViewBase::display_item(item);
-        std::stringstream ss;
-        ss << "Average Score: ";
-        ss.precision(3);
-        ss << item->score;
-        m_score->set_text(ss.str());
+        auto text = Glib::ustring::compose("Average Score: %1",
+                                           Glib::ustring::format(std::fixed, std::setprecision(2), item->score));
+        m_score->set_text(text);
         m_score->show();
     }
 

@@ -15,13 +15,14 @@
  *  along with mal-gtk.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <locale>
 #include <iostream>
 #include <cstdlib>
 #include <curl/curl.h>
 #include "application.hpp"
 
-int main(int argc, char** argv) {
-    setlocale(LC_ALL, "");
+int main(int argc, char* argv[]) {
+    std::locale::global(std::locale(""));
 
     CURLcode code = curl_global_init(CURL_GLOBAL_DEFAULT);
     if (code != CURLE_OK) {
