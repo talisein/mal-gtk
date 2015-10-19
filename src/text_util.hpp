@@ -16,18 +16,22 @@
  */
 
 #pragma once
-#include <map>
+#include <unordered_map>
+#include <array>
+#include <codecvt>
+#include <locale>
 
 namespace MAL {
 
     class TextUtility {
     public:
         TextUtility();
-
-        void parse_html_entities(std::string&) const;
+        void parse_html_entities(std::string&);
 
     private:
-        const std::map<const std::string, const std::string> html_entities;
+        std::unordered_map<std::string, const std::string> html_entities;
+        std::array<std::string, 3> ignored_entities;
+        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> ucs4conv;
     };
 
 }
