@@ -154,7 +154,7 @@ namespace MAL {
             } else {
                 /* If its not a unicode point, give up. */
                 if (G_UNLIKELY(entity.at(0) != '#')) {
-                    g_message("Unhandled HTML entity '%s'", entity.c_str());
+                    g_debug("Unhandled HTML entity '%s'. Full text: %s", entity.c_str(), str.c_str());
                     continue;
                 }
 
