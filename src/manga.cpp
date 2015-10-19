@@ -42,19 +42,19 @@ namespace MAL {
 	}
 
 	MangaSeriesType manga_series_type_from_string(const Glib::ustring& s) {
-		if (s.compare(to_string(MANGA)) == 0)
+		if (s == to_string(MANGA))
 			return MANGA;
-		else if (s.compare(to_string(NOVEL)) == 0)
+		else if (s == to_string(NOVEL))
 			return NOVEL;
-		else if (s.compare(to_string(ONESHOT)) == 0)
+		else if (s == to_string(ONESHOT) || s == "One-shot")
 			return ONESHOT;
-		else if (s.compare(to_string(DOUJIN)) == 0)
+		else if (s == to_string(DOUJIN))
 			return DOUJIN;
-		else if (s.compare(to_string(MANHWA)) == 0)
+		else if (s == to_string(MANHWA))
 			return MANHWA;
-		else if (s.compare(to_string(MANHUA)) == 0)
+		else if (s == to_string(MANHUA))
 			return MANHUA;
-        else if (s.compare(to_string(OEL)) == 0)
+        else if (s == to_string(OEL))
             return OEL;
 		else {
 			std::cerr << "Error: Unknown manga series type '" << s << "'" << std::endl;

@@ -45,7 +45,7 @@ namespace MAL {
             "GtkLabel#TV, GtkLabel#Manga {"
             "  background-color: " TV_COLOR ";"
             "}"
-            "GtkLabel#OVA, GtkLabel#OneShot {"
+            "GtkLabel#OVA, GtkLabel#One-Shot {"
             "  background-color: " OVA_COLOR ";"
             "}"
             "GtkLabel#Movie, GtkLabel#Novel {"
@@ -109,7 +109,7 @@ namespace MAL {
             {"TV", Gdk::RGBA(TV_COLOR)},
             {"Manga", Gdk::RGBA(TV_COLOR)},
             {"OVA", Gdk::RGBA(OVA_COLOR)},
-            {"OneShot", Gdk::RGBA(OVA_COLOR)},
+            {"One Shot", Gdk::RGBA(OVA_COLOR)},
             {"Movie", Gdk::RGBA(MOVIE_COLOR)},
             {"Novel", Gdk::RGBA(MOVIE_COLOR)},
             {"Special", Gdk::RGBA(SPECIAL_COLOR)},
