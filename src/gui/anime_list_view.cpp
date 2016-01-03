@@ -189,8 +189,9 @@ namespace MAL {
         auto anime = std::static_pointer_cast<Anime>(item);
         if (!olditem || olditem->series_itemdb_id != item->series_itemdb_id) {
             AnimeDetailViewBase::display_item(item);
-            m_episodes_entry->set_label("/ " + std::to_string(anime->series_episodes) + " Episodes");
-            m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
+            using Glib::ustring;
+            m_episodes_entry->set_label(ustring::compose("/ %1 Episodes", anime->series_episodes));
+            m_episodes_entry->set_entry_text(ustring::format(anime->episodes));
             m_anime_status_combo->set_anime_status(anime->status);
         }
 
