@@ -558,7 +558,7 @@ namespace MAL {
             if (times_consumed != row.get_value(columns->times_consumed))
                 row.set_value(columns->times_consumed, times_consumed);
 
-            auto priority = priority_from_string(m_priority_combo->get_active_text());
+            auto priority = m_priority_combo->get_priority();
             if (priority != row.get_value(columns->priority))
                 row.set_value(columns->priority, priority);
 
