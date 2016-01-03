@@ -84,19 +84,14 @@ namespace MAL {
     {
         constexpr gunichar spc = ' ';
         constexpr gunichar dash = '-';
-        
+
         set_text(label);
 
-        /* Glib::ustring has no writable iterator, so can't use std::replace */
-        auto const end = std::end(label);
-        for(auto iter = std::begin(label); iter != end; ++iter) {
-            if (*iter == spc) {
-                Glib::ustring::iterator next(iter);
-                ++next;
-                label.replace(iter, next, 1, dash);
-            }
+        Glib::ustring::size_type pos = label.find(spc);
+        for (; pos != Glib::ustring::npos; pos = label.find(spc, pos+1)) {
+            label.replace(pos, 1, 1, dash);
         }
-                      
+
         set_name(label);
     }
 
