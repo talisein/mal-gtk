@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <glib.h>
 #include "malgtk_malitem.h"
 #include "malgtk_date.h"
 #include "malgtk_enumtypes.h"
@@ -249,10 +250,16 @@ malgtk_malitem_get_property (GObject    *object,
             g_value_take_boxed (value, _tree_to_gstrv(priv->tags));
             break;
         case PROP_DATE_START:
-            g_value_set_boxed (value, &priv->date_start);
+            if (g_date_valid (&priv->date_start))
+                g_value_set_boxed (value, &priv->date_start);
+            else
+                g_value_set_boxed (value, NULL);
             break;
         case PROP_DATE_FINISH:
-            g_value_set_boxed (value, &priv->date_finish);
+            if (g_date_valid (&priv->date_finish))
+                g_value_set_boxed (value, &priv->date_finish);
+            else
+                g_value_set_boxed (value, NULL);
             break;
         case PROP_ID:
             g_value_set_int64 (value, priv->id);
@@ -669,4 +676,182 @@ static void _tree_remove_all(GTree *tree)
 {
     g_tree_ref (tree);
     g_tree_destroy (tree);
+}
+
+static gboolean
+xform_gint64(GValue *value, const xmlChar* in)
+{
+    gint64 i;
+    g_value_init(value, G_TYPE_INT64);
+    i = g_ascii_strtoll((const gchar*)in, NULL, 0);
+    g_value_set_int64(value, i);
+    return FALSE;
+}
+
+static gboolean
+xform_gdate(GValue *value, const xmlChar* in)
+{
+    MalgtkDate d;
+    malgtk_date_clear(&d);
+    malgtk_date_set_from_string(&d, (const gchar*)in);
+    if (malgtk_date_is_complete(&d)) {
+        g_value_init(value, G_TYPE_DATE);
+        g_value_take_boxed(value, malgtk_date_get_g_date(&d));
+        return FALSE;
+    } else {
+        return TRUE;
+    }
+}
+
+static gboolean
+xform_datetime(GValue *value, const xmlChar* in)
+{
+    gint64 t;
+    GDateTime *dt;
+
+    t  = g_ascii_strtoll((const gchar*)in, NULL, 0);
+    dt = g_date_time_new_from_unix_utc (t);
+    g_value_init(value, G_TYPE_DATE_TIME);
+    g_value_take_boxed(value, dt);
+    return FALSE;
+}
+
+static gboolean
+xform_gdouble(GValue *value, const xmlChar* in)
+{
+    gdouble i;
+    g_value_init(value, G_TYPE_DOUBLE);
+    i = g_ascii_strtod((const gchar*)in, NULL);
+    g_value_set_double(value, i);
+    return FALSE;
+}
+
+static gboolean
+xform_enum(GValue *value, GType type, const xmlChar* in)
+{
+    GEnumClass* enum_class;
+    GEnumValue* enum_value;
+
+    enum_class = g_type_class_ref(type);
+    enum_value = g_enum_get_value_by_nick(enum_class, (const char*)in);
+    if (G_UNLIKELY(NULL == enum_value)) {
+        g_warning("Unrecognized %s nick: %s", G_ENUM_CLASS_TYPE_NAME(enum_class), (const char*)in);
+        return TRUE;
+    }
+    g_value_init(value, type);
+    g_value_set_enum(value, enum_value->value);
+    g_type_class_unref(enum_class);
+    return FALSE;
+}
+
+static gboolean
+xform_reconsume_value_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_MALITEM_RECONSUME_VALUE, in);
+}
+
+static gboolean
+xform_priority_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_MALITEM_PRIORITY, in);
+}
+
+
+static gboolean
+xform_string(GValue *value, const xmlChar* in)
+{
+    g_value_init(value, G_TYPE_STRING);
+    g_value_set_static_string(value, (const char*)in);
+    return FALSE;
+}
+
+static const struct {
+    const xmlChar *xml_name;
+    gint prop_id;
+    gboolean (*xform)(GValue *out, const xmlChar* in);
+} field_map[] = {
+    { BAD_CAST"series_itemdb_id",       PROP_SERIES_MALDB_ID,        xform_gint64},
+    { BAD_CAST"series_title",           PROP_SERIES_TITLE,           xform_string},
+    { BAD_CAST"series_preferred_title", PROP_SERIES_PREFERRED_TITLE, xform_string},
+    { BAD_CAST"series_date_begin",      PROP_SERIES_DATE_BEGIN,      xform_string},
+    { BAD_CAST"series_date_end",        PROP_SERIES_DATE_END,        xform_string},
+    { BAD_CAST"image_url",              PROP_IMAGE_URL,              xform_string},
+    { BAD_CAST"series_synonyms",        -1,                          xform_string},
+    { BAD_CAST"series_synonym",         PROP_SERIES_SYNONYM,         xform_string},
+    { BAD_CAST"series_synopsis",        PROP_SERIES_SYNOPSIS,        xform_string},
+    { BAD_CAST"tags",                   -1,                          xform_string},
+    { BAD_CAST"tag",                    PROP_TAGS,                   xform_string},
+    { BAD_CAST"date_finish",            PROP_DATE_FINISH,            xform_gdate},
+    { BAD_CAST"date_start",             PROP_DATE_START,             xform_gdate},
+    { BAD_CAST"id",                     PROP_ID,                     xform_gint64},
+    { BAD_CAST"last_updated",           PROP_LAST_UPDATED,           xform_datetime},
+    { BAD_CAST"score",                  PROP_SCORE,                  xform_gdouble},
+    { BAD_CAST"enable_reconsuming",     PROP_ENABLE_RECONSUMING,     xform_gint64},
+    { BAD_CAST"fansub_group",           PROP_FANSUB_GROUP,           xform_string},
+    { BAD_CAST"comments",               PROP_COMMENTS,               xform_string},
+    { BAD_CAST"downloaded_items",       PROP_DOWNLOADED_ITEMS,       xform_gint64},
+    { BAD_CAST"times_consumed",         PROP_TIMES_CONSUMED,         xform_gint64},
+    { BAD_CAST"reconsume_value",        PROP_RECONSUME_VALUE,        xform_reconsume_value_enum},
+    { BAD_CAST"priority",               PROP_PRIORITY,               xform_priority_enum},
+    { BAD_CAST"enable_discussion",      PROP_ENABLE_DISCUSSION,      xform_gint64},
+    { BAD_CAST"has_details",            PROP_HAS_DETAILS,            xform_gint64},
+};
+
+static gint
+find_field_for_name(const xmlChar *name)
+{
+    for (guint i = 0; i < G_N_ELEMENTS(field_map); ++i)
+    {
+        if (xmlStrEqual(field_map[i].xml_name, name)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void
+malgtk_malitem_set_from_xml(MalgtkMalitem *malitem, xmlTextReaderPtr reader)
+{
+    gint offset = -1;
+    GValue value;
+    gboolean is_default;
+    g_return_if_fail(MALGTK_IS_MALITEM(malitem));
+    xmlTextReaderRead(reader);
+
+    for (; !(xmlStrEqual(BAD_CAST"MALitem", xmlTextReaderConstName(reader)) &&
+             xmlTextReaderNodeType(reader) == XML_READER_TYPE_END_ELEMENT);
+         xmlTextReaderRead(reader))
+    {
+        switch (xmlTextReaderNodeType(reader))
+        {
+            case XML_READER_TYPE_ELEMENT:
+                offset = find_field_for_name(xmlTextReaderConstName(reader));
+                if (-1 == offset) {
+                    g_warning("Unexpected field: %s", (const char*)xmlTextReaderConstName(reader));
+                }
+                break;
+            case XML_READER_TYPE_TEXT:
+                switch (field_map[offset].prop_id) {
+                    case -1:
+                        break;
+                    case PROP_TAGS:
+                        malgtk_malitem_add_tag(malitem, (const char*)xmlTextReaderConstValue(reader));
+                        break;
+                    case PROP_SERIES_SYNONYM:
+                        malgtk_malitem_add_synonym(malitem, (const char*)xmlTextReaderConstValue(reader));
+                        break;
+                    default:
+                        is_default = field_map[offset].xform(&value, xmlTextReaderConstValue(reader));
+                        if (!is_default) {
+                            g_object_set_property(G_OBJECT(malitem), obj_properties[field_map[offset].prop_id]->name, &value);
+                            g_value_unset(&value);
+                        }
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+    }
 }
