@@ -21,6 +21,7 @@
 #include "malgtk_malitem.h"
 #include "malgtk_date.h"
 #include "malgtk_enumtypes.h"
+#include "malgtk_deserialize_v1_tools.h"
 
 typedef struct _MalgtkMalitemPrivate
 {
@@ -679,72 +680,6 @@ static void _tree_remove_all(GTree *tree)
 }
 
 static gboolean
-xform_gint64(GValue *value, const xmlChar* in)
-{
-    gint64 i;
-    g_value_init(value, G_TYPE_INT64);
-    i = g_ascii_strtoll((const gchar*)in, NULL, 0);
-    g_value_set_int64(value, i);
-    return FALSE;
-}
-
-static gboolean
-xform_gdate(GValue *value, const xmlChar* in)
-{
-    MalgtkDate d;
-    malgtk_date_clear(&d);
-    malgtk_date_set_from_string(&d, (const gchar*)in);
-    if (malgtk_date_is_complete(&d)) {
-        g_value_init(value, G_TYPE_DATE);
-        g_value_take_boxed(value, malgtk_date_get_g_date(&d));
-        return FALSE;
-    } else {
-        return TRUE;
-    }
-}
-
-static gboolean
-xform_datetime(GValue *value, const xmlChar* in)
-{
-    gint64 t;
-    GDateTime *dt;
-
-    t  = g_ascii_strtoll((const gchar*)in, NULL, 0);
-    dt = g_date_time_new_from_unix_utc (t);
-    g_value_init(value, G_TYPE_DATE_TIME);
-    g_value_take_boxed(value, dt);
-    return FALSE;
-}
-
-static gboolean
-xform_gdouble(GValue *value, const xmlChar* in)
-{
-    gdouble i;
-    g_value_init(value, G_TYPE_DOUBLE);
-    i = g_ascii_strtod((const gchar*)in, NULL);
-    g_value_set_double(value, i);
-    return FALSE;
-}
-
-static gboolean
-xform_enum(GValue *value, GType type, const xmlChar* in)
-{
-    GEnumClass* enum_class;
-    GEnumValue* enum_value;
-
-    enum_class = g_type_class_ref(type);
-    enum_value = g_enum_get_value_by_nick(enum_class, (const char*)in);
-    if (G_UNLIKELY(NULL == enum_value)) {
-        g_warning("Unrecognized %s nick: %s", G_ENUM_CLASS_TYPE_NAME(enum_class), (const char*)in);
-        return TRUE;
-    }
-    g_value_init(value, type);
-    g_value_set_enum(value, enum_value->value);
-    g_type_class_unref(enum_class);
-    return FALSE;
-}
-
-static gboolean
 xform_reconsume_value_enum(GValue *value, const xmlChar *in)
 {
     return xform_enum(value, MALGTK_TYPE_MALITEM_RECONSUME_VALUE, in);
@@ -770,6 +705,7 @@ static const struct {
     gint prop_id;
     gboolean (*xform)(GValue *out, const xmlChar* in);
 } field_map[] = {
+    { BAD_CAST"MALitem",                -1,                          NULL},
     { BAD_CAST"series_itemdb_id",       PROP_SERIES_MALDB_ID,        xform_gint64},
     { BAD_CAST"series_title",           PROP_SERIES_TITLE,           xform_string},
     { BAD_CAST"series_preferred_title", PROP_SERIES_PREFERRED_TITLE, xform_string},
@@ -814,10 +750,9 @@ void
 malgtk_malitem_set_from_xml(MalgtkMalitem *malitem, xmlTextReaderPtr reader)
 {
     gint offset = -1;
-    GValue value;
+    GValue value = G_VALUE_INIT;
     gboolean is_default;
     g_return_if_fail(MALGTK_IS_MALITEM(malitem));
-    xmlTextReaderRead(reader);
 
     for (; !(xmlStrEqual(BAD_CAST"MALitem", xmlTextReaderConstName(reader)) &&
              xmlTextReaderNodeType(reader) == XML_READER_TYPE_END_ELEMENT);
@@ -842,9 +777,11 @@ malgtk_malitem_set_from_xml(MalgtkMalitem *malitem, xmlTextReaderPtr reader)
                         malgtk_malitem_add_synonym(malitem, (const char*)xmlTextReaderConstValue(reader));
                         break;
                     default:
-                        is_default = field_map[offset].xform(&value, xmlTextReaderConstValue(reader));
+                        is_default = field_map[offset].xform(&value,
+                                                             xmlTextReaderConstValue(reader));
                         if (!is_default) {
-                            g_object_set_property(G_OBJECT(malitem), obj_properties[field_map[offset].prop_id]->name, &value);
+                            g_object_set_property(G_OBJECT(malitem),
+                                                  obj_properties[field_map[offset].prop_id]->name, &value);
                             g_value_unset(&value);
                         }
                         break;

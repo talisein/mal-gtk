@@ -17,6 +17,7 @@
 
 #include "malgtk_anime.h"
 #include "malgtk_enumtypes.h"
+#include "malgtk_deserialize_v1_tools.h"
 
 typedef struct _MalgtkAnime
 {
@@ -249,5 +250,105 @@ MalgtkAnime *
 malgtk_anime_new(void)
 {
     return g_object_new(MALGTK_TYPE_ANIME, NULL);
+}
+
+static gboolean
+xform_series_type_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_ANIME_SERIES_TYPE, in);
+}
+
+static gboolean
+xform_series_status_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_ANIME_SERIES_STATUS, in);
+}
+
+static gboolean
+xform_status_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_ANIME_STATUS, in);
+}
+
+static gboolean
+xform_storage_type_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_ANIME_STORAGE_TYPE, in);
+}
+
+static const struct {
+    const xmlChar *xml_name;
+    gint prop_id;
+    gboolean (*xform)(GValue *out, const xmlChar* in);
+} field_map[] = {
+    {BAD_CAST"MALitem",         -1,                   NULL},
+    {BAD_CAST"anime",           -1,                   NULL},
+    {BAD_CAST"series_type",     PROP_SERIES_TYPE,     xform_series_type_enum},
+    {BAD_CAST"series_status",   PROP_SERIES_STATUS,   xform_series_status_enum},
+    {BAD_CAST"series_episodes", PROP_SERIES_EPISODES, xform_gint64},
+    {BAD_CAST"status",          PROP_STATUS,          xform_status_enum},
+    {BAD_CAST"episodes",        PROP_EPISODES,        xform_gint64},
+    {BAD_CAST"rewatch_episode", PROP_REWATCH_EPISODE, xform_gint64},
+    {BAD_CAST"storage_type",    PROP_STORAGE_TYPE,    xform_storage_type_enum},
+    {BAD_CAST"storage_value",   PROP_STORAGE_VALUE,   xform_gdouble},
+};
+
+static gint
+find_field_for_name(const xmlChar *name)
+{
+    for (guint i = 0; i < G_N_ELEMENTS(field_map); ++i)
+    {
+        if (xmlStrEqual(field_map[i].xml_name, name)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void
+malgtk_anime_set_from_xml(MalgtkAnime *anime,
+                          xmlTextReaderPtr reader)
+{
+    gint offset = -1;
+    GValue value = G_VALUE_INIT;
+    gboolean is_default;
+    g_return_if_fail(MALGTK_IS_ANIME(anime));
+
+    for (; !(xmlStrEqual(BAD_CAST"anime", xmlTextReaderConstName(reader)) &&
+             xmlTextReaderNodeType(reader) == XML_READER_TYPE_END_ELEMENT);
+         xmlTextReaderRead(reader))
+    {
+        switch (xmlTextReaderNodeType(reader))
+        {
+            case XML_READER_TYPE_ELEMENT:
+                offset = find_field_for_name(xmlTextReaderConstName(reader));
+                if (-1 == offset) {
+                    g_warning("Unexpected field: %s", (const char*)xmlTextReaderConstName(reader));
+                }
+                if (0 == offset) {
+                    malgtk_malitem_set_from_xml (MALGTK_MALITEM(anime), reader);
+                    break;
+                }
+                break;
+            case XML_READER_TYPE_TEXT:
+                switch (field_map[offset].prop_id) {
+                    case -1:
+                        break;
+                    default:
+                        is_default = field_map[offset].xform(&value,
+                                                             xmlTextReaderConstValue(reader));
+                        if (!is_default) {
+                            g_object_set_property(G_OBJECT(anime),
+                                                  obj_properties[field_map[offset].prop_id]->name, &value);
+                            g_value_unset(&value);
+                        }
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+    }
 }
 

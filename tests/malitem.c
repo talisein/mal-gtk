@@ -106,155 +106,158 @@ test_malitem_test3 (MalitemFixture *fixture,
 
     g_strfreev(strv);
     strv = NULL;
+
     g_object_get(item, "series-synonyms", &strv, NULL);
     g_assert_cmpstr (strv[0], ==, "Apple");
     g_assert_cmpstr (strv[1], ==, "Bee");
-    g_assert_null (strv[2]);
+    g_assert_null   (strv[2]);
 }
 
 static void
 test_malitem_test4 (MalitemFixture *fixture,
                     gconstpointer user_data)
 {
-    MalgtkMalitem *item = fixture->item;
-    gint64 mal_db_id = G_MAXINT64;
-    gchar *series_title = "Test Series";
-    gchar *preferred_title = "My Preferred Test Series Title";
-    MalgtkDate series_begin;
-    MalgtkDate series_end;
+    MalgtkMalitem              *item               = fixture->item;
+    gint64                      mal_db_id          = g_test_rand_int();
+    gchar                      *series_title       = "Test Series";
+    gchar                      *preferred_title    = "My Preferred Test Series Title";
+    MalgtkDate                  series_begin;
+    MalgtkDate                  series_end;
+    gchar                      *image_url          = "http://i.myanimelist.net/g/23522342.jpg";
+    gchar                      *synonyms[]         = { "SynOne", "SynTwo", NULL };
+    gchar                      *synopsis           = "A simple synopsis of the Test Series";
+    gchar                      *tags[]             = { "TagOne", "TagTwo", "TagThree", "TagFour", NULL };
+    GDate                       date_start;
+    GDate                       date_finish;
+    gint64                      id                 = g_test_rand_int();
+    g_autoptr(GDateTime)        last_updated       = g_date_time_new_from_unix_utc(g_test_rand_int_range(G_MININT, G_MAXINT));
+    double                      score              = g_test_rand_double_range(0.0, 10.0);
+    gboolean                    enable_reconsuming = g_test_rand_bit();
+    gchar                      *fansub_group       = "Nutbladder";
+    gchar                      *comments           = "My favorite ennui series";
+    gint                        downloaded_items   = g_test_rand_int_range(0, G_MAXINT);
+    gint                        times_consumed     = g_test_rand_int_range(0, G_MAXINT);
+    MalgtkMalitemReconsumeValue reconsume_value    = MALGTK_MALITEM_RECONSUME_VALUE_MEDIUM;
+    MalgtkMalitemPriority       priority           = MALGTK_MALITEM_PRIORITY_HIGH;
+    gboolean                    enable_discussion  = g_test_rand_bit();
+    gboolean                    has_details        = g_test_rand_bit();
     malgtk_date_set_from_string (&series_begin, "2014-02-01");
     malgtk_date_set_from_string (&series_end, "2015");
-    gchar *image_url = "http://i.myanimelist.net/g/23522342.jpg";
-    gchar *synonyms[] = { "SynOne", "SynTwo", NULL };
-    gchar *synopsis = "A simple synopsis of the Test Series";
-    gchar *tags[] = { "TagOne", "TagTwo", "TagThree", "TagFour", NULL };
-    GDate date_start;
-    GDate date_finish;
     g_date_set_dmy (&date_start, 3, 1, 2014);
     g_date_set_dmy (&date_finish, 6, 1, 2015);
-    gint64 id = G_MININT64;
-    g_autoptr(GDateTime) last_updated = g_date_time_new_now_local();
-    double score = 9.6;
-    gboolean enable_reconsuming = TRUE;
-    gchar *fansub_group = "Nutbladder";
-    gchar *comments = "My favorite ennui series";
-    gint downloaded_items = 110;
-    gint times_consumed = 3;
-    MalgtkMalitemReconsumeValue reconsume_value = MALGTK_MALITEM_RECONSUME_VALUE_MEDIUM;
-    MalgtkMalitemPriority priority = MALGTK_MALITEM_PRIORITY_HIGH;
-    gboolean enable_discussion = TRUE;
-    gboolean has_details = TRUE;
 
     g_object_set (G_OBJECT(item),
-                  "mal-db-id", mal_db_id,
-                  "series-title", series_title,
-                  "preferred-title", preferred_title,
-                  "series-date-begin", &series_begin,
-                  "series-date-end", &series_end,
-                  "image-url", image_url,
-                  "series-synonyms", synonyms,
-                  "series-synopsis", synopsis,
-                  "tags", tags,
-                  "date-start", &date_start,
-                  "date-finish", &date_finish,
-                  "id", id,
-                  "last-updated", last_updated,
-                  "score", score,
-                  "enable-reconsuming", enable_reconsuming,
-                  "fansub-group", fansub_group,
-                  "comments", comments,
-                  "downloaded-items", downloaded_items,
-                  "times-consumed", times_consumed,
-                  "reconsume-value", reconsume_value,
-                  "priority", priority,
-                  "enable-discussion", enable_discussion,
-                  "has-details", has_details,
+                  "mal-db-id",           mal_db_id,
+                  "series-title",        series_title,
+                  "preferred-title",     preferred_title,
+                  "series-date-begin",  &series_begin,
+                  "series-date-end",    &series_end,
+                  "image-url",           image_url,
+                  "series-synonyms",     synonyms,
+                  "series-synopsis",     synopsis,
+                  "tags",                tags,
+                  "date-start",         &date_start,
+                  "date-finish",        &date_finish,
+                  "id",                  id,
+                  "last-updated",        last_updated,
+                  "score",               score,
+                  "enable-reconsuming",  enable_reconsuming,
+                  "fansub-group",        fansub_group,
+                  "comments",            comments,
+                  "downloaded-items",    downloaded_items,
+                  "times-consumed",      times_consumed,
+                  "reconsume-value",     reconsume_value,
+                  "priority",            priority,
+                  "enable-discussion",   enable_discussion,
+                  "has-details",         has_details,
                   NULL);
 
-    gint64 _mal_db_id;
-    g_autofree gchar *_series_title     = NULL;
-    g_autofree gchar *_preferred_title  = NULL;
-    g_autoptr(MalgtkDate) _series_begin = NULL;
-    g_autoptr(MalgtkDate) _series_end   = NULL;
-    g_autofree gchar *_season_begin     = NULL;
-    g_autofree gchar *_season_end       = NULL;
-    g_autofree gchar *_image_url        = NULL;
-    g_auto (GStrv) _synonyms            = NULL;
-    g_autofree gchar *_synopsis         = NULL;
-    g_auto (GStrv) _tags                = NULL;
-    GDate *_date_start                  = NULL;
-    GDate *_date_finish                 = NULL;
-    gint64 _id;
-    g_autoptr(GDateTime) _last_updated;
-    double _score;
-    gboolean _enable_reconsuming;
-    g_autofree gchar *_fansub_group     = NULL;
-    g_autofree gchar *_comments         = NULL;
-    gint _downloaded_items;
-    gint _times_consumed;
-    MalgtkMalitemReconsumeValue _reconsume_value;
-    MalgtkMalitemPriority _priority;
-    gboolean _enable_discussion;
-    gboolean _has_details;
+    gint64                       _mal_db_id;
+    g_autofree gchar            *_series_title    = NULL;
+    g_autofree gchar            *_preferred_title = NULL;
+    g_autoptr(MalgtkDate)        _series_begin    = NULL;
+    g_autoptr(MalgtkDate)        _series_end      = NULL;
+    g_autofree gchar            *_season_begin    = NULL;
+    g_autofree gchar            *_season_end      = NULL;
+    g_autofree gchar            *_image_url       = NULL;
+    g_auto (GStrv)               _synonyms        = NULL;
+    g_autofree gchar            *_synopsis        = NULL;
+    g_auto (GStrv)               _tags            = NULL;
+    GDate                       *_date_start      = NULL;
+    GDate                       *_date_finish     = NULL;
+    gint64                       _id;
+    g_autoptr(GDateTime)         _last_updated;
+    double                       _score;
+    gboolean                     _enable_reconsuming;
+    g_autofree gchar            *_fansub_group    = NULL;
+    g_autofree gchar            *_comments        = NULL;
+    gint                         _downloaded_items;
+    gint                         _times_consumed;
+    MalgtkMalitemReconsumeValue  _reconsume_value;
+    MalgtkMalitemPriority        _priority;
+    gboolean                     _enable_discussion;
+    gboolean                     _has_details;
+
     g_object_get (G_OBJECT(item),
-                  "mal-db-id", &_mal_db_id,
-                  "series-title", &_series_title,
-                  "preferred-title", &_preferred_title,
-                  "series-date-begin", &_series_begin,
-                  "series-date-end", &_series_end,
-                  "season-begin", &_season_begin,
-                  "season-end", &_season_end,
-                  "image-url", &_image_url,
-                  "series-synonyms", &_synonyms,
-                  "series-synopsis", &_synopsis,
-                  "tags", &_tags,
-                  "date-start", &_date_start,
-                  "date-finish", &_date_finish,
-                  "id", &_id,
-                  "last-updated", &_last_updated,
-                  "score", &_score,
+                  "mal-db-id",          &_mal_db_id,
+                  "series-title",       &_series_title,
+                  "preferred-title",    &_preferred_title,
+                  "series-date-begin",  &_series_begin,
+                  "series-date-end",    &_series_end,
+                  "season-begin",       &_season_begin,
+                  "season-end",         &_season_end,
+                  "image-url",          &_image_url,
+                  "series-synonyms",    &_synonyms,
+                  "series-synopsis",    &_synopsis,
+                  "tags",               &_tags,
+                  "date-start",         &_date_start,
+                  "date-finish",        &_date_finish,
+                  "id",                 &_id,
+                  "last-updated",       &_last_updated,
+                  "score",              &_score,
                   "enable-reconsuming", &_enable_reconsuming,
-                  "fansub-group", &_fansub_group,
-                  "comments", &_comments,
-                  "downloaded-items", &_downloaded_items,
-                  "times-consumed", &_times_consumed,
-                  "reconsume-value", &_reconsume_value,
-                  "priority", &_priority,
-                  "enable-discussion", &_enable_discussion,
-                  "has-details", &_has_details,
+                  "fansub-group",       &_fansub_group,
+                  "comments",           &_comments,
+                  "downloaded-items",   &_downloaded_items,
+                  "times-consumed",     &_times_consumed,
+                  "reconsume-value",    &_reconsume_value,
+                  "priority",           &_priority,
+                  "enable-discussion",  &_enable_discussion,
+                  "has-details",        &_has_details,
                   NULL);
 
-    g_assert_cmpint (mal_db_id, ==, _mal_db_id);
-    g_assert_cmpstr (series_title, ==, _series_title);
-    g_assert_cmpstr (preferred_title, ==, _preferred_title);
-    g_assert_true (malgtk_date_is_equal (&series_begin, _series_begin));
-    g_assert_true (malgtk_date_is_equal (&series_end, _series_end));
-    g_assert_cmpstr (_season_begin, ==, "Winter 2014");
-    g_assert_cmpstr (_season_end, ==, "2015");
-    g_assert_cmpstr (image_url, ==, _image_url);
-    g_assert_cmpstr (synonyms[0], ==, _synonyms[0]);
-    g_assert_cmpstr (synonyms[1], ==, _synonyms[1]);
-    g_assert_null (_synonyms[2]);
-    g_assert_cmpstr (synopsis, ==, _synopsis);
-    g_assert_cmpstr (tags[3], ==, _tags[0]);
-    g_assert_cmpstr (tags[0], ==, _tags[1]);
-    g_assert_cmpstr (tags[2], ==, _tags[2]);
-    g_assert_cmpstr (tags[1], ==, _tags[3]);
-    g_assert_null (_tags[4]);
-    g_assert_true ( g_date_compare(&date_start, _date_start) == 0);
-    g_assert_true ( g_date_compare(&date_finish, _date_finish) == 0);
-    g_assert_cmpint (id, ==, _id);
-    g_assert_true ( g_date_time_compare(last_updated, _last_updated) == 0);
-    g_assert_cmpfloat (score, ==, _score);
-    g_assert_cmpint (enable_reconsuming, ==, _enable_reconsuming);
-    g_assert_cmpstr (fansub_group, ==, _fansub_group);
-    g_assert_cmpstr (comments, ==, _comments);
-    g_assert_cmpint (downloaded_items, ==, _downloaded_items);
-    g_assert_cmpint (times_consumed, ==, _times_consumed);
-    g_assert_cmpint (reconsume_value, ==, _reconsume_value);
-    g_assert_cmpint (priority, ==, _priority);
-    g_assert_cmpint (enable_discussion, ==, _enable_discussion);
-    g_assert_cmpint (has_details, ==, _has_details);
+    g_assert_cmpint   (mal_db_id,          ==, _mal_db_id);
+    g_assert_cmpstr   (series_title,       ==, _series_title);
+    g_assert_cmpstr   (preferred_title,    ==, _preferred_title);
+    g_assert_true     (malgtk_date_is_equal (&series_begin, _series_begin));
+    g_assert_true     (malgtk_date_is_equal (&series_end, _series_end));
+    g_assert_cmpstr   (_season_begin,      ==, "Winter 2014");
+    g_assert_cmpstr   (_season_end,        ==, "2015");
+    g_assert_cmpstr   (image_url,          ==, _image_url);
+    g_assert_cmpstr   (synonyms[0],        ==, _synonyms[0]);
+    g_assert_cmpstr   (synonyms[1],        ==, _synonyms[1]);
+    g_assert_null     (_synonyms[2]);
+    g_assert_cmpstr   (synopsis,           ==, _synopsis);
+    g_assert_cmpstr   (tags[3],            ==, _tags[0]);
+    g_assert_cmpstr   (tags[0],            ==, _tags[1]);
+    g_assert_cmpstr   (tags[2],            ==, _tags[2]);
+    g_assert_cmpstr   (tags[1],            ==, _tags[3]);
+    g_assert_null     (_tags[4]);
+    g_assert_true     (g_date_compare(&date_start, _date_start) == 0);
+    g_assert_true     (g_date_compare(&date_finish, _date_finish) == 0);
+    g_assert_cmpint   (id,                 ==, _id);
+    g_assert_true     (g_date_time_compare(last_updated, _last_updated) == 0);
+    g_assert_cmpfloat (score,              ==, _score);
+    g_assert_cmpint   (enable_reconsuming, ==, _enable_reconsuming);
+    g_assert_cmpstr   (fansub_group,       ==, _fansub_group);
+    g_assert_cmpstr   (comments,           ==, _comments);
+    g_assert_cmpint   (downloaded_items,   ==, _downloaded_items);
+    g_assert_cmpint   (times_consumed,     ==, _times_consumed);
+    g_assert_cmpint   (reconsume_value,    ==, _reconsume_value);
+    g_assert_cmpint   (priority,           ==, _priority);
+    g_assert_cmpint   (enable_discussion,  ==, _enable_discussion);
+    g_assert_cmpint   (has_details,        ==, _has_details);
+
 
     g_date_free (_date_start);
     g_date_free (_date_finish);
@@ -262,106 +265,107 @@ test_malitem_test4 (MalitemFixture *fixture,
 
 static void
 test_malitem_xml (MalitemFixture *fixture,
-                    gconstpointer user_data)
+                  gconstpointer user_data)
 {
     static const char xml[] = "<MALitem version=\"1\"><series_itemdb_id>1</series_itemdb_id><series_title>Cowboy Bebop</series_title><series_preferred_title></series_preferred_title><series_date_begin>1998-04-03</series_date_begin><series_date_end>1999-04-24</series_date_end><image_url>http://cdn.myanimelist.net/images/anime/4/19644.jpg</image_url><series_synonyms><series_synonym>Cowboy Bebop</series_synonym></series_synonyms><series_synopsis></series_synopsis><tags/><date_start>0000-00-00</date_start><date_finish>0000-00-00</date_finish><id>9755128</id><last_updated>1238650198</last_updated><score>0.000000</score><enable_reconsuming>0</enable_reconsuming><fansub_group></fansub_group><comments></comments><downloaded_items>0</downloaded_items><times_consumed>0</times_consumed><reconsume_value>Invalid Reconsume Value</reconsume_value><priority>Invalid Priority</priority><enable_discussion>0</enable_discussion><has_details>0</has_details></MALitem>";
-    MalgtkMalitem *item = fixture->item;
+    MalgtkMalitem   *item   = fixture->item;
     xmlTextReaderPtr reader = xmlReaderForMemory(xml, G_N_ELEMENTS(xml) - 1, NULL, NULL, 0);
     xmlTextReaderRead(reader);
     malgtk_malitem_set_from_xml(item, reader);
 
-    gint64 mal_db_id = 1;
-    gchar *series_title = "Cowboy Bebop";
-    MalgtkDate series_begin;
-    MalgtkDate series_end;
+    gint64                       mal_db_id          = 1;
+    gchar                       *series_title       = "Cowboy Bebop";
+    MalgtkDate                   series_begin;
+    MalgtkDate                   series_end;
+    gchar                       *image_url          = "http://cdn.myanimelist.net/images/anime/4/19644.jpg";
+    gchar                       *synonyms[]         = { "Cowboy Bebop", NULL };
+    gchar                       *tags[]             = { NULL };
+    GDate                        date_start;
+    GDate                        date_finish;
+    gint64                       id                 = 9755128;
+    g_autoptr(GDateTime)         last_updated       = g_date_time_new_from_unix_utc(1238650198);
+    double                       score              = 0.0;
+    gboolean                     enable_reconsuming = FALSE;
+    gint                         downloaded_items   = 0;
+    gint                         times_consumed     = 0;
+    MalgtkMalitemReconsumeValue  reconsume_value    = MALGTK_MALITEM_RECONSUME_VALUE_INVALID;
+    MalgtkMalitemPriority        priority           = MALGTK_MALITEM_PRIORITY_INVALID;
+    gboolean                     enable_discussion  = FALSE;
+    gboolean                     has_details        = FALSE;
     malgtk_date_set_from_string (&series_begin, "1998-04-03");
     malgtk_date_set_from_string (&series_end, "1999-04-24");
-    gchar *image_url = "http://cdn.myanimelist.net/images/anime/4/19644.jpg";
-    gchar *synonyms[] = { "Cowboy Bebop", NULL };
-    gchar *tags[] = { NULL };
-    GDate date_start;
-    GDate date_finish;
     g_date_clear (&date_start, 1);
     g_date_clear (&date_finish, 1);
-    gint64 id = 9755128;
-    g_autoptr(GDateTime) last_updated = g_date_time_new_from_unix_utc(1238650198);
-    double score = 0.0;
-    gboolean enable_reconsuming = FALSE;
-    gint downloaded_items = 0;
-    gint times_consumed = 0;
-    MalgtkMalitemReconsumeValue reconsume_value = MALGTK_MALITEM_RECONSUME_VALUE_INVALID;
-    MalgtkMalitemPriority priority = MALGTK_MALITEM_PRIORITY_INVALID;
-    gboolean enable_discussion = FALSE;
-    gboolean has_details = FALSE;
 
-    gint64 _mal_db_id;
-    g_autofree gchar *_series_title     = NULL;
-    g_autoptr(MalgtkDate) _series_begin = NULL;
-    g_autoptr(MalgtkDate) _series_end   = NULL;
-    g_autofree gchar *_season_begin     = NULL;
-    g_autofree gchar *_season_end       = NULL;
-    g_autofree gchar *_image_url        = NULL;
-    g_auto (GStrv) _synonyms            = NULL;
-    g_auto (GStrv) _tags                = NULL;
-    GDate *_date_start                  = NULL;
-    GDate *_date_finish                 = NULL;
-    gint64 _id;
-    g_autoptr(GDateTime) _last_updated;
-    double _score;
-    gboolean _enable_reconsuming;
-    gint _downloaded_items;
-    gint _times_consumed;
-    MalgtkMalitemReconsumeValue _reconsume_value;
-    MalgtkMalitemPriority _priority;
-    gboolean _enable_discussion;
-    gboolean _has_details;
+    gint64                       _mal_db_id;
+    g_autofree gchar             *_series_title = NULL;
+    g_autoptr(MalgtkDate)        _series_begin  = NULL;
+    g_autoptr(MalgtkDate)        _series_end    = NULL;
+    g_autofree gchar             *_season_begin = NULL;
+    g_autofree gchar             *_season_end   = NULL;
+    g_autofree gchar             *_image_url    = NULL;
+    g_auto (GStrv)               _synonyms      = NULL;
+    g_auto (GStrv)               _tags          = NULL;
+    GDate                        *_date_start   = NULL;
+    GDate                        *_date_finish  = NULL;
+    gint64                       _id;
+    g_autoptr(GDateTime)         _last_updated;
+    double                       _score;
+    gboolean                     _enable_reconsuming;
+    gint                         _downloaded_items;
+    gint                         _times_consumed;
+    MalgtkMalitemReconsumeValue  _reconsume_value;
+    MalgtkMalitemPriority        _priority;
+    gboolean                     _enable_discussion;
+    gboolean                     _has_details;
+
     g_object_get (G_OBJECT(item),
-                  "mal-db-id", &_mal_db_id,
-                  "series-title", &_series_title,
-                  "series-date-begin", &_series_begin,
-                  "series-date-end", &_series_end,
-                  "season-begin", &_season_begin,
-                  "season-end", &_season_end,
-                  "image-url", &_image_url,
-                  "series-synonyms", &_synonyms,
-                  "tags", &_tags,
-                  "date-start", &_date_start,
-                  "date-finish", &_date_finish,
-                  "id", &_id,
-                  "last-updated", &_last_updated,
-                  "score", &_score,
+                  "mal-db-id",          &_mal_db_id,
+                  "series-title",       &_series_title,
+                  "series-date-begin",  &_series_begin,
+                  "series-date-end",    &_series_end,
+                  "season-begin",       &_season_begin,
+                  "season-end",         &_season_end,
+                  "image-url",          &_image_url,
+                  "series-synonyms",    &_synonyms,
+                  "tags",               &_tags,
+                  "date-start",         &_date_start,
+                  "date-finish",        &_date_finish,
+                  "id",                 &_id,
+                  "last-updated",       &_last_updated,
+                  "score",              &_score,
                   "enable-reconsuming", &_enable_reconsuming,
-                  "downloaded-items", &_downloaded_items,
-                  "times-consumed", &_times_consumed,
-                  "reconsume-value", &_reconsume_value,
-                  "priority", &_priority,
-                  "enable-discussion", &_enable_discussion,
-                  "has-details", &_has_details,
+                  "downloaded-items",   &_downloaded_items,
+                  "times-consumed",     &_times_consumed,
+                  "reconsume-value",    &_reconsume_value,
+                  "priority",           &_priority,
+                  "enable-discussion",  &_enable_discussion,
+                  "has-details",        &_has_details,
                   NULL);
 
-    g_assert_cmpint (mal_db_id, ==, _mal_db_id);
-    g_assert_cmpstr (series_title, ==, _series_title);
-    g_assert_true (malgtk_date_is_equal (&series_begin, _series_begin));
-    g_assert_true (malgtk_date_is_equal (&series_end, _series_end));
-    g_assert_cmpstr (_season_begin, ==, "Spring 1998");
-    g_assert_cmpstr (_season_end, ==, "Spring 1999");
-    g_assert_cmpstr (image_url, ==, _image_url);
-    g_assert_cmpstr (synonyms[0], ==, _synonyms[0]);
-    g_assert_cmpstr (synonyms[1], ==, _synonyms[1]);
-    g_assert_null (_synonyms[2]);
-    g_assert_null (_tags[0]);
-    g_assert_null (_date_start);
-    g_assert_null (_date_finish);
-    g_assert_cmpint (id, ==, _id);
-    g_assert_true ( g_date_time_compare(last_updated, _last_updated) == 0);
-    g_assert_cmpfloat (score, ==, _score);
-    g_assert_cmpint (enable_reconsuming, ==, _enable_reconsuming);
-    g_assert_cmpint (downloaded_items, ==, _downloaded_items);
-    g_assert_cmpint (times_consumed, ==, _times_consumed);
-    g_assert_cmpint (reconsume_value, ==, _reconsume_value);
-    g_assert_cmpint (priority, ==, _priority);
-    g_assert_cmpint (enable_discussion, ==, _enable_discussion);
-    g_assert_cmpint (has_details, ==, _has_details);
+    g_assert_cmpint   (mal_db_id,          ==, _mal_db_id);
+    g_assert_cmpstr   (series_title,       ==, _series_title);
+    g_assert_true     (malgtk_date_is_equal (&series_begin, _series_begin));
+    g_assert_true     (malgtk_date_is_equal (&series_end, _series_end));
+    g_assert_cmpstr   (_season_begin,      ==, "Spring 1998");
+    g_assert_cmpstr   (_season_end,        ==, "Spring 1999");
+    g_assert_cmpstr   (image_url,          ==, _image_url);
+    g_assert_cmpstr   (synonyms[0],        ==, _synonyms[0]);
+    g_assert_cmpstr   (synonyms[1],        ==, _synonyms[1]);
+    g_assert_null     (_synonyms[2]);
+    g_assert_null     (_tags[0]);
+    g_assert_null     (_date_start);
+    g_assert_null     (_date_finish);
+    g_assert_cmpint   (id,                 ==, _id);
+    g_assert_true     (g_date_time_compare(last_updated, _last_updated) == 0);
+    g_assert_cmpfloat (score,              ==, _score);
+    g_assert_cmpint   (enable_reconsuming, ==, _enable_reconsuming);
+    g_assert_cmpint   (downloaded_items,   ==, _downloaded_items);
+    g_assert_cmpint   (times_consumed,     ==, _times_consumed);
+    g_assert_cmpint   (reconsume_value,    ==, _reconsume_value);
+    g_assert_cmpint   (priority,           ==, _priority);
+    g_assert_cmpint   (enable_discussion,  ==, _enable_discussion);
+    g_assert_cmpint   (has_details,        ==, _has_details);
 }
 
 int main(int argc, char *argv[])
@@ -369,23 +373,23 @@ int main(int argc, char *argv[])
     setlocale (LC_ALL, "");
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add ("/malgtk-malitem/test_season1", MalitemFixture, "some-user-data",
+    g_test_add ("/malgtk/malitem/season", MalitemFixture, NULL,
                 malitem_fixture_set_up, test_malitem_test1,
                 malitem_fixture_tear_down);
 
-    g_test_add ("/malgtk-malitem/test_synonyms1", MalitemFixture, "some-user-data",
+    g_test_add ("/malgtk/malitem/synonyms1", MalitemFixture, NULL,
                 malitem_fixture_set_up, test_malitem_test2,
                 malitem_fixture_tear_down);
 
-    g_test_add ("/malgtk-malitem/test_synonyms4", MalitemFixture, "some-user-data",
+    g_test_add ("/malgtk/malitem/synonyms2", MalitemFixture, NULL,
                 malitem_fixture_set_up, test_malitem_test3,
                 malitem_fixture_tear_down);
 
-    g_test_add ("/malgtk-malitem/test_set", MalitemFixture, "some-user-data",
+    g_test_add ("/malgtk/malitem/getset", MalitemFixture, NULL,
                 malitem_fixture_set_up, test_malitem_test4,
                 malitem_fixture_tear_down);
 
-    g_test_add ("/malgtk-malitem/test_xml", MalitemFixture, "some-user-data",
+    g_test_add ("/malgtk/malitem/xml", MalitemFixture, NULL,
                 malitem_fixture_set_up, test_malitem_xml,
                 malitem_fixture_tear_down);
 

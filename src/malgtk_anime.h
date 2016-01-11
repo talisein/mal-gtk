@@ -67,5 +67,6 @@ typedef enum /*< prefix=MALGTK_ANIME >*/
 G_DECLARE_FINAL_TYPE(MalgtkAnime, malgtk_anime, MALGTK, ANIME, MalgtkMalitem)
 
 MalgtkAnime     *malgtk_anime_new (void);
+void             malgtk_anime_set_from_xml(MalgtkAnime *anime, xmlTextReaderPtr reader);
 
 G_END_DECLS
