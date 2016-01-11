@@ -164,6 +164,22 @@ namespace MAL {
         m_series_episodes_label->set_text(std::to_string(anime->series_episodes) + " Episodes");
     }
 
+    void AnimeDetailViewEditable::anime_status_changed()
+    {
+        auto status = m_anime_status_combo->get_anime_status();
+        if (status == AnimeStatus::COMPLETED) {
+            m_date_end_entry->set_sensitive(true);
+            m_date_end_button->set_sensitive(true);
+            m_date_end_grid->show();
+            m_times_consumed_entry->show();
+        } else {
+            m_date_end_entry->set_sensitive(false);
+            m_date_end_button->set_sensitive(false);
+            m_date_end_grid->hide();
+            m_times_consumed_entry->hide();
+        }
+    }
+
     AnimeDetailViewEditable::AnimeDetailViewEditable(const std::shared_ptr<MAL>& mal,
                                                      const std::shared_ptr<AnimeModelColumnsEditable>& columns,
                                                      const sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&>& slot) :
@@ -179,6 +195,7 @@ namespace MAL {
         m_grid_left->attach_next_to(*m_anime_status_combo, *m_series_date_grid, Gtk::POS_BOTTOM, 1, 1);
         m_episodes_entry->signal_activate().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
         m_anime_status_changed_connection = m_anime_status_combo->signal_changed().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::notify_list_model));
+        m_anime_status_combo->signal_changed().connect(sigc::mem_fun(*this, &AnimeDetailViewEditable::anime_status_changed));
     }
 
     void AnimeDetailViewEditable::display_item(const std::shared_ptr<MALItem>& item)
@@ -193,14 +210,7 @@ namespace MAL {
             m_episodes_entry->set_label(ustring::compose("/ %1 Episodes", anime->series_episodes));
             m_episodes_entry->set_entry_text(ustring::format(anime->episodes));
             m_anime_status_combo->set_anime_status(anime->status);
-        }
-
-        if (anime->status == AnimeStatus::COMPLETED) {
-            m_date_end_entry->set_sensitive(true);
-            m_times_consumed_entry->show();
-        } else {
-            m_date_end_entry->set_sensitive(false);
-            m_times_consumed_entry->hide();
+            anime_status_changed();
         }
 
         m_anime_status_changed_connection.unblock();

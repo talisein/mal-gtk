@@ -372,6 +372,14 @@ namespace MAL {
         m_score->show();
     }
 
+    void MALItemDetailViewEditable::active_date_now(DateEntry *entry)
+    {
+        Glib::Date now;
+        now.set_time_current();
+        entry->set_date(now);
+        entry->activate();
+    }
+
     MALItemDetailViewEditable::MALItemDetailViewEditable(const std::shared_ptr<MAL> &mal,
                                                          const std::shared_ptr<MALItemModelColumnsEditable> &columns,
                                                          const sigc::slot<void, const Gtk::TreeModel::SlotForeachPathAndIter&> &slot) :
@@ -380,10 +388,14 @@ namespace MAL {
         m_columns(columns),
         m_score_grid(Gtk::manage(new Gtk::Grid())),
         m_score(Gtk::manage(new ScoreComboBox())),
+        m_date_begin_grid(Gtk::manage(new Gtk::Grid())),
         m_date_begin_label(Gtk::manage(new Gtk::Label("Began:", Gtk::ALIGN_START))),
         m_date_begin_entry(Gtk::manage(new DateEntry())),
+        m_date_begin_button(Gtk::manage(new Gtk::Button("Today"))),
+        m_date_end_grid(Gtk::manage(new Gtk::Grid())),
         m_date_end_label(Gtk::manage(new Gtk::Label("Finished:", Gtk::ALIGN_START))),
         m_date_end_entry(Gtk::manage(new DateEntry())),
+        m_date_end_button(Gtk::manage(new Gtk::Button("Today"))),
         m_reconsuming_label(Gtk::manage(new Gtk::Label("Rewatching:", Gtk::ALIGN_START))),
         m_reconsuming_switch(Gtk::manage(new Gtk::Switch())),
         m_downloaded_items_entry(Gtk::manage(new IncrementEntry("Downloaded Episodes"))),
@@ -401,25 +413,32 @@ namespace MAL {
         m_grid_left->attach_next_to(*m_score_grid, *m_series_date_grid,
                                     Gtk::POS_BOTTOM, 1, 1);
         m_score_changed_connection = m_score->signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
-        auto grid = Gtk::manage(new Gtk::Grid());
-        grid->attach(*m_date_begin_label, 0, 0, 1, 1);
-        grid->attach(*m_date_begin_entry, 1, 0, 1, 1);
-        grid->attach(*m_date_end_label, 0, 1, 1, 1);
-        grid->attach(*m_date_end_entry, 1, 1, 1, 1);
-        grid->set_column_spacing(5);
-        grid->set_row_spacing(5);
+        m_date_begin_grid->attach(*m_date_begin_label, 0, 0, 1, 1);
+        m_date_begin_grid->attach(*m_date_begin_entry, 1, 0, 1, 1);
+        m_date_begin_grid->attach_next_to(*m_date_begin_button, *m_date_begin_entry, Gtk::POS_RIGHT, 1, 1);
+        m_date_begin_grid->set_column_spacing(5);
+        m_date_begin_grid->set_row_spacing(5);
         m_grid_left->insert_next_to(*m_score_grid, Gtk::POS_BOTTOM);
-        m_grid_left->attach_next_to(*grid, *m_score_grid, Gtk::POS_BOTTOM, 1, 2);
+        m_grid_left->attach_next_to(*m_date_begin_grid, *m_score_grid, Gtk::POS_BOTTOM, 1, 1);
+        m_date_end_grid->attach(*m_date_end_label, 0, 0, 1, 1);
+        m_date_end_grid->attach(*m_date_end_entry, 1, 0, 1, 1);
+        m_date_end_grid->attach_next_to(*m_date_end_button, *m_date_end_entry, Gtk::POS_RIGHT, 1, 1);
+        m_date_end_grid->set_column_spacing(5);
+        m_date_end_grid->set_row_spacing(5);
+        m_grid_left->insert_next_to(*m_date_begin_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*m_date_end_grid, *m_date_begin_grid, Gtk::POS_BOTTOM, 1, 1);
 
         m_date_begin_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
         m_date_end_entry->signal_activate().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
-        
+        m_date_begin_button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &MALItemDetailViewEditable::active_date_now), m_date_begin_entry));
+        m_date_end_button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &MALItemDetailViewEditable::active_date_now), m_date_end_entry));
+
         auto switchgrid = Gtk::manage(new Gtk::Grid());
         switchgrid->attach(*m_reconsuming_label, 0, 0, 1, 1);
         switchgrid->attach(*m_reconsuming_switch, 1, 0, 1, 1);
         switchgrid->set_column_spacing(5);
-        m_grid_left->insert_next_to(*grid, Gtk::POS_BOTTOM);
-        m_grid_left->attach_next_to(*switchgrid, *grid, Gtk::POS_BOTTOM, 1, 1);
+        m_grid_left->insert_next_to(*m_date_end_grid, Gtk::POS_BOTTOM);
+        m_grid_left->attach_next_to(*switchgrid, *m_date_end_grid, Gtk::POS_BOTTOM, 1, 1);
         m_reconsuming_changed_connection = m_reconsuming_switch->property_active().signal_changed().connect(sigc::mem_fun(*this, &MALItemDetailViewEditable::notify_list_model));
 
         auto fansubgrid = Gtk::manage(new Gtk::Grid());

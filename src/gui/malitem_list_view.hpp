@@ -202,10 +202,14 @@ namespace MAL {
 
         Gtk::Grid      *m_score_grid;
         ScoreComboBox  *m_score;
+        Gtk::Grid      *m_date_begin_grid;
         Gtk::Label     *m_date_begin_label;
         DateEntry      *m_date_begin_entry;
+        Gtk::Button    *m_date_begin_button;
+        Gtk::Grid      *m_date_end_grid;
         Gtk::Label     *m_date_end_label;
         DateEntry      *m_date_end_entry;
+        Gtk::Button    *m_date_end_button;
         Gtk::Label     *m_reconsuming_label;
         Gtk::Switch    *m_reconsuming_switch;
         IncrementEntry *m_downloaded_items_entry;
@@ -222,6 +226,7 @@ namespace MAL {
         sigc::connection m_reconsuming_changed_connection;
         sigc::connection m_priority_changed_connection;
         sigc::connection m_reconsume_value_changed_connection;
+        void active_date_now(DateEntry *entry);
     };
 
 	class MALItemListViewBase : public Gtk::Grid {

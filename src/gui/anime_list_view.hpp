@@ -226,6 +226,8 @@ namespace MAL {
 
     private:
         sigc::connection m_anime_status_changed_connection;
+
+        void anime_status_changed();
     };
 
     class AnimeSearchListPage final : public MALItemListPage {
