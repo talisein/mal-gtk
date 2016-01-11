@@ -210,8 +210,8 @@ namespace MAL {
             m_episodes_entry->set_label(ustring::compose("/ %1 Episodes", anime->series_episodes));
             m_episodes_entry->set_entry_text(ustring::format(anime->episodes));
             m_anime_status_combo->set_anime_status(anime->status);
-            anime_status_changed();
         }
+        anime_status_changed();
 
         m_anime_status_changed_connection.unblock();
     }
