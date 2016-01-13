@@ -15,9 +15,10 @@
  *  along with mal-gtk.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include "malgtk_manga.h"
 #include "malgtk_enumtypes.h"
+#include "malgtk_deserialize_v1_tools.h"
+
 typedef struct _MalgtkManga MalgtkManga;
 
 typedef struct _MalgtkManga
@@ -262,8 +263,7 @@ static void
 malgtk_manga_init (MalgtkManga *self)
 {
     (void)self;
-    //MalgtkMangaPrivate *priv = malgtk_manga_get_instance_private (self);
-    //(void)priv;
+    /* MalgtkMangaPrivate *priv = malgtk_manga_get_instance_private (self); */
 }
 
 MalgtkManga *
@@ -272,3 +272,104 @@ malgtk_manga_new(void)
     return g_object_new(MALGTK_TYPE_MANGA, NULL);
 }
 
+static gboolean
+xform_series_type_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_MANGA_SERIES_TYPE, in);
+}
+
+static gboolean
+xform_series_status_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_MANGA_SERIES_STATUS, in);
+}
+
+static gboolean
+xform_status_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_MANGA_STATUS, in);
+}
+
+static gboolean
+xform_storage_type_enum(GValue *value, const xmlChar *in)
+{
+    return xform_enum(value, MALGTK_TYPE_MANGA_STORAGE_TYPE, in);
+}
+
+static const struct {
+    const xmlChar *xml_name;
+    gint prop_id;
+    gboolean (*xform)(GValue *out, const xmlChar* in);
+} field_map[] = {
+    {BAD_CAST"MALitem",           -1,                     NULL},
+    {BAD_CAST"manga",             -1,                     NULL},
+    {BAD_CAST"series_type",       PROP_SERIES_TYPE,       xform_series_type_enum},
+    {BAD_CAST"series_status",     PROP_SERIES_STATUS,     xform_series_status_enum},
+    {BAD_CAST"series_chapters",   PROP_SERIES_CHAPTERS,   xform_gint64},
+    {BAD_CAST"series_volumes",    PROP_SERIES_VOLUMES,    xform_gint64},
+    {BAD_CAST"status",            PROP_STATUS,            xform_status_enum},
+    {BAD_CAST"chapters",          PROP_CHAPTERS,          xform_gint64},
+    {BAD_CAST"volumes",           PROP_VOLUMES,           xform_gint64},
+    {BAD_CAST"rereading_chapter", PROP_REREADING_CHAPTER, xform_gint64},
+    {BAD_CAST"retail_volumes",    PROP_RETAIL_VOLUMES,    xform_gint64},
+    {BAD_CAST"storage_type",      PROP_STORAGE_TYPE,      xform_storage_type_enum},
+};
+
+static gint
+find_field_for_name(const xmlChar *name)
+{
+    for (size_t i = 0; i < G_N_ELEMENTS(field_map); ++i)
+    {
+        if (xmlStrEqual(field_map[i].xml_name, name)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void
+malgtk_manga_set_from_xml(MalgtkManga *manga, xmlTextReaderPtr reader)
+{
+    gint offset = -1;
+    GValue value = G_VALUE_INIT;
+    gboolean is_default;
+    g_return_if_fail(MALGTK_IS_MANGA(manga));
+
+    for (; !(xmlStrEqual(BAD_CAST"manga", xmlTextReaderConstName(reader)) &&
+             xmlTextReaderNodeType(reader) == XML_READER_TYPE_END_ELEMENT);
+         xmlTextReaderRead(reader))
+    {
+        switch (xmlTextReaderNodeType(reader))
+        {
+            case XML_READER_TYPE_ELEMENT:
+                offset = find_field_for_name(xmlTextReaderConstName(reader));
+                if (-1 == offset) {
+                    g_warning("Unexpected field: %s", (const char*)xmlTextReaderConstName(reader));
+                }
+                if (0 == offset) {
+                    malgtk_malitem_set_from_xml (MALGTK_MALITEM(manga), reader);
+                    break;
+                }
+                break;
+            case XML_READER_TYPE_TEXT:
+                switch (field_map[offset].prop_id) {
+                    case -1:
+                        break;
+                    default:
+                        is_default = field_map[offset].xform(&value,
+                                                             xmlTextReaderConstValue(reader));
+                        if (!is_default) {
+                            g_object_set_property(G_OBJECT(manga),
+                                                  obj_properties[field_map[offset].prop_id]->name, &value);
+                            g_value_unset(&value);
+                        }
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+}

@@ -366,6 +366,8 @@ test_malitem_xml (MalitemFixture *fixture,
     g_assert_cmpint   (priority,           ==, _priority);
     g_assert_cmpint   (enable_discussion,  ==, _enable_discussion);
     g_assert_cmpint   (has_details,        ==, _has_details);
+
+    xmlFreeTextReader(reader);
 }
 
 int main(int argc, char *argv[])

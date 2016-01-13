@@ -296,7 +296,7 @@ static const struct {
 static gint
 find_field_for_name(const xmlChar *name)
 {
-    for (guint i = 0; i < G_N_ELEMENTS(field_map); ++i)
+    for (size_t i = 0; i < G_N_ELEMENTS(field_map); ++i)
     {
         if (xmlStrEqual(field_map[i].xml_name, name)) {
             return i;

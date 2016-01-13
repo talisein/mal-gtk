@@ -117,15 +117,17 @@ test_anime_xml (void)
                  "storage-value",   &_storage_value,
                  NULL);
 
-    g_assert_cmpstr   (series_title,    ==, _series_title);
-    g_assert_cmpint   (series_type,     ==, _series_type);
-    g_assert_cmpint   (series_status,   ==, _series_status);
-    g_assert_cmpint   (series_episodes, ==, _series_episodes);
-    g_assert_cmpint   (status,          ==, _status);
-    g_assert_cmpint   (episodes,        ==, _episodes);
-    g_assert_cmpint   (rewatch_episode, ==, _rewatch_episode);
-    g_assert_cmpint   (storage_type,    ==, _storage_type);
-    g_assert_cmpfloat (storage_value,   ==, _storage_value);
+    g_assert_cmpstr  (series_title,    ==, _series_title);
+    g_assert_cmpint  (series_type,     ==, _series_type);
+    g_assert_cmpint  (series_status,   ==, _series_status);
+    g_assert_cmpint  (series_episodes, ==, _series_episodes);
+    g_assert_cmpint  (status,          ==, _status);
+    g_assert_cmpint  (episodes,        ==, _episodes);
+    g_assert_cmpint  (rewatch_episode, ==, _rewatch_episode);
+    g_assert_cmpint  (storage_type,    ==, _storage_type);
+    g_assert_cmpfloat(storage_value,   ==, _storage_value);
+
+    xmlFreeTextReader(reader);
 }
 
 int

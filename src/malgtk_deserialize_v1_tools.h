@@ -18,7 +18,7 @@
 #include "malgtk_date.h"
 
 
-static gboolean
+static inline gboolean
 xform_gint64(GValue *value, const xmlChar* in)
 {
     gint64 i;
@@ -56,7 +56,7 @@ xform_datetime(GValue *value, const xmlChar* in)
     return FALSE;
 }
 
-static gboolean
+static inline gboolean
 xform_gdouble(GValue *value, const xmlChar* in)
 {
     gdouble i;
@@ -66,7 +66,7 @@ xform_gdouble(GValue *value, const xmlChar* in)
     return FALSE;
 }
 
-static gboolean
+static inline gboolean
 xform_enum(GValue *value, GType type, const xmlChar* in)
 {
     GEnumClass* enum_class;
