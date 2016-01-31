@@ -18,6 +18,7 @@
 #include <glib.h>
 #include <locale.h>
 #include <stdio.h>
+#include <string.h>
 #include "malgtk_anime.h"
 
 
@@ -130,6 +131,52 @@ test_anime_xml (void)
     xmlFreeTextReader(reader);
 }
 
+struct notify_ctx
+{
+    gchar *name;
+    gint64 cnt;
+};
+
+static void
+notify_counter (GObject    *gobject,
+                GParamSpec *pspec,
+                gpointer    user_data)
+{
+    struct notify_ctx *ctx = user_data;
+    if (strcmp(pspec->name, ctx->name) == 0) {
+        ++ctx->cnt;
+    }
+}
+
+static void
+test_anime_notify(void)
+{
+    struct notify_ctx ctx;
+    g_autoptr(MalgtkAnime)  anime = malgtk_anime_new();
+    g_signal_connect(G_OBJECT(anime), "notify",
+                     G_CALLBACK (notify_counter),
+                     &ctx);
+
+#define  TEST_NOTIFY(prop, val, val2)  do {                 \
+        ctx.name = prop;                                    \
+        ctx.cnt = 0;                                        \
+        g_object_set(G_OBJECT(anime), prop, val, NULL);     \
+        g_assert_cmpint(ctx.cnt, ==, 1);                    \
+        g_object_set(G_OBJECT(anime), prop, val, NULL);     \
+        g_assert_cmpint(ctx.cnt, ==, 1);                    \
+        g_object_set(G_OBJECT(anime), prop, val2, NULL);    \
+        g_assert_cmpint(ctx.cnt, ==, 2); } while (0);
+
+    TEST_NOTIFY("series-type", MALGTK_ANIME_SERIES_TYPE_TV, MALGTK_ANIME_SERIES_TYPE_ONA);
+    TEST_NOTIFY("series-status", MALGTK_ANIME_SERIES_STATUS_FINISHED, MALGTK_ANIME_SERIES_STATUS_INVALID);
+    TEST_NOTIFY("series-episodes", 13, 26);
+    TEST_NOTIFY("status", MALGTK_ANIME_STATUS_ON_HOLD, MALGTK_ANIME_STATUS_COMPLETED);
+    TEST_NOTIFY("episodes", 8, 12);
+    TEST_NOTIFY("rewatch-episode", 7, 9);
+    TEST_NOTIFY("storage-type", MALGTK_ANIME_STORAGE_TYPE_DVDCD, MALGTK_ANIME_STORAGE_TYPE_INVALID);
+    TEST_NOTIFY("storage-value", 12.2, 159.2);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -137,7 +184,8 @@ main(int argc, char *argv[])
     g_test_init (&argc, &argv, NULL);
     g_test_add_func("/malgtk/anime/getset", test_anime_getset);
     g_test_add_func("/malgtk/anime/xml", test_anime_xml);
-    
+    g_test_add_func("/malgtk/anime/notify", test_anime_notify);
+
     int res = g_test_run ();
 
     return res;

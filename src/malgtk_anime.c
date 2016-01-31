@@ -64,32 +64,66 @@ malgtk_anime_set_property (GObject      *object,
 {
     MalgtkAnime *self = MALGTK_ANIME (object);
     MalgtkAnimePrivate *priv = malgtk_anime_get_instance_private (self);
+    gint i;
+    gdouble d;
 
     switch (property_id)
     {
         case PROP_SERIES_TYPE:
-            priv->series_type = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if (i != priv->series_type) {
+                priv->series_type = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_TYPE]);
+            }
             break;
         case PROP_SERIES_STATUS:
-            priv->series_status = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if (i != priv->series_status) {
+                priv->series_status = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_STATUS]);
+            }
             break;
         case PROP_SERIES_EPISODES:
-            priv->series_episodes = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->series_episodes) {
+                priv->series_episodes = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_EPISODES]);
+            }
             break;
         case PROP_STATUS:
-            priv->status = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if (i != priv->status) {
+                priv->status = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_STATUS]);
+            }
             break;
         case PROP_EPISODES:
-            priv->episodes = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->episodes) {
+                priv->episodes = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_EPISODES]);
+            }
             break;
         case PROP_REWATCH_EPISODE:
-            priv->rewatch_episode = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->rewatch_episode) {
+                priv->rewatch_episode = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_REWATCH_EPISODE]);
+            }
             break;
         case PROP_STORAGE_TYPE:
-            priv->storage_type = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if ((MalgtkAnimeStorageType)i != priv->storage_type) {
+                priv->storage_type = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_STORAGE_TYPE]);
+            }
             break;
         case PROP_STORAGE_VALUE:
-            priv->storage_value = g_value_get_double (value);
+            d = g_value_get_double (value);
+            if (d != priv->storage_value) {
+                priv->storage_value = d;
+                g_object_notify_by_pspec(object, obj_properties[PROP_STORAGE_VALUE]);
+            }
             break;
         default:
             /* We don't have any other property... */
@@ -160,7 +194,7 @@ static void
 malgtk_anime_class_init (MalgtkAnimeClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-    
+
     gobject_class->set_property = malgtk_anime_set_property;
     gobject_class->get_property = malgtk_anime_get_property;
     gobject_class->dispose      = malgtk_anime_dispose;
@@ -172,7 +206,7 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                            "Type of media this series is",
                            MALGTK_TYPE_ANIME_SERIES_TYPE,
                            MALGTK_ANIME_SERIES_TYPE_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_STATUS] =
         g_param_spec_enum ("series-status",
@@ -180,7 +214,7 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                            "Airing status of the anime",
                            MALGTK_TYPE_ANIME_SERIES_STATUS,
                            MALGTK_ANIME_SERIES_STATUS_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_EPISODES] =
         g_param_spec_int ("series-episodes",
@@ -189,7 +223,7 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_STATUS] =
         g_param_spec_enum ("status",
@@ -197,7 +231,7 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                            "Your status for the series",
                            MALGTK_TYPE_ANIME_STATUS,
                            MALGTK_ANIME_STATUS_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_EPISODES] =
         g_param_spec_int ("episodes",
@@ -206,7 +240,7 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_REWATCH_EPISODE] =
         g_param_spec_int ("rewatch-episode",
@@ -215,7 +249,7 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_STORAGE_TYPE] =
         g_param_spec_enum ("storage-type",
@@ -223,7 +257,7 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                            "Medium you are storing the series with",
                            MALGTK_TYPE_ANIME_STORAGE_TYPE,
                            MALGTK_ANIME_STORAGE_TYPE_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_STORAGE_VALUE] =
         g_param_spec_double ("storage-value",
@@ -232,7 +266,7 @@ malgtk_anime_class_init (MalgtkAnimeClass *klass)
                              0.0,
                              G_MAXDOUBLE,
                              0.0,
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     g_object_class_install_properties (gobject_class,
                                        N_PROPERTIES,
@@ -351,4 +385,3 @@ malgtk_anime_set_from_xml(MalgtkAnime *anime,
         }
     }
 }
-
