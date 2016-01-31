@@ -51,7 +51,7 @@ typedef struct _MalgtkMalitemPrivate
     gboolean has_details;
 
     GStringChunk *chunk;
-    
+
 } MalgtkMalitemPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (MalgtkMalitem, malgtk_malitem, G_TYPE_OBJECT)
@@ -92,6 +92,43 @@ enum
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL, };
 
+struct strv_tree_data
+{
+    const gchar * const * strv;
+    gboolean is_equal;
+};
+
+static gboolean
+strv_tree_eq_fn(gpointer key, gpointer value, gpointer data)
+{
+    struct strv_tree_data *d = (struct strv_tree_data*)data;
+    if (!g_strv_contains(d->strv, (const gchar*)key)) {
+        d->is_equal = FALSE;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean
+is_strv_tree_equal(gchar **strv, GTree *tree)
+{
+    struct strv_tree_data d;
+
+    for (gchar **s = strv; NULL != *s; ++s) {
+        if (!g_tree_lookup_extended (tree, *s, NULL, NULL)) {
+            return FALSE;
+        }
+    }
+
+    d.strv     = (const gchar * const *)strv;
+    d.is_equal = TRUE;
+
+    g_tree_foreach(tree, strv_tree_eq_fn, &d);
+
+    return d.is_equal;
+}
+
 static void
 malgtk_malitem_set_property (GObject      *object,
                              guint         property_id,
@@ -101,25 +138,53 @@ malgtk_malitem_set_property (GObject      *object,
     MalgtkMalitem *self = MALGTK_MALITEM (object);
     MalgtkMalitemPrivate *priv = malgtk_malitem_get_instance_private (self);
     gchar **strv;
+    gint64 i64;
+    const gchar *str;
+    MalgtkDate *mdate;
+    GDate *date;
+    GDateTime *dt;
+    gdouble dbl;
+    gboolean b;
+    gint i;
 
     switch (property_id)
     {
         case PROP_SERIES_MALDB_ID:
-            priv->mal_db_id = g_value_get_int64 (value);
+            i64 = g_value_get_int64 (value);
+            if (i64 != priv->mal_db_id) {
+                priv->mal_db_id = i64;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_MALDB_ID]);
+            }
             break;
         case PROP_SERIES_TITLE:
-            g_string_assign(priv->series_title, g_value_get_string (value));
+            str = g_value_get_string (value);
+            if (0 != strcmp(priv->series_title->str, str)) {
+                g_string_assign(priv->series_title, str);
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_TITLE]);
+            }
             break;
         case PROP_SERIES_PREFERRED_TITLE:
-            g_string_assign(priv->preferred_title, g_value_get_string (value));
+            str = g_value_get_string (value);
+            if (0 != strcmp(priv->preferred_title->str, str)) {
+                g_string_assign(priv->preferred_title, str);
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_PREFERRED_TITLE]);
+            }
             break;
         case PROP_SERIES_DATE_BEGIN:
-            priv->series_begin = *(MalgtkDate*)g_value_get_boxed(value);
-            g_object_notify_by_pspec(object, obj_properties[PROP_SEASON_BEGIN]);
+            mdate = (MalgtkDate*)g_value_get_boxed(value);
+            if (!malgtk_date_is_equal(mdate, &priv->series_begin)) {
+                priv->series_begin = *mdate;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_DATE_BEGIN]);
+                g_object_notify_by_pspec(object, obj_properties[PROP_SEASON_BEGIN]);
+            }
             break;
         case PROP_SERIES_DATE_END:
-            priv->series_end = *(MalgtkDate*)g_value_get_boxed(value);
-            g_object_notify_by_pspec(object, obj_properties[PROP_SEASON_END]);
+            mdate = (MalgtkDate*)g_value_get_boxed(value);
+            if (!malgtk_date_is_equal(mdate, &priv->series_end)) {
+                priv->series_end = *mdate;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_DATE_END]);
+                g_object_notify_by_pspec(object, obj_properties[PROP_SEASON_END]);
+            }
             break;
         case PROP_SEASON_BEGIN:
             /* read-only */
@@ -130,78 +195,156 @@ malgtk_malitem_set_property (GObject      *object,
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
             break;
         case PROP_IMAGE_URL:
-            g_string_assign(priv->image_url, g_value_get_string (value));
+            str = g_value_get_string (value);
+            if (0 != strcmp(priv->image_url->str, str)) {
+                g_string_assign(priv->image_url, str);
+                g_object_notify_by_pspec(object, obj_properties[PROP_IMAGE_URL]);
+            }
             break;
         case PROP_SERIES_SYNONYM:
-            _tree_remove_all(priv->series_synonyms);
             strv = g_value_get_boxed(value);
-            for (; NULL != *strv; ++strv) {
-                if (!g_tree_lookup(priv->series_synonyms, *strv))
-                    g_tree_insert(priv->series_synonyms,
-                                  g_string_chunk_insert_const(priv->chunk, *strv), NULL);
+            if (!is_strv_tree_equal(strv, priv->series_synonyms)) {
+                _tree_remove_all(priv->series_synonyms);
+                for (; NULL != *strv; ++strv) {
+                    if (!g_tree_lookup_extended(priv->series_synonyms, *strv, NULL, NULL)) {
+                        g_tree_insert(priv->series_synonyms,
+                                      g_string_chunk_insert_const(priv->chunk, *strv), NULL);
+                    }
+                }
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_SYNONYM]);
             }
             break;
         case PROP_SERIES_SYNOPSIS:
-            g_string_assign (priv->synopsis, g_value_get_string (value));
+            str = g_value_get_string (value);
+            if (0 != strcmp(priv->synopsis->str, str)) {
+                g_string_assign (priv->synopsis, str);
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_SYNOPSIS]);
+            }
             break;
         case PROP_TAGS:
-            _tree_remove_all(priv->tags);
             strv = g_value_get_boxed(value);
-            for (; NULL != *strv; ++strv) {
-                if (!g_tree_lookup(priv->tags, *strv))
-                    g_tree_insert(priv->tags,
-                                  g_string_chunk_insert_const(priv->chunk, *strv), NULL);
+            if (!is_strv_tree_equal(strv, priv->tags)) {
+                _tree_remove_all(priv->tags);
+                for (; NULL != *strv; ++strv) {
+                    if (!g_tree_lookup_extended(priv->tags, *strv, NULL, NULL)) {
+                        g_tree_insert(priv->tags,
+                                      g_string_chunk_insert_const(priv->chunk, *strv), NULL);
+                    }
+                }
+                g_object_notify_by_pspec(object, obj_properties[PROP_TAGS]);
             }
             break;
         case PROP_DATE_START:
-            priv->date_start = *(GDate*)g_value_get_boxed(value);
+            date = (GDate*)g_value_get_boxed(value);
+            if (g_date_valid(date) &&
+                (!g_date_valid(&priv->date_start) ||
+                 0 != g_date_compare(date, &priv->date_start)))
+            {
+                priv->date_start = *date;
+                g_object_notify_by_pspec(object, obj_properties[PROP_DATE_START]);
+            }
             break;
         case PROP_DATE_FINISH:
-            priv->date_finish = *(GDate*)g_value_get_boxed(value);
+            date = (GDate*)g_value_get_boxed(value);
+            if (g_date_valid(date) &&
+                (!g_date_valid(&priv->date_finish) ||
+                 0 != g_date_compare(date, &priv->date_finish)))
+            {
+                priv->date_finish = *date;
+                g_object_notify_by_pspec(object, obj_properties[PROP_DATE_FINISH]);
+            }
             break;
         case PROP_ID:
-            priv->id = g_value_get_int64 (value);
+            i64 = g_value_get_int64 (value);
+            if (i64 != priv->id) {
+                priv->id = i64;
+                g_object_notify_by_pspec(object, obj_properties[PROP_ID]);
+            }
             break;
         case PROP_LAST_UPDATED:
-            g_date_time_unref (priv->last_updated);
-            priv->last_updated = g_value_dup_boxed(value);
+            dt = g_value_get_boxed(value);
+            if (0 != g_date_time_compare(dt, priv->last_updated)) {
+                g_date_time_unref (priv->last_updated);
+                priv->last_updated = g_date_time_ref(dt);
+                g_object_notify_by_pspec(object, obj_properties[PROP_LAST_UPDATED]);
+            }
             break;
         case PROP_SCORE:
-            priv->score = g_value_get_double (value);
+            dbl = g_value_get_double (value);
+            if (dbl != priv->score) {
+                priv->score = dbl;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SCORE]);
+            }
             break;
         case PROP_ENABLE_RECONSUMING:
-            priv->enable_reconsuming = g_value_get_boolean (value);
+            b = g_value_get_boolean (value);
+            if (b != priv->enable_reconsuming) {
+                priv->enable_reconsuming = b;
+                g_object_notify_by_pspec(object, obj_properties[PROP_ENABLE_RECONSUMING]);
+            }
             break;
         case PROP_FANSUB_GROUP:
-            g_string_assign (priv->fansub_group, g_value_get_string (value));
+            str = g_value_get_string (value);
+            if (0 != strcmp(priv->fansub_group->str, str)) {
+                g_string_assign (priv->fansub_group, str);
+                g_object_notify_by_pspec(object, obj_properties[PROP_FANSUB_GROUP]);
+            }
             break;
         case PROP_COMMENTS:
-            g_string_assign (priv->comments, g_value_get_string (value));
+            str = g_value_get_string (value);
+            if (0 != strcmp(priv->comments->str, str)) {
+                g_string_assign (priv->comments, str);
+                g_object_notify_by_pspec(object, obj_properties[PROP_COMMENTS]);
+            }
             break;
         case PROP_DOWNLOADED_ITEMS:
-            priv->downloaded_items = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->downloaded_items) {
+                priv->downloaded_items = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_DOWNLOADED_ITEMS]);
+            }
             break;
         case PROP_TIMES_CONSUMED:
-            priv->times_consumed = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->times_consumed) {
+                priv->times_consumed = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_TIMES_CONSUMED]);
+            }
             break;
         case PROP_RECONSUME_VALUE:
-            priv->reconsume_value = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if (i != priv->reconsume_value) {
+                priv->reconsume_value = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_RECONSUME_VALUE]);
+            }
             break;
         case PROP_PRIORITY:
-            priv->priority = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if (i != priv->priority) {
+                priv->priority = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_PRIORITY]);
+            }
             break;
         case PROP_ENABLE_DISCUSSION:
-            priv->enable_discussion = g_value_get_boolean (value);
+            b = g_value_get_boolean (value);
+            if (b != priv->enable_discussion) {
+                priv->enable_discussion = b;
+                g_object_notify_by_pspec(object, obj_properties[PROP_ENABLE_DISCUSSION]);
+            }
             break;
         case PROP_HAS_DETAILS:
-            priv->has_details = g_value_get_boolean (value);
+            b = g_value_get_boolean (value);
+            if (b != priv->has_details) {
+                priv->has_details = b;
+                g_object_notify_by_pspec(object, obj_properties[PROP_HAS_DETAILS]);
+            }
             break;
         default:
             /* We don't have any other property... */
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
             break;
     }
- 
+
 }
 
 static void
@@ -212,7 +355,7 @@ malgtk_malitem_get_property (GObject    *object,
 {
     MalgtkMalitem *self = MALGTK_MALITEM (object);
     MalgtkMalitemPrivate *priv = malgtk_malitem_get_instance_private (self);
-    
+
     switch (property_id)
     {
         case PROP_SERIES_MALDB_ID:
@@ -342,7 +485,7 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
     gobject_class->get_property = malgtk_malitem_get_property;
     gobject_class->dispose      = malgtk_malitem_dispose;
     gobject_class->finalize     = malgtk_malitem_finalize;
-        
+
     obj_properties[PROP_SERIES_MALDB_ID] =
         g_param_spec_int64 ("mal-db-id",
                             "MAL.net id",
@@ -350,93 +493,93 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                             G_MININT64,
                             G_MAXINT64,
                             0,
-                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_TITLE] =
         g_param_spec_string ("series-title",
                              "Series Title",
                              "Title of the series or franchise",
                              "no-series-title-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_PREFERRED_TITLE] =
         g_param_spec_string ("preferred-title",
                              "Preferred Title",
                              "Your defined override for series title",
                              "no-preferred-series-title-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-    
-    obj_properties[PROP_SERIES_DATE_BEGIN] = 
+
+    obj_properties[PROP_SERIES_DATE_BEGIN] =
         g_param_spec_boxed ("series-date-begin",
                             "Series Begin",
                             "Date the series begins",
                             MALGTK_TYPE_DATE,
-                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-    obj_properties[PROP_SERIES_DATE_END] = 
+    obj_properties[PROP_SERIES_DATE_END] =
         g_param_spec_boxed ("series-date-end",
                             "Series End",
                             "Date the series ends",
                             MALGTK_TYPE_DATE,
-                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-    obj_properties[PROP_SEASON_BEGIN] = 
+    obj_properties[PROP_SEASON_BEGIN] =
         g_param_spec_string ("season-begin",
                              "Season Start",
                              "Season for the beginning of the series",
                              "no-season-begin-set",
-                             G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-    obj_properties[PROP_SEASON_END] = 
+    obj_properties[PROP_SEASON_END] =
         g_param_spec_string ("season-end",
                              "Season End",
                              "Season for the ending of the series",
                              "no-season-end-set",
-                             G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_IMAGE_URL] =
         g_param_spec_string ("image-url",
                              "Image URL",
                              "URL for image representing the series",
                              "no-image-url-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_SYNONYM] =
         g_param_spec_boxed ("series-synonyms",
                             "Series Synonyms",
                             "Set of synonyms for the series title",
                             G_TYPE_STRV,
-                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-    
+                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
     obj_properties[PROP_SERIES_SYNOPSIS] =
         g_param_spec_string ("series-synopsis",
                              "Synopsis",
                              "Synopsis of the series",
                              "no-series-synopsis-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_TAGS] =
         g_param_spec_boxed ("tags",
                             "Tags",
                             "Tags associated with the series",
                             G_TYPE_STRV,
-                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-    
-    obj_properties[PROP_DATE_START] = 
+                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
+    obj_properties[PROP_DATE_START] =
         g_param_spec_boxed ("date-start",
                             "Started",
                             "Date you started watching or reading the series",
                             G_TYPE_DATE,
-                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-    
-    obj_properties[PROP_DATE_FINISH] = 
+                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
+    obj_properties[PROP_DATE_FINISH] =
         g_param_spec_boxed ("date-finish",
                             "Date Finished",
                             "Date you finished watching or reading the series",
                             G_TYPE_DATE,
-                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-    
+                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
     obj_properties[PROP_ID] =
         g_param_spec_int64 ("id",
                             "id",
@@ -444,15 +587,15 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                             G_MININT64,
                             G_MAXINT64,
                             0,
-                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-    obj_properties[PROP_LAST_UPDATED] = 
+    obj_properties[PROP_LAST_UPDATED] =
         g_param_spec_boxed ("last-updated",
                             "Last Updated",
                             "Last time data was updated on mal.net",
                             G_TYPE_DATE_TIME,
-                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-    
+                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
     obj_properties[PROP_SCORE] =
         g_param_spec_double ("score",
                              "Score",
@@ -460,28 +603,28 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                              0.0,
                              10.0,
                              0.0,
-                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-    obj_properties[PROP_ENABLE_RECONSUMING] = 
+    obj_properties[PROP_ENABLE_RECONSUMING] =
         g_param_spec_boolean ("enable-reconsuming",
                               "Reconsuming",
                               "Indicates you are rewatching or rereading the series",
                               FALSE,
-                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_FANSUB_GROUP] =
         g_param_spec_string ("fansub-group",
                              "Fansub Group",
                              "Fansub Group you are using",
                              "no-fansub-group-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_COMMENTS] =
         g_param_spec_string ("comments",
                              "Comments",
                              "Your comments",
                              "no-comments-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_DOWNLOADED_ITEMS] =
         g_param_spec_int ("downloaded-items",
@@ -490,7 +633,7 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_TIMES_CONSUMED] =
         g_param_spec_int ("times-consumed",
@@ -499,7 +642,7 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_RECONSUME_VALUE] =
         g_param_spec_enum ("reconsume-value",
@@ -507,29 +650,29 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                            "How rewatchable or rereadable the series is",
                            MALGTK_TYPE_MALITEM_RECONSUME_VALUE,
                            MALGTK_MALITEM_RECONSUME_VALUE_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-        
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
     obj_properties[PROP_PRIORITY] =
         g_param_spec_enum ("priority",
                            "Priority",
                            "Priority for watching or reading this series",
                            MALGTK_TYPE_MALITEM_PRIORITY,
                            MALGTK_MALITEM_PRIORITY_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-        
-    obj_properties[PROP_ENABLE_DISCUSSION] = 
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
+    obj_properties[PROP_ENABLE_DISCUSSION] =
         g_param_spec_boolean ("enable-discussion",
                               "Enable Discussion",
                               "Whether the series can be discussed on your myanimelist.net page",
                               FALSE,
-                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-    obj_properties[PROP_HAS_DETAILS] = 
+    obj_properties[PROP_HAS_DETAILS] =
         g_param_spec_boolean ("has-details",
                               "Has Details",
                               "Indicates mal-gtk has downloaded all possible details for this series",
                               FALSE,
-                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     g_object_class_install_properties (gobject_class,
                                        N_PROPERTIES,
@@ -541,7 +684,7 @@ static gint
 _gcompare_str(gconstpointer a, gconstpointer b, gpointer user_data)
 {
     (void) user_data;
-    return strcoll(a, b);
+    return g_utf8_collate(a, b);
 }
 
 static void
@@ -652,10 +795,10 @@ malgtk_malitem_foreach_tag(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, g
     g_tree_foreach (priv->tags, _foreach_cb, &data);
 }
 
-static gboolean 
+static gboolean
 _tree_to_gstrv_cb(gpointer key, gpointer value, gpointer data)
 {
-    gchar ***strvp = data; 
+    gchar ***strvp = data;
     **strvp = g_strdup(key);
     ++*strvp;
     return FALSE;
@@ -752,6 +895,8 @@ malgtk_malitem_set_from_xml(MalgtkMalitem *malitem, xmlTextReaderPtr reader)
     gboolean is_default;
     g_return_if_fail(MALGTK_IS_MALITEM(malitem));
 
+    g_object_freeze_notify (G_OBJECT (malitem));
+
     for (; !(xmlStrEqual(BAD_CAST"MALitem", xmlTextReaderConstName(reader)) &&
              xmlTextReaderNodeType(reader) == XML_READER_TYPE_END_ELEMENT);
          xmlTextReaderRead(reader))
@@ -789,4 +934,6 @@ malgtk_malitem_set_from_xml(MalgtkMalitem *malitem, xmlTextReaderPtr reader)
                 break;
         }
     }
+
+    g_object_thaw_notify (G_OBJECT (malitem));
 }

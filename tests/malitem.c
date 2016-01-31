@@ -18,6 +18,7 @@
 #include <glib.h>
 #include <locale.h>
 #include <stdio.h>
+#include <string.h>
 #include "malgtk_malitem.h"
 #include "malgtk_date.h"
 
@@ -64,7 +65,7 @@ test_malitem_test1 (MalitemFixture *fixture,
     g_object_get(fixture->item, "season-begin", &begin, "season-end", &end, NULL);
     g_assert_cmpstr (begin, ==, "Winter 2012");
     g_assert_cmpstr (end, ==, "2012");
-    
+
     malgtk_date_set_dmy(&fixture->begin, 0, 0, 0);
     malgtk_date_clear(&fixture->end);
     g_object_set(fixture->item, "series-date-begin", &fixture->begin, "series-date-end", &fixture->end, NULL);
@@ -353,7 +354,7 @@ test_malitem_xml (MalitemFixture *fixture,
     g_assert_cmpstr   (synonyms[0],        ==, _synonyms[0]);
     g_assert_cmpstr   (synonyms[1],        ==, _synonyms[1]);
     g_assert_null     (_synonyms[2]);
-    g_assert_null     (_tags[0]);
+    g_assert_true     (_tags[0] == tags[0]);
     g_assert_null     (_date_start);
     g_assert_null     (_date_finish);
     g_assert_cmpint   (id,                 ==, _id);
@@ -368,6 +369,101 @@ test_malitem_xml (MalitemFixture *fixture,
     g_assert_cmpint   (has_details,        ==, _has_details);
 
     xmlFreeTextReader(reader);
+}
+
+struct notify_ctx
+{
+    gchar *name;
+    gint64 cnt;
+};
+
+static void
+notify_counter (GObject    *gobject,
+                GParamSpec *pspec,
+                gpointer    user_data)
+{
+    struct notify_ctx *ctx = user_data;
+    if (strcmp(pspec->name, ctx->name) == 0) {
+        ++ctx->cnt;
+    }
+}
+
+static
+void season_counter(GObject    *gobject,
+                    GParamSpec *pspec,
+                    gpointer    user_data)
+{
+    gint64 *cnt = user_data;
+    ++*cnt;
+}
+
+static void
+test_malitem_notify (MalitemFixture *fixture,
+                     gconstpointer user_data)
+{
+    struct notify_ctx ctx;
+    gint64 season_cnt = 0;
+    g_signal_connect(G_OBJECT(fixture->item), "notify",
+                     G_CALLBACK (notify_counter),
+                     &ctx);
+    g_signal_connect(G_OBJECT(fixture->item), "notify::season-begin",
+                     G_CALLBACK (season_counter),
+                     &season_cnt);
+    g_signal_connect(G_OBJECT(fixture->item), "notify::season-end",
+                     G_CALLBACK (season_counter),
+                     &season_cnt);
+
+#define  TEST_NOTIFY(prop, val, val2)  do {                         \
+        ctx.name = prop;                                            \
+        ctx.cnt = 0;                                                \
+        g_object_set(G_OBJECT(fixture->item), prop, val, NULL);     \
+        g_assert_cmpint(ctx.cnt, ==, 1);                            \
+        g_object_set(G_OBJECT(fixture->item), prop, val, NULL);     \
+        g_assert_cmpint(ctx.cnt, ==, 1);                            \
+        g_object_set(G_OBJECT(fixture->item), prop, val2, NULL);    \
+        g_assert_cmpint(ctx.cnt, ==, 2); } while (0);
+
+    MalgtkDate md1, md2;
+    GDate *d1, *d2;
+    malgtk_date_clear(&md1);
+    malgtk_date_clear(&md2);
+    malgtk_date_set_from_string(&md1, "2010-01-01");
+    malgtk_date_set_from_string(&md2, "2010-01-02");
+    d1 = malgtk_date_get_g_date(&md1);
+    d2 = malgtk_date_get_g_date(&md2);
+    GDateTime *dt1 = g_date_time_new_now_utc();
+    GDateTime *dt2 = g_date_time_add_months(dt1, 1);
+
+    gchar *strv1[] = {"Banana", "Apple", "Apple", NULL};
+    gchar *strv2[] = {"Banana", "Apple", "Cherry", NULL};
+
+    TEST_NOTIFY("mal-db-id", 123, 122);
+    TEST_NOTIFY("series-title", "abc", "abd");
+    TEST_NOTIFY("preferred-title", "abc", "abd");
+    TEST_NOTIFY("series-date-begin", &md1, &md2);
+    g_assert_cmpint(season_cnt, ==, 2);
+    TEST_NOTIFY("series-date-end", &md1, &md2);
+    g_assert_cmpint(season_cnt, ==, 4);
+    TEST_NOTIFY("image-url", "abc", "abd");
+    TEST_NOTIFY("series-synonyms", strv1, strv2);
+    TEST_NOTIFY("series-synopsis", "abc", "abd");
+    TEST_NOTIFY("tags", strv1, strv2);
+    TEST_NOTIFY("date-start", d1, d2);
+    TEST_NOTIFY("date-finish", d1, d2);
+    TEST_NOTIFY("id", 123, 122);
+    TEST_NOTIFY("last-updated", dt1, dt2);
+    TEST_NOTIFY("score", 1.1, 2.1);
+    TEST_NOTIFY("enable-reconsuming", TRUE, FALSE);
+    TEST_NOTIFY("fansub-group", "Vivid", "Triad");
+    TEST_NOTIFY("comments", "abc", "");
+    TEST_NOTIFY("downloaded-items", 1, 2);
+    TEST_NOTIFY("times-consumed", 1, 2);
+    TEST_NOTIFY("reconsume-value", MALGTK_MALITEM_RECONSUME_VALUE_MEDIUM, MALGTK_MALITEM_RECONSUME_VALUE_INVALID);
+    TEST_NOTIFY("priority", MALGTK_MALITEM_PRIORITY_HIGH, MALGTK_MALITEM_PRIORITY_INVALID);
+    TEST_NOTIFY("enable-discussion", TRUE, FALSE);
+    TEST_NOTIFY("has-details", TRUE, FALSE);
+
+#undef TEST_NOTIFY
 }
 
 int main(int argc, char *argv[])
@@ -395,8 +491,11 @@ int main(int argc, char *argv[])
                 malitem_fixture_set_up, test_malitem_xml,
                 malitem_fixture_tear_down);
 
+    g_test_add ("/malgtk/malitem/notify", MalitemFixture, NULL,
+                malitem_fixture_set_up, test_malitem_notify,
+                malitem_fixture_tear_down);
+
     int res = g_test_run ();
 
     return res;
 }
-
