@@ -39,7 +39,7 @@ typedef struct _MalgtkMangaPrivate
     gint rereading_chapter;
 
     gint retail_volumes;
-    
+
     MalgtkMangaStorageType storage_type;
 } MalgtkMangaPrivate;
 
@@ -71,45 +71,85 @@ malgtk_manga_set_property (GObject      *object,
 {
     MalgtkManga *self = MALGTK_MANGA (object);
     MalgtkMangaPrivate *priv = malgtk_manga_get_instance_private (self);
+    gint i;
 
     switch (property_id)
     {
         case PROP_SERIES_TYPE:
-            priv->series_type = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if (i != priv->series_type) {
+                priv->series_type = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_TYPE]);
+            }
             break;
         case PROP_SERIES_STATUS:
-            priv->series_status = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if (i != priv->series_status) {
+                priv->series_status =  i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_STATUS]);
+            }
             break;
         case PROP_SERIES_CHAPTERS:
-            priv->series_chapters = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->series_chapters) {
+                priv->series_chapters = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_CHAPTERS]);
+            }
             break;
         case PROP_SERIES_VOLUMES:
-            priv->series_volumes = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->series_volumes) {
+                priv->series_volumes = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_SERIES_VOLUMES]);
+            }
             break;
         case PROP_STATUS:
-            priv->status = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if (i != priv->status) {
+                priv->status = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_STATUS]);
+            }
             break;
         case PROP_CHAPTERS:
-            priv->chapters = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->chapters) {
+                priv->chapters = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_CHAPTERS]);
+            }
             break;
         case PROP_VOLUMES:
-            priv->volumes = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->volumes) {
+                priv->volumes = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_VOLUMES]);
+            }
             break;
         case PROP_REREADING_CHAPTER:
-            priv->rereading_chapter = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->rereading_chapter) {
+                priv->rereading_chapter = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_REREADING_CHAPTER]);
+            }
             break;
         case PROP_RETAIL_VOLUMES:
-            priv->retail_volumes = g_value_get_int (value);
+            i = g_value_get_int (value);
+            if (i != priv->retail_volumes) {
+                priv->retail_volumes = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_RETAIL_VOLUMES]);
+            }
             break;
         case PROP_STORAGE_TYPE:
-            priv->storage_type = g_value_get_enum (value);
+            i = g_value_get_enum (value);
+            if (i != priv->storage_type) {
+                priv->storage_type = i;
+                g_object_notify_by_pspec(object, obj_properties[PROP_STORAGE_TYPE]);
+            }
             break;
         default:
             /* We don't have any other property... */
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
             break;
     }
-
 }
 
 static void
@@ -175,7 +215,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                            "Type of media this series is",
                            MALGTK_TYPE_MANGA_SERIES_TYPE,
                            MALGTK_MANGA_SERIES_TYPE_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_STATUS] =
         g_param_spec_enum ("series-status",
@@ -183,7 +223,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                            "Publishing status of the manga series",
                            MALGTK_TYPE_MANGA_SERIES_STATUS,
                            MALGTK_MANGA_SERIES_STATUS_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_CHAPTERS] =
         g_param_spec_int ("series-chapters",
@@ -192,7 +232,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_VOLUMES] =
         g_param_spec_int ("series-volumes",
@@ -201,7 +241,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_STATUS] =
         g_param_spec_enum ("status",
@@ -209,7 +249,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                            "Your status for the series",
                            MALGTK_TYPE_MANGA_STATUS,
                            MALGTK_MANGA_STATUS_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_CHAPTERS] =
         g_param_spec_int ("chapters",
@@ -218,7 +258,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_VOLUMES] =
         g_param_spec_int ("volumes",
@@ -227,7 +267,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_REREADING_CHAPTER] =
         g_param_spec_int ("rereading-chapter",
@@ -236,7 +276,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_RETAIL_VOLUMES] =
         g_param_spec_int ("retail-volumes",
@@ -245,7 +285,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                           0,
                           G_MAXINT,
                           0,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_STORAGE_TYPE] =
         g_param_spec_enum ("storage-type",
@@ -253,7 +293,7 @@ malgtk_manga_class_init (MalgtkMangaClass *klass)
                            "Medium you are storing the series with",
                            MALGTK_TYPE_MANGA_STORAGE_TYPE,
                            MALGTK_MANGA_STORAGE_TYPE_INVALID,
-                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     g_object_class_install_properties (gobject_class,
                                        N_PROPERTIES,

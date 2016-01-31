@@ -34,9 +34,9 @@ typedef enum /*< prefix=MALGTK_MANGA >*/
 typedef enum /*< prefix=MALGTK_MANGA >*/
 {
     MALGTK_MANGA_SERIES_STATUS_INVALID           = -1, /*< nick=Invalid Status >*/
-    MALGTK_MANGA_SERIES_STATUS_PUBLISHING        = -1, /*< nick=Publishing >*/
-    MALGTK_MANGA_SERIES_STATUS_FINISHED          = -1, /*< nick=Finished >*/
-    MALGTK_MANGA_SERIES_STATUS_NOT_YET_PUBLISHED = -1, /*< nick=Not Yet Published >*/
+    MALGTK_MANGA_SERIES_STATUS_PUBLISHING        = 1, /*< nick=Publishing >*/
+    MALGTK_MANGA_SERIES_STATUS_FINISHED          = 2, /*< nick=Finished >*/
+    MALGTK_MANGA_SERIES_STATUS_NOT_YET_PUBLISHED = 3, /*< nick=Not Yet Published >*/
 } MalgtkMangaSeriesStatus;
 
 typedef enum /*< prefix=MALGTK_MANGA >*/

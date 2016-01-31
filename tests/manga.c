@@ -18,6 +18,7 @@
 #include <glib.h>
 #include <locale.h>
 #include <stdio.h>
+#include <string.h>
 #include "malgtk_manga.h"
 
 static void
@@ -35,7 +36,7 @@ test_manga_getset(void)
     gint                    retail_volumes    = 5;
     MalgtkMangaStorageType  storage_type      = MALGTK_MANGA_STORAGE_TYPE_HARD_DRIVE;
     gchar                  *series_title      = "derp";
-    
+
     g_object_set (G_OBJECT(manga),
                   "series-type",       series_type,
                   "series-status",     series_status,
@@ -156,6 +157,55 @@ Volume 14: Berserk: The Prototype</series_synopsis><tags/><date_start>0000-00-00
     xmlFreeTextReader(reader);
 }
 
+struct notify_ctx
+{
+    gchar *name;
+    gint64 cnt;
+};
+
+static void
+notify_counter (GObject    *gobject,
+                GParamSpec *pspec,
+                gpointer    user_data)
+{
+    struct notify_ctx *ctx = user_data;
+    if (strcmp(pspec->name, ctx->name) == 0) {
+        ++ctx->cnt;
+    }
+}
+
+static void
+test_manga_notify(void)
+{
+    struct notify_ctx ctx;
+    g_autoptr(MalgtkManga) manga  = malgtk_manga_new();
+
+    g_signal_connect(G_OBJECT(manga), "notify",
+                     G_CALLBACK (notify_counter),
+                     &ctx);
+
+#define  TEST_NOTIFY(prop, val, val2)  do {                 \
+        ctx.name = prop;                                    \
+        ctx.cnt = 0;                                        \
+        g_object_set(G_OBJECT(manga), prop, val, NULL);     \
+        g_assert_cmpint(ctx.cnt, ==, 1);                    \
+        g_object_set(G_OBJECT(manga), prop, val, NULL);     \
+        g_assert_cmpint(ctx.cnt, ==, 1);                    \
+        g_object_set(G_OBJECT(manga), prop, val2, NULL);    \
+        g_assert_cmpint(ctx.cnt, ==, 2); } while (0);
+
+    TEST_NOTIFY("series-type", MALGTK_MANGA_SERIES_TYPE_MANGA, MALGTK_MANGA_SERIES_TYPE_DOUJIN);
+    TEST_NOTIFY("series-status", MALGTK_MANGA_SERIES_STATUS_PUBLISHING, MALGTK_MANGA_SERIES_STATUS_NOT_YET_PUBLISHED);
+    TEST_NOTIFY("series-chapters", 4, 12);
+    TEST_NOTIFY("series-volumes", 4, 12);
+    TEST_NOTIFY("status", MALGTK_MANGA_STATUS_ON_HOLD, MALGTK_MANGA_STATUS_READING);
+    TEST_NOTIFY("chapters", 3, 23);
+    TEST_NOTIFY("volumes", 4, 24);
+    TEST_NOTIFY("rereading-chapter", 3, 24);
+    TEST_NOTIFY("retail-volumes", 2, 22);
+    TEST_NOTIFY("storage-type", MALGTK_MANGA_STORAGE_TYPE_HARD_DRIVE, MALGTK_MANGA_STORAGE_TYPE_INVALID);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -163,7 +213,8 @@ main(int argc, char *argv[])
     g_test_init (&argc, &argv, NULL);
     g_test_add_func("/malgtk/manga/getset", test_manga_getset);
     g_test_add_func("/malgtk/manga/xml", test_manga_xml);
-    
+    g_test_add_func("/malgtk/manga/notify", test_manga_notify);
+
     int res = g_test_run ();
 
     return res;
