@@ -19,6 +19,7 @@
 #include <locale.h>
 #include <stdio.h>
 #include <string.h>
+#include <libxml/encoding.h>
 #include "malgtk_malitem.h"
 #include "malgtk_date.h"
 
@@ -265,8 +266,8 @@ test_malitem_test4 (MalitemFixture *fixture,
 }
 
 static void
-test_malitem_xml (MalitemFixture *fixture,
-                  gconstpointer user_data)
+test_malitem_xmlset (MalitemFixture *fixture,
+                     gconstpointer user_data)
 {
     static const char xml[] = "<MALitem version=\"1\"><series_itemdb_id>1</series_itemdb_id><series_title>Cowboy Bebop</series_title><series_preferred_title></series_preferred_title><series_date_begin>1998-04-03</series_date_begin><series_date_end>1999-04-24</series_date_end><image_url>http://cdn.myanimelist.net/images/anime/4/19644.jpg</image_url><series_synonyms><series_synonym>Cowboy Bebop</series_synonym></series_synonyms><series_synopsis></series_synopsis><tags/><date_start>0000-00-00</date_start><date_finish>0000-00-00</date_finish><id>9755128</id><last_updated>1238650198</last_updated><score>0.000000</score><enable_reconsuming>0</enable_reconsuming><fansub_group></fansub_group><comments></comments><downloaded_items>0</downloaded_items><times_consumed>0</times_consumed><reconsume_value>Invalid Reconsume Value</reconsume_value><priority>Invalid Priority</priority><enable_discussion>0</enable_discussion><has_details>0</has_details></MALitem>";
     MalgtkMalitem   *item   = fixture->item;
@@ -369,6 +370,36 @@ test_malitem_xml (MalitemFixture *fixture,
     g_assert_cmpint   (has_details,        ==, _has_details);
 
     xmlFreeTextReader(reader);
+}
+
+static void
+test_malitem_xmlget (MalitemFixture *fixture,
+                     gconstpointer user_data)
+{
+    static const char xml[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MALitem version=\"1\"><series_itemdb_id>1</series_itemdb_id><series_title>Cowboy Bebop</series_title><series_preferred_title></series_preferred_title><series_date_begin>1998-04-03</series_date_begin><series_date_end>1999-04-24</series_date_end><image_url>http://cdn.myanimelist.net/images/anime/4/19644.jpg</image_url><series_synonyms><series_synonym>Cowboy Bebop</series_synonym></series_synonyms><series_synopsis></series_synopsis><tags/><date_start>0000-00-00</date_start><date_finish>2000-01-25</date_finish><id>9755128</id><last_updated>1238650198</last_updated><score>9.000000</score><enable_reconsuming>0</enable_reconsuming><fansub_group></fansub_group><comments></comments><downloaded_items>0</downloaded_items><times_consumed>0</times_consumed><reconsume_value>Invalid Reconsume Value</reconsume_value><priority>Invalid Priority</priority><enable_discussion>0</enable_discussion><has_details>0</has_details></MALitem>\n";
+
+    MalgtkMalitem   *item   = fixture->item;
+    xmlBufferPtr     buffer = xmlBufferCreate();;
+    xmlTextWriterPtr writer = xmlNewTextWriterMemory(buffer, 0);
+    xmlTextReaderPtr reader = xmlReaderForMemory(xml, G_N_ELEMENTS(xml) - 1, NULL, NULL, 0);
+
+    /* Set the state */
+    xmlTextReaderRead(reader);
+    malgtk_malitem_set_from_xml(item, reader);
+
+    /* Now serialize the state */
+    xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
+    malgtk_malitem_get_xml(item, writer);
+    xmlTextWriterEndDocument(writer);
+
+    /* Check idempotent */
+    const char *content = (char*)xmlBufferContent(buffer);
+    g_assert_cmpstr(xml, ==, content);
+
+    /* Free */
+    xmlFreeTextReader(reader);
+    xmlFreeTextWriter(writer);
+    xmlBufferFree(buffer);
 }
 
 struct notify_ctx
@@ -487,12 +518,16 @@ int main(int argc, char *argv[])
                 malitem_fixture_set_up, test_malitem_test4,
                 malitem_fixture_tear_down);
 
-    g_test_add ("/malgtk/malitem/xml", MalitemFixture, NULL,
-                malitem_fixture_set_up, test_malitem_xml,
+    g_test_add ("/malgtk/malitem/xmlset", MalitemFixture, NULL,
+                malitem_fixture_set_up, test_malitem_xmlset,
                 malitem_fixture_tear_down);
 
     g_test_add ("/malgtk/malitem/notify", MalitemFixture, NULL,
                 malitem_fixture_set_up, test_malitem_notify,
+                malitem_fixture_tear_down);
+
+    g_test_add ("/malgtk/malitem/xmlget", MalitemFixture, NULL,
+                malitem_fixture_set_up, test_malitem_xmlget,
                 malitem_fixture_tear_down);
 
     int res = g_test_run ();

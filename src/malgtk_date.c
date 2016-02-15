@@ -223,9 +223,9 @@ gchar *
 malgtk_date_get_string(const MalgtkDate *date)
 {
     if (malgtk_date_is_complete(date))
-        return g_strdup_printf("%u-%u-%u", date->year, date->month, date->day);
+        return g_strdup_printf("%u-%02u-%02u", date->year, date->month, date->day);
     if (g_date_valid_month(date->month) && g_date_valid_year(date->year))
-        return g_strdup_printf("%u-%u", date->year, date->month);
+        return g_strdup_printf("%u-%02u", date->year, date->month);
     if (g_date_valid_year(date->year))
         return g_strdup_printf("%u", date->year);
     return g_strdup("");

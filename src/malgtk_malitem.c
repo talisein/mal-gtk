@@ -99,7 +99,9 @@ struct strv_tree_data
 };
 
 static gboolean
-strv_tree_eq_fn(gpointer key, gpointer value, gpointer data)
+strv_tree_eq_fn(gpointer key,
+                gpointer value,
+                gpointer data)
 {
     struct strv_tree_data *d = (struct strv_tree_data*)data;
     if (!g_strv_contains(d->strv, (const gchar*)key)) {
@@ -111,7 +113,8 @@ strv_tree_eq_fn(gpointer key, gpointer value, gpointer data)
 }
 
 static gboolean
-is_strv_tree_equal(gchar **strv, GTree *tree)
+is_strv_tree_equal(gchar **strv,
+                   GTree *tree)
 {
     struct strv_tree_data d;
 
@@ -500,14 +503,14 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                              "Series Title",
                              "Title of the series or franchise",
                              "no-series-title-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_PREFERRED_TITLE] =
         g_param_spec_string ("preferred-title",
                              "Preferred Title",
                              "Your defined override for series title",
                              "no-preferred-series-title-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
 
     obj_properties[PROP_SERIES_DATE_BEGIN] =
@@ -543,7 +546,7 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                              "Image URL",
                              "URL for image representing the series",
                              "no-image-url-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_SERIES_SYNONYM] =
         g_param_spec_boxed ("series-synonyms",
@@ -557,7 +560,7 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                              "Synopsis",
                              "Synopsis of the series",
                              "no-series-synopsis-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_TAGS] =
         g_param_spec_boxed ("tags",
@@ -617,14 +620,14 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
                              "Fansub Group",
                              "Fansub Group you are using",
                              "no-fansub-group-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_COMMENTS] =
         g_param_spec_string ("comments",
                              "Comments",
                              "Your comments",
                              "no-comments-set",
-                             G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     obj_properties[PROP_DOWNLOADED_ITEMS] =
         g_param_spec_int ("downloaded-items",
@@ -681,7 +684,9 @@ malgtk_malitem_class_init (MalgtkMalitemClass *klass)
 }
 
 static gint
-_gcompare_str(gconstpointer a, gconstpointer b, gpointer user_data)
+_gcompare_str(gconstpointer a,
+              gconstpointer b,
+              gpointer user_data)
 {
     (void) user_data;
     return g_utf8_collate(a, b);
@@ -691,20 +696,20 @@ static void
 malgtk_malitem_init (MalgtkMalitem *self)
 {
     MalgtkMalitemPrivate *priv = malgtk_malitem_get_instance_private (self);
-    priv->series_title    = g_string_new(NULL);
-    priv->preferred_title = g_string_new(NULL);
+    priv->series_title    = g_string_new("");
+    priv->preferred_title = g_string_new("");
     malgtk_date_clear(&priv->series_begin);
     malgtk_date_clear(&priv->series_end);
-    priv->image_url       = g_string_new(NULL);
+    priv->image_url       = g_string_new("");
     priv->series_synonyms = g_tree_new_full(_gcompare_str, NULL, NULL, NULL);
-    priv->synopsis        = g_string_new(NULL);
+    priv->synopsis        = g_string_new("");
 
     priv->tags            = g_tree_new_full(_gcompare_str, NULL, NULL, NULL);
     g_date_clear(&priv->date_start, 1);
     g_date_clear(&priv->date_finish, 1);
     priv->last_updated    = g_date_time_new_from_unix_utc (0);
-    priv->fansub_group    = g_string_new(NULL);
-    priv->comments        = g_string_new(NULL);
+    priv->fansub_group    = g_string_new("");
+    priv->comments        = g_string_new("");
     priv->reconsume_value = MALGTK_MALITEM_RECONSUME_VALUE_INVALID;
     priv->priority        = MALGTK_MALITEM_PRIORITY_INVALID;
 
@@ -720,7 +725,8 @@ malgtk_malitem_new(void)
 }
 
 void
-malgtk_malitem_add_synonym(MalgtkMalitem *item, const gchar *synonym)
+malgtk_malitem_add_synonym(MalgtkMalitem *item,
+                           const gchar *synonym)
 {
     MalgtkMalitemPrivate *priv;
     gpointer p;
@@ -742,7 +748,8 @@ malgtk_malitem_add_synonym(MalgtkMalitem *item, const gchar *synonym)
 }
 
 void
-malgtk_malitem_add_tag(MalgtkMalitem *item, const gchar *tag)
+malgtk_malitem_add_tag(MalgtkMalitem *item,
+                       const gchar *tag)
 {
     MalgtkMalitemPrivate *priv;
     gpointer p;
@@ -768,14 +775,18 @@ struct _foreach_data {
 };
 
 static gboolean
-_foreach_cb(gpointer key, gpointer value, gpointer data)
+_foreach_cb(gpointer key,
+            gpointer value,
+            gpointer data)
 {
     struct _foreach_data *bkt = data;
     return bkt->cb(key, bkt->user_data);
 }
 
 void
-malgtk_malitem_foreach_synonym(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, gpointer user_data)
+malgtk_malitem_foreach_synonym(const MalgtkMalitem *item,
+                               MalgtkSetForeachFunc cb,
+                               gpointer user_data)
 {
     MalgtkMalitemPrivate *priv;
     struct _foreach_data data = {cb, user_data};
@@ -786,7 +797,9 @@ malgtk_malitem_foreach_synonym(const MalgtkMalitem *item, MalgtkSetForeachFunc c
 }
 
 void
-malgtk_malitem_foreach_tag(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, gpointer user_data)
+malgtk_malitem_foreach_tag(const MalgtkMalitem *item,
+                           MalgtkSetForeachFunc cb,
+                           gpointer user_data)
 {
     MalgtkMalitemPrivate *priv;
     struct _foreach_data data = {cb, user_data};
@@ -796,7 +809,9 @@ malgtk_malitem_foreach_tag(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, g
 }
 
 static gboolean
-_tree_to_gstrv_cb(gpointer key, gpointer value, gpointer data)
+_tree_to_gstrv_cb(gpointer key,
+                  gpointer value,
+                  gpointer data)
 {
     gchar ***strvp = data;
     **strvp = g_strdup(key);
@@ -821,20 +836,23 @@ static void _tree_remove_all(GTree *tree)
 }
 
 static gboolean
-xform_reconsume_value_enum(GValue *value, const xmlChar *in)
+xform_reconsume_value_enum(GValue *value,
+                           const xmlChar *in)
 {
     return xform_enum(value, MALGTK_TYPE_MALITEM_RECONSUME_VALUE, in);
 }
 
 static gboolean
-xform_priority_enum(GValue *value, const xmlChar *in)
+xform_priority_enum(GValue *value,
+                    const xmlChar *in)
 {
     return xform_enum(value, MALGTK_TYPE_MALITEM_PRIORITY, in);
 }
 
 
 static gboolean
-xform_string(GValue *value, const xmlChar* in)
+xform_string(GValue *value,
+             const xmlChar* in)
 {
     g_value_init(value, G_TYPE_STRING);
     g_value_set_static_string(value, (const char*)in);
@@ -888,7 +906,8 @@ find_field_for_name(const xmlChar *name)
 }
 
 void
-malgtk_malitem_set_from_xml(MalgtkMalitem *malitem, xmlTextReaderPtr reader)
+malgtk_malitem_set_from_xml(MalgtkMalitem *malitem,
+                            xmlTextReaderPtr reader)
 {
     gint offset = -1;
     GValue value = G_VALUE_INIT;
@@ -936,4 +955,118 @@ malgtk_malitem_set_from_xml(MalgtkMalitem *malitem, xmlTextReaderPtr reader)
     }
 
     g_object_thaw_notify (G_OBJECT (malitem));
+}
+
+struct key_writer_pair
+{
+    const char *element;
+    xmlTextWriterPtr writer;
+};
+
+static gboolean
+_gtree_to_writer_cb(gpointer key,
+                    gpointer value,
+                    gpointer data)
+{
+    struct key_writer_pair *pair = (struct key_writer_pair*)data;
+    xmlTextWriterWriteElement(pair->writer, BAD_CAST pair->element, BAD_CAST key);
+    return FALSE;
+}
+
+static void
+_write_g_tree(xmlTextWriterPtr writer,
+              const char *head_element,
+              const char *child_element,
+              GTree *tree)
+{
+    struct key_writer_pair pair = { child_element, writer };
+
+    xmlTextWriterStartElement(writer, BAD_CAST head_element);
+    g_tree_foreach (tree, _gtree_to_writer_cb, &pair);
+    xmlTextWriterEndElement(writer);
+}
+
+static void
+_write_g_date(xmlTextWriterPtr writer,
+              const char *element,
+              const GDate *date)
+{
+    if (!g_date_valid(date)) {
+        xmlTextWriterWriteElement(writer, BAD_CAST element, BAD_CAST "0000-00-00");
+        return;
+    }
+
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST element, "%d-%02d-%02d",
+                                    g_date_get_year(date),
+                                    g_date_get_month(date),
+                                    g_date_get_day(date));
+}
+
+static void
+_write_maldate(xmlTextWriterPtr writer,
+               const char *element,
+               const MalgtkDate *date)
+{
+    g_autofree char *str = malgtk_date_get_string(date);
+    xmlTextWriterWriteElement(writer, BAD_CAST element, BAD_CAST str);
+}
+
+static void
+_write_enum_nick(xmlTextWriterPtr writer,
+                 const char *element,
+                 GType enum_type,
+                 gint value)
+{
+    GEnumClass *enum_class = g_type_class_ref(enum_type);
+    GEnumValue *enum_value = g_enum_get_value(enum_class, value);
+    xmlTextWriterWriteElement(writer, BAD_CAST element, BAD_CAST enum_value->value_nick);
+    g_type_class_unref(enum_class);
+}
+
+static void
+_write_g_string(xmlTextWriterPtr writer,
+                const char *element,
+                GString *str)
+{
+    xmlTextWriterWriteElement(writer, BAD_CAST element, BAD_CAST str->str);
+}
+
+void
+malgtk_malitem_get_xml(const MalgtkMalitem *malitem,
+                       xmlTextWriterPtr writer)
+{
+    MalgtkMalitemPrivate *priv;
+    g_return_if_fail (MALGTK_IS_MALITEM(malitem));
+    priv = malgtk_malitem_get_instance_private (malitem);
+    xmlTextWriterStartElement(writer, BAD_CAST"MALitem");
+    xmlTextWriterWriteAttribute(writer, BAD_CAST"version", BAD_CAST"1");
+
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST"series_itemdb_id", "%" G_GINT64_FORMAT,
+                                    priv->mal_db_id);
+    _write_g_string (writer, "series_title",                       priv->series_title);
+    _write_g_string (writer, "series_preferred_title",             priv->preferred_title);
+    _write_maldate  (writer, "series_date_begin",                 &priv->series_begin);
+    _write_maldate  (writer, "series_date_end",                   &priv->series_end);
+    _write_g_string (writer, "image_url",                          priv->image_url);
+    _write_g_tree   (writer, "series_synonyms", "series_synonym",  priv->series_synonyms);
+    _write_g_string (writer, "series_synopsis",                    priv->synopsis);
+    _write_g_tree   (writer, "tags", "tag",                        priv->tags);
+    _write_g_date   (writer, "date_start",                        &priv->date_start);
+    _write_g_date   (writer, "date_finish",                       &priv->date_finish);
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST"id",           "%" G_GINT64_FORMAT,
+                                    priv->id);
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST"last_updated", "%" G_GINT64_FORMAT,
+                                    g_date_time_to_unix(priv->last_updated));
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST"score",              "%f", priv->score);
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST"enable_reconsuming", "%d", priv->enable_reconsuming);
+    _write_g_string (writer, "fansub_group", priv->fansub_group);
+    _write_g_string (writer, "comments",     priv->comments);
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST"downloaded_items",   "%d", priv->downloaded_items);
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST"times_consumed",     "%d", priv->times_consumed);
+    _write_enum_nick(writer, "reconsume_value", MALGTK_TYPE_MALITEM_RECONSUME_VALUE, priv->reconsume_value);
+    _write_enum_nick(writer, "priority",        MALGTK_TYPE_MALITEM_PRIORITY,        priv->priority);
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST"enable_discussion",  "%d", priv->enable_discussion);
+    xmlTextWriterWriteFormatElement(writer, BAD_CAST"has_details",        "%d", priv->has_details);
+
+    xmlTextWriterEndElement(writer); /* MALitem */
 }

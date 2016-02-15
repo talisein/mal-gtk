@@ -18,6 +18,7 @@
 #pragma once
 #include <glib-object.h>
 #include <libxml/xmlreader.h>
+#include <libxml/xmlwriter.h>
 
 G_BEGIN_DECLS
 
@@ -50,11 +51,12 @@ struct _MalgtkMalitemClass
 
 typedef gboolean (*MalgtkSetForeachFunc)(const gchar *str, gpointer user_data);
 
-MalgtkMalitem     *malgtk_malitem_new (void);
-void               malgtk_malitem_add_synonym(MalgtkMalitem *item, const gchar *synonym);
-void               malgtk_malitem_foreach_synonym(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, gpointer user_data);
-void               malgtk_malitem_add_tag(MalgtkMalitem *item, const gchar *synonym);
-void               malgtk_malitem_foreach_tag(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, gpointer user_data);
-void               malgtk_malitem_set_from_xml(MalgtkMalitem *item, xmlTextReaderPtr reader);
+MalgtkMalitem *malgtk_malitem_new (void);
+void           malgtk_malitem_add_synonym(MalgtkMalitem *item, const gchar *synonym);
+void           malgtk_malitem_foreach_synonym(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, gpointer user_data);
+void           malgtk_malitem_add_tag(MalgtkMalitem *item, const gchar *synonym);
+void           malgtk_malitem_foreach_tag(const MalgtkMalitem *item, MalgtkSetForeachFunc cb, gpointer user_data);
+void           malgtk_malitem_set_from_xml(MalgtkMalitem *item, xmlTextReaderPtr reader);
+void           malgtk_malitem_get_xml(const MalgtkMalitem *item, xmlTextWriterPtr writer);
 
 G_END_DECLS
