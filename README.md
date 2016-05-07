@@ -17,6 +17,8 @@ mal-gtk is the executable name.
 
 Usage Notes
 -----------
+- I use mal-gtk everyday, but its not quite "release ready" yet.
+
 - MAL.net has no way to read a Manga's "Scan Group" field.
 
   While the API does allow writing to this field, at present mal-gtk
@@ -28,6 +30,12 @@ Usage Notes
   field. Pressing the + button on the episode count will automatically
   save the change, but if you manually modify the episode count you'll
   need to press enter.
+
+- Some 'extended details' don't seem to be saving onto myanimelist.net
+  anymore. These are fields like Fansub Group. Changing
+  watching/completed status, rating, and changing the viewed episode
+  count is working fine. I will try to fix this bug sometime
+  soon... (issue #3)
 
 Goals
 -----
@@ -65,8 +73,14 @@ Features
 - Caches a local copy of the anime/manga list
 - Modification possible via both the List View and the Detail View
 
+### Current Development Focus
+- Pure C GObject implementation for Anime and Manga (90%)
+- GListModel / GtkListBox implementation for anime/manga lists (0%)
+- UI defined via Glade xml. (0%)
+
 ### Planned
 
+- xdg-app release
 - Detailed modification:
 
         Rewatching episode number
@@ -110,6 +124,5 @@ clients out there, but that's not the same thing.
 - [Trackma](https://github.com/z411/trackma) - Python, Gtk2. It has a
   cool curses interface, and connects to more than just MAL.
 
-IRC
----
-I'm usually alone in #malgtk on Rizon.
+IRC --- I'm usually alone in #malgtk on Rizon. I may not respond
+immediately, but please feel free to leave a comment.
