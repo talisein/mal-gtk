@@ -17,6 +17,7 @@
 
 #include "increment_entry.hpp"
 #include <iostream>
+#include <numeric>
 
 namespace {
     static const Glib::SignalProxyInfo IncrementEntry_signal_activate_info =

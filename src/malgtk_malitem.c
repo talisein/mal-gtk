@@ -790,9 +790,9 @@ malgtk_malitem_foreach_synonym(const MalgtkMalitem *item,
 {
     MalgtkMalitemPrivate *priv;
     struct _foreach_data data = {cb, user_data};
-    g_return_if_fail(MALGTK_IS_MALITEM(item));
+    g_return_if_fail(MALGTK_IS_MALITEM((MalgtkMalitem*)item));
 
-    priv = malgtk_malitem_get_instance_private (item);
+    priv = malgtk_malitem_get_instance_private ((MalgtkMalitem*)item);
     g_tree_foreach (priv->series_synonyms, _foreach_cb, &data);
 }
 
@@ -803,8 +803,8 @@ malgtk_malitem_foreach_tag(const MalgtkMalitem *item,
 {
     MalgtkMalitemPrivate *priv;
     struct _foreach_data data = {cb, user_data};
-    g_return_if_fail(MALGTK_IS_MALITEM(item));
-    priv = malgtk_malitem_get_instance_private (item);
+    g_return_if_fail(MALGTK_IS_MALITEM((MalgtkMalitem*)item));
+    priv = malgtk_malitem_get_instance_private ((MalgtkMalitem*)item);
     g_tree_foreach (priv->tags, _foreach_cb, &data);
 }
 
@@ -912,7 +912,7 @@ malgtk_malitem_set_from_xml(MalgtkMalitem *malitem,
     gint offset = -1;
     GValue value = G_VALUE_INIT;
     gboolean is_default;
-    g_return_if_fail(MALGTK_IS_MALITEM(malitem));
+    g_return_if_fail(MALGTK_IS_MALITEM((MalgtkMalitem*)malitem));
 
     g_object_freeze_notify (G_OBJECT (malitem));
 

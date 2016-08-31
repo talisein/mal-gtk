@@ -221,7 +221,7 @@ namespace MAL {
         }
 
         auto status = m_manga_status_combo->get_manga_status();
-        if (status != row.get_value(columns->status))
+        if (status != manga_status_from_string(row.get_value(columns->status)))
             row.set_value(columns->status, Glib::ustring(to_string(status)));
 
         return true;

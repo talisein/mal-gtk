@@ -191,6 +191,6 @@ malgtk_cell_renderer_score_new (void)
 gint
 malgtk_cell_renderer_score_get_score(const MalgtkCellRendererScore* cellscore)
 {
-    MalgtkCellRendererScorePrivate *priv = malgtk_cell_renderer_score_get_instance_private(cellscore);
+    MalgtkCellRendererScorePrivate *priv = malgtk_cell_renderer_score_get_instance_private((MalgtkCellRendererScore*)cellscore);
     return priv->score;
 }
