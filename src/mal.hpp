@@ -174,15 +174,15 @@ namespace MAL {
         void serialize_to_disk_async();
 
     private:
-        const std::string LIST_BASE_URL          = "http://myanimelist.net/malappinfo.php?u=";
-        const std::string DETAILS_BASE_URL       = "http://myanimelist.net/editlist.php?type=anime&id=";
-        const std::string SEARCH_BASE_URL        = "http://myanimelist.net/api/anime/search.xml?q=";
-        const std::string UPDATED_BASE_URL       = "http://myanimelist.net/api/animelist/update/";
-        const std::string ADD_BASE_URL           = "http://myanimelist.net/api/animelist/add/";
-        const std::string MANGA_DETAILS_BASE_URL = "http://myanimelist.net/panel.php?go=editmanga&id=";
-        const std::string MANGA_SEARCH_BASE_URL  = "http://myanimelist.net/api/manga/search.xml?q=";
-        const std::string MANGA_UPDATED_BASE_URL = "http://myanimelist.net/api/mangalist/update/";
-        const std::string MANGA_ADD_BASE_URL     = "http://myanimelist.net/api/mangalist/add/";
+        const std::string LIST_BASE_URL          = "https://myanimelist.net/malappinfo.php?u=";
+        const std::string DETAILS_BASE_URL       = "https://myanimelist.net/editlist.php?type=anime&id=";
+        const std::string SEARCH_BASE_URL        = "https://myanimelist.net/api/anime/search.xml?q=";
+        const std::string UPDATED_BASE_URL       = "https://myanimelist.net/api/animelist/update/";
+        const std::string ADD_BASE_URL           = "https://myanimelist.net/api/animelist/add/";
+        const std::string MANGA_DETAILS_BASE_URL = "https://myanimelist.net/panel.php?go=editmanga&id=";
+        const std::string MANGA_SEARCH_BASE_URL  = "https://myanimelist.net/api/manga/search.xml?q=";
+        const std::string MANGA_UPDATED_BASE_URL = "https://myanimelist.net/api/mangalist/update/";
+        const std::string MANGA_ADD_BASE_URL     = "https://myanimelist.net/api/mangalist/add/";
 
         CallbackDispatcher cb_dispatcher;
 
