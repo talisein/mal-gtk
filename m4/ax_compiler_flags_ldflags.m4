@@ -25,10 +25,10 @@
 #   and this notice are preserved.  This file is offered as-is, without any
 #   warranty.
 
-#serial 3
+#serial 5
 
 AC_DEFUN([AX_COMPILER_FLAGS_LDFLAGS],[
-    AX_REQUIRE_DEFINED([AX_APPEND_COMPILE_FLAGS])
+    AX_REQUIRE_DEFINED([AX_APPEND_LINK_FLAGS])
     AX_REQUIRE_DEFINED([AX_APPEND_FLAG])
     AX_REQUIRE_DEFINED([AX_CHECK_COMPILE_FLAG])
 
@@ -48,24 +48,24 @@ AC_DEFUN([AX_COMPILER_FLAGS_LDFLAGS],[
     ])
 
     # Base flags
-    AX_APPEND_COMPILE_FLAGS([ dnl
+    AX_APPEND_LINK_FLAGS([ dnl
         -Wl,--no-as-needed dnl
         $3 dnl
     ],ax_warn_ldflags_variable,[$ax_compiler_flags_test])
 
     AS_IF([test "$ax_enable_compile_warnings" != "no"],[
         # "yes" flags
-        AX_APPEND_COMPILE_FLAGS([$4 $5 $6 $7],
+        AX_APPEND_LINK_FLAGS([$4 $5 $6 $7],
                                 ax_warn_ldflags_variable,
                                 [$ax_compiler_flags_test])
     ])
     AS_IF([test "$ax_enable_compile_warnings" = "error"],[
         # "error" flags; -Werror has to be appended unconditionally because
-        # it’s not possible to test for
+        # it's not possible to test for
         #
         # suggest-attribute=format is disabled because it gives too many false
         # positives
-        AX_APPEND_COMPILE_FLAGS([ dnl
+        AX_APPEND_LINK_FLAGS([ dnl
             -Wl,--fatal-warnings dnl
         ],ax_warn_ldflags_variable,[$ax_compiler_flags_test])
     ])

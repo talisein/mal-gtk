@@ -25,9 +25,10 @@
 #   and this notice are preserved.  This file is offered as-is, without any
 #   warranty.
 
-#serial 8
+#serial 11
 
 AC_DEFUN([AX_COMPILER_FLAGS_CFLAGS],[
+    AC_REQUIRE([AC_PROG_SED])
     AX_REQUIRE_DEFINED([AX_APPEND_COMPILE_FLAGS])
     AX_REQUIRE_DEFINED([AX_APPEND_FLAG])
     AX_REQUIRE_DEFINED([AX_CHECK_COMPILE_FLAG])
@@ -100,7 +101,7 @@ AC_DEFUN([AX_COMPILER_FLAGS_CFLAGS],[
     ])
     AS_IF([test "$ax_enable_compile_warnings" = "error"],[
         # "error" flags; -Werror has to be appended unconditionally because
-        # it’s not possible to test for
+        # it's not possible to test for
         #
         # suggest-attribute=format is disabled because it gives too many false
         # positives
@@ -119,7 +120,7 @@ AC_DEFUN([AX_COMPILER_FLAGS_CFLAGS],[
         AS_CASE([$flag],
                 [-Wno-*=*],[],
                 [-Wno-*],[
-                    AX_APPEND_COMPILE_FLAGS([-Wno-error=${flag:5}],
+                    AX_APPEND_COMPILE_FLAGS([-Wno-error=$(AS_ECHO([$flag]) | $SED 's/^-Wno-//')],
                                             ax_warn_cflags_variable,
                                             [$ax_compiler_flags_test])
                 ])
