@@ -172,7 +172,7 @@ namespace {
         fields += password;
         fields += "&cookie=1";
         curl_setup_post(curl, fields);
-        curl_easy_setopt(curl.get(), CURLOPT_URL, "http://myanimelist.net/login.php");
+        curl_easy_setopt(curl.get(), CURLOPT_URL, "https://myanimelist.net/login.php");
         return curl_easy_perform(curl.get());
     }
 }
@@ -547,8 +547,13 @@ namespace MAL {
                 return Glib::RefPtr<Gio::MemoryInputStream>();
             } else {
                 char *url;
+                long response_code;
+                curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &response_code);
                 curl_easy_getinfo(curl.get(), CURLINFO_EFFECTIVE_URL, &url);
-                if (strcmp(url, "http://myanimelist.net/404.php") == 0) {
+                if (404 == response_code ||
+                    strcmp(url, "https://myanimelist.net/404.php") == 0 ||
+                    strcmp(url, "http://myanimelist.net/404.php") == 0)
+                {
                     signal_mal_info("Unable to fetch image for " + item.series_title + ": 404");
                     g_byte_array_free(ba, TRUE);
                     return Glib::RefPtr<Gio::MemoryInputStream>();
