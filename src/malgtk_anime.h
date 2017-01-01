@@ -68,5 +68,6 @@ G_DECLARE_FINAL_TYPE(MalgtkAnime, malgtk_anime, MALGTK, ANIME, MalgtkMalitem)
 
 MalgtkAnime     *malgtk_anime_new (void);
 void             malgtk_anime_set_from_xml(MalgtkAnime *anime, xmlTextReaderPtr reader);
+void             malgtk_anime_get_xml(const MalgtkAnime *anime, xmlTextWriterPtr writer);
 
 G_END_DECLS

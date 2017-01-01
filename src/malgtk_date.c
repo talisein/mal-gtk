@@ -228,7 +228,7 @@ malgtk_date_get_string(const MalgtkDate *date)
         return g_strdup_printf("%u-%02u", date->year, date->month);
     if (g_date_valid_year(date->year))
         return g_strdup_printf("%u", date->year);
-    return g_strdup("");
+    return g_strdup("0000-00-00");
 }
 
 gboolean

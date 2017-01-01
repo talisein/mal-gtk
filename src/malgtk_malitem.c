@@ -16,10 +16,13 @@
  */
 
 #include <string.h>
+#include <assert.h>
 #include "malgtk_malitem.h"
 #include "malgtk_date.h"
 #include "malgtk_enumtypes.h"
 #include "malgtk_deserialize_v1_tools.h"
+#include "malgtk_xml.h"
+#include "malgtk_gtree.h"
 
 typedef struct _MalgtkMalitemPrivate
 {
@@ -37,7 +40,7 @@ typedef struct _MalgtkMalitemPrivate
     GDate date_finish;
     gint64 id;
     GDateTime* last_updated;
-    double score;
+    gdouble score;
     gboolean enable_reconsuming;
 
     GString *fansub_group;
@@ -55,6 +58,12 @@ typedef struct _MalgtkMalitemPrivate
 } MalgtkMalitemPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (MalgtkMalitem, malgtk_malitem, G_TYPE_OBJECT)
+
+static inline gconstpointer
+malgtk_malitem_get_instance_private_const (const MalgtkMalitem *self)
+{
+  return (G_STRUCT_MEMBER_P (self, MalgtkMalitem_private_offset));
+}
 
 static gchar ** _tree_to_gstrv(GTree *tree);
 static void     _tree_remove_all(GTree *tree);
@@ -957,116 +966,103 @@ malgtk_malitem_set_from_xml(MalgtkMalitem *malitem,
     g_object_thaw_notify (G_OBJECT (malitem));
 }
 
-struct key_writer_pair
+static GOnce s_defs_once = G_ONCE_INIT;
+static struct malgtk_xml_serialization_defs s_defs[N_PROPERTIES] = { 0 };
+
+static void*
+_init_s_defs(void* v)
 {
-    const char *element;
-    xmlTextWriterPtr writer;
-};
+    (void)v;
+    s_defs[0] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT64, PROP_SERIES_MALDB_ID, "mal-db-id", "series_itemdb_id",
+        NULL, offsetof(MalgtkMalitemPrivate, mal_db_id), 0 };
+    s_defs[1] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_GSTRING, PROP_SERIES_TITLE, "series-title", "series_title",
+        NULL, offsetof(MalgtkMalitemPrivate, series_title), 0 };
+    s_defs[2] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_GSTRING, PROP_SERIES_PREFERRED_TITLE, "preferred-title", "series_preferred_title",
+        NULL, offsetof(MalgtkMalitemPrivate, preferred_title), 0 };
+    s_defs[3] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_DATE, PROP_SERIES_DATE_BEGIN, "series-date-begin", "series_date_begin",
+        NULL, offsetof(MalgtkMalitemPrivate, series_begin), 0 };
+    s_defs[4] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_DATE, PROP_SERIES_DATE_END, "series-date-end", "series_date_end",
+        NULL, offsetof(MalgtkMalitemPrivate, series_end), 0 };
+    s_defs[5] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_GSTRING, PROP_IMAGE_URL, "image-url", "image_url",
+        NULL, offsetof(MalgtkMalitemPrivate, image_url), 0 };
+    s_defs[6] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_TREE, PROP_SERIES_SYNONYM, "series-synonyms", "series_synonyms",
+        "series_synonym", offsetof(MalgtkMalitemPrivate, series_synonyms), 0 };
+    s_defs[7] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_GSTRING, PROP_SERIES_SYNOPSIS, "series-synopsis", "series_synopsis",
+        NULL, offsetof(MalgtkMalitemPrivate, synopsis), 0 };
+    s_defs[8] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_TREE, PROP_TAGS, "tags", "tags",
+        "tag", offsetof(MalgtkMalitemPrivate, tags), 0 };
+    s_defs[9] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_DATE, PROP_DATE_START, "date-start", "date_start",
+        NULL, offsetof(MalgtkMalitemPrivate, date_start), 0 };
+    s_defs[10] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_DATE, PROP_DATE_FINISH, "date-finish", "date_finish",
+        NULL, offsetof(MalgtkMalitemPrivate, date_finish), 0 };
+    s_defs[11] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT64, PROP_ID, "id", "id",
+        NULL, offsetof(MalgtkMalitemPrivate, id), 0 };
+    s_defs[12] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_DATE_TIME, PROP_LAST_UPDATED, "last-updated", "last_updated",
+        NULL, offsetof(MalgtkMalitemPrivate, last_updated), 0 };
+    s_defs[13] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_DOUBLE, PROP_SCORE, "score", "score",
+        NULL, offsetof(MalgtkMalitemPrivate, score), 0 };
+    s_defs[14] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_BOOLEAN, PROP_ENABLE_RECONSUMING, "enable-reconsuming", "enable_reconsuming",
+        NULL, offsetof(MalgtkMalitemPrivate, enable_reconsuming), 0 };
+    s_defs[15] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_GSTRING, PROP_FANSUB_GROUP, "fansub-group", "fansub_group",
+        NULL, offsetof(MalgtkMalitemPrivate, fansub_group), 0 };
+    s_defs[16] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_GSTRING, PROP_COMMENTS, "comments", "comments",
+        NULL, offsetof(MalgtkMalitemPrivate, comments), 0 };
+    s_defs[17] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_DOWNLOADED_ITEMS, "downloaded-items", "downloaded_items",
+        NULL, offsetof(MalgtkMalitemPrivate, downloaded_items), 0 };
+    s_defs[18] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_TIMES_CONSUMED, "times-consumed", "times_consumed",
+        NULL, offsetof(MalgtkMalitemPrivate, times_consumed), 0 };
 
-static gboolean
-_gtree_to_writer_cb(gpointer key,
-                    gpointer value,
-                    gpointer data)
-{
-    struct key_writer_pair *pair = (struct key_writer_pair*)data;
-    xmlTextWriterWriteElement(pair->writer, BAD_CAST pair->element, BAD_CAST key);
-    return FALSE;
-}
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkMalitemReconsumeValue);
 
-static void
-_write_g_tree(xmlTextWriterPtr writer,
-              const char *head_element,
-              const char *child_element,
-              GTree *tree)
-{
-    struct key_writer_pair pair = { child_element, writer };
+    s_defs[19] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_MALITEM_RECONSUME_VALUE, PROP_RECONSUME_VALUE, "reconsume-value", "reconsume_value",
+        NULL, offsetof(MalgtkMalitemPrivate, reconsume_value), sizeof(MalgtkMalitemReconsumeValue) };
 
-    xmlTextWriterStartElement(writer, BAD_CAST head_element);
-    g_tree_foreach (tree, _gtree_to_writer_cb, &pair);
-    xmlTextWriterEndElement(writer);
-}
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkMalitemPriority);
 
-static void
-_write_g_date(xmlTextWriterPtr writer,
-              const char *element,
-              const GDate *date)
-{
-    if (!g_date_valid(date)) {
-        xmlTextWriterWriteElement(writer, BAD_CAST element, BAD_CAST "0000-00-00");
-        return;
-    }
-
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST element, "%d-%02d-%02d",
-                                    g_date_get_year(date),
-                                    g_date_get_month(date),
-                                    g_date_get_day(date));
-}
-
-static void
-_write_maldate(xmlTextWriterPtr writer,
-               const char *element,
-               const MalgtkDate *date)
-{
-    g_autofree char *str = malgtk_date_get_string(date);
-    xmlTextWriterWriteElement(writer, BAD_CAST element, BAD_CAST str);
-}
-
-static void
-_write_enum_nick(xmlTextWriterPtr writer,
-                 const char *element,
-                 GType enum_type,
-                 gint value)
-{
-    GEnumClass *enum_class = g_type_class_ref(enum_type);
-    GEnumValue *enum_value = g_enum_get_value(enum_class, value);
-    xmlTextWriterWriteElement(writer, BAD_CAST element, BAD_CAST enum_value->value_nick);
-    g_type_class_unref(enum_class);
-}
-
-static void
-_write_g_string(xmlTextWriterPtr writer,
-                const char *element,
-                GString *str)
-{
-    xmlTextWriterWriteElement(writer, BAD_CAST element, BAD_CAST str->str);
+    s_defs[20] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_MALITEM_PRIORITY, PROP_PRIORITY, "priority", "priority",
+        NULL, offsetof(MalgtkMalitemPrivate, priority), sizeof(MalgtkMalitemPriority) };
+    s_defs[21] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_BOOLEAN, PROP_ENABLE_DISCUSSION, "enable-discussion", "enable_discussion",
+        NULL, offsetof(MalgtkMalitemPrivate, enable_discussion), 0 };
+    s_defs[22] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_BOOLEAN, PROP_HAS_DETAILS, "has-details", "has_details",
+        NULL, offsetof(MalgtkMalitemPrivate, has_details), 0 };
+    return NULL;
 }
 
 void
 malgtk_malitem_get_xml(const MalgtkMalitem *malitem,
                        xmlTextWriterPtr writer)
 {
-    MalgtkMalitemPrivate *priv;
-    g_return_if_fail (MALGTK_IS_MALITEM(malitem));
-    priv = malgtk_malitem_get_instance_private (malitem);
+    const MalgtkMalitemPrivate *priv;
+    g_return_if_fail (MALGTK_IS_MALITEM((MalgtkMalitem*)malitem));
+    g_once (&s_defs_once, _init_s_defs, NULL);
+    priv = malgtk_malitem_get_instance_private_const (malitem);
     xmlTextWriterStartElement(writer, BAD_CAST"MALitem");
     xmlTextWriterWriteAttribute(writer, BAD_CAST"version", BAD_CAST"1");
 
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST"series_itemdb_id", "%" G_GINT64_FORMAT,
-                                    priv->mal_db_id);
-    _write_g_string (writer, "series_title",                       priv->series_title);
-    _write_g_string (writer, "series_preferred_title",             priv->preferred_title);
-    _write_maldate  (writer, "series_date_begin",                 &priv->series_begin);
-    _write_maldate  (writer, "series_date_end",                   &priv->series_end);
-    _write_g_string (writer, "image_url",                          priv->image_url);
-    _write_g_tree   (writer, "series_synonyms", "series_synonym",  priv->series_synonyms);
-    _write_g_string (writer, "series_synopsis",                    priv->synopsis);
-    _write_g_tree   (writer, "tags", "tag",                        priv->tags);
-    _write_g_date   (writer, "date_start",                        &priv->date_start);
-    _write_g_date   (writer, "date_finish",                       &priv->date_finish);
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST"id",           "%" G_GINT64_FORMAT,
-                                    priv->id);
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST"last_updated", "%" G_GINT64_FORMAT,
-                                    g_date_time_to_unix(priv->last_updated));
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST"score",              "%f", priv->score);
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST"enable_reconsuming", "%d", priv->enable_reconsuming);
-    _write_g_string (writer, "fansub_group", priv->fansub_group);
-    _write_g_string (writer, "comments",     priv->comments);
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST"downloaded_items",   "%d", priv->downloaded_items);
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST"times_consumed",     "%d", priv->times_consumed);
-    _write_enum_nick(writer, "reconsume_value", MALGTK_TYPE_MALITEM_RECONSUME_VALUE, priv->reconsume_value);
-    _write_enum_nick(writer, "priority",        MALGTK_TYPE_MALITEM_PRIORITY,        priv->priority);
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST"enable_discussion",  "%d", priv->enable_discussion);
-    xmlTextWriterWriteFormatElement(writer, BAD_CAST"has_details",        "%d", priv->has_details);
+    malgtk_xml_serialize(writer, s_defs, priv);
 
     xmlTextWriterEndElement(writer); /* MALitem */
 }

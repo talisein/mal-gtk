@@ -91,7 +91,7 @@ test_manga_getset(void)
 }
 
 static void
-test_manga_xml(void)
+test_manga_xmlset(void)
 {
     static const char xml[] = "<manga version=\"1\"><MALitem version=\"1\"><series_itemdb_id>2</series_itemdb_id><series_title>Berserk</series_title><series_preferred_title></series_preferred_title><series_date_begin>1989-08-25</series_date_begin><series_date_end>0000-00-00</series_date_end><image_url>http://cdn.myanimelist.net/images/manga/3/26544.jpg</image_url><series_synonyms><series_synonym>Berserk</series_synonym></series_synonyms><series_synopsis>Guts, known as the Black Swordsman, seeks sanctuary from the demonic forces that pursue him and his woman, and also vengeance against the man who branded him as an unholy sacrifice. Aided only by his titanic strength, skill, and sword, Guts must struggle against his bleak destiny, all the while fighting with a rage that might strip him of his humanity. Berserk is a dark and brooding story of outrageous swordplay and ominous fate, in the theme of Shakespeare's Macbeth.\
 \
@@ -113,7 +113,7 @@ Volume 14: Berserk: The Prototype</series_synopsis><tags/><date_start>0000-00-00
     gint                    rereading_chapter = 55;
     gint                    retail_volumes    = 44;
     MalgtkMangaStorageType  storage_type      = MALGTK_MANGA_STORAGE_TYPE_HARD_DRIVE;
-
+    gboolean                has_details       = TRUE;
     malgtk_manga_set_from_xml(manga, reader);
 
     g_autofree gchar       *_series_title = NULL;
@@ -127,19 +127,20 @@ Volume 14: Berserk: The Prototype</series_synopsis><tags/><date_start>0000-00-00
     gint                    _rereading_chapter;
     gint                    _retail_volumes;
     MalgtkMangaStorageType  _storage_type;
-
+    gboolean                _has_details;
     g_object_get(G_OBJECT(manga),
-                 "series_title",      &_series_title,
-                 "series_type",       &_series_type,
-                 "series_status",     &_series_status,
-                 "series_chapters",   &_series_chapters,
-                 "series_volumes",    &_series_volumes,
+                 "series-title",      &_series_title,
+                 "series-type",       &_series_type,
+                 "series-status",     &_series_status,
+                 "series-chapters",   &_series_chapters,
+                 "series-volumes",    &_series_volumes,
                  "status",            &_status,
                  "chapters",          &_chapters,
                  "volumes",           &_volumes,
-                 "rereading_chapter", &_rereading_chapter,
-                 "retail_volumes",    &_retail_volumes,
-                 "storage_type",      &_storage_type,
+                 "rereading-chapter", &_rereading_chapter,
+                 "retail-volumes",    &_retail_volumes,
+                 "storage-type",      &_storage_type,
+                 "has-details",       &_has_details,
                  NULL);
 
     g_assert_cmpstr(series_title,      ==, _series_title);
@@ -153,8 +154,46 @@ Volume 14: Berserk: The Prototype</series_synopsis><tags/><date_start>0000-00-00
     g_assert_cmpint(rereading_chapter, ==, _rereading_chapter);
     g_assert_cmpint(retail_volumes,    ==, _retail_volumes);
     g_assert_cmpint(storage_type,      ==, _storage_type);
+    g_assert_cmpint(storage_type,      ==, _storage_type);
+    g_assert_cmpint(has_details,       ==, _has_details);
 
     xmlFreeTextReader(reader);
+}
+
+static void
+test_manga_xmlget (void)
+{
+    static const char xml[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<manga version=\"1\"><MALitem version=\"1\"><series_itemdb_id>2</series_itemdb_id><series_title>Berserk</series_title><series_preferred_title></series_preferred_title><series_date_begin>1989-08-25</series_date_begin><series_date_end>0000-00-00</series_date_end><image_url>http://cdn.myanimelist.net/images/manga/3/26544.jpg</image_url><series_synonyms><series_synonym>Berserk</series_synonym></series_synonyms><series_synopsis>Guts, known as the Black Swordsman, seeks sanctuary from the demonic forces that pursue him and his woman, and also vengeance against the man who branded him as an unholy sacrifice. Aided only by his titanic strength, skill, and sword, Guts must struggle against his bleak destiny, all the while fighting with a rage that might strip him of his humanity. Berserk is a dark and brooding story of outrageous swordplay and ominous fate, in the theme of Shakespeare's Macbeth.\
+\
+[b]Included one-shot:[/b]\
+\
+Volume 14: Berserk: The Prototype</series_synopsis><tags/><date_start>0000-00-00</date_start><date_finish>0000-00-00</date_finish><id>13382867</id><last_updated>1367619562</last_updated><score>9.000000</score><enable_reconsuming>0</enable_reconsuming><fansub_group></fansub_group><comments></comments><downloaded_items>0</downloaded_items><times_consumed>0</times_consumed><reconsume_value>Invalid Reconsume Value</reconsume_value><priority>Invalid Priority</priority><enable_discussion>0</enable_discussion><has_details>1</has_details></MALitem><series_type>Manga</series_type><series_status>Publishing</series_status><series_chapters>99</series_chapters><series_volumes>88</series_volumes><status>Reading</status><chapters>77</chapters><volumes>66</volumes><rereading_chapter>55</rereading_chapter><retail_volumes>44</retail_volumes><storage_type>Harddrive</storage_type></manga>\n";
+
+    g_autoptr(MalgtkManga) manga = malgtk_manga_new();
+    xmlBufferPtr     buffer = xmlBufferCreate();;
+    xmlTextWriterPtr writer = xmlNewTextWriterMemory(buffer, 0);
+    xmlTextReaderPtr reader = xmlReaderForMemory(xml, G_N_ELEMENTS(xml) - 1, NULL, NULL, 0);
+
+    /* Set the state */
+    xmlTextReaderRead(reader);
+    malgtk_manga_set_from_xml(manga, reader);
+
+    gboolean x;
+    g_object_get(G_OBJECT(manga), "has-details", &x, NULL);
+
+    /* Now serialize the state */
+    xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
+    malgtk_manga_get_xml(manga, writer);
+    xmlTextWriterEndDocument(writer);
+
+    /* Check idempotent */
+    const char *content = (char*)xmlBufferContent(buffer);
+    g_assert_cmpstr(xml, ==, content);
+
+    /* Free */
+    xmlFreeTextReader(reader);
+    xmlFreeTextWriter(writer);
+    xmlBufferFree(buffer);
 }
 
 struct notify_ctx
@@ -212,8 +251,9 @@ main(int argc, char *argv[])
     setlocale (LC_ALL, "");
     g_test_init (&argc, &argv, NULL);
     g_test_add_func("/malgtk/manga/getset", test_manga_getset);
-    g_test_add_func("/malgtk/manga/xml", test_manga_xml);
+    g_test_add_func("/malgtk/manga/xmlset", test_manga_xmlset);
     g_test_add_func("/malgtk/manga/notify", test_manga_notify);
+    g_test_add_func("/malgtk/manga/xmlget", test_manga_xmlget);
 
     int res = g_test_run ();
 

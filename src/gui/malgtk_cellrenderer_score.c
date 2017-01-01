@@ -9,6 +9,12 @@ typedef struct _MalgtkCellRendererScorePrivate MalgtkCellRendererScorePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (MalgtkCellRendererScore, malgtk_cell_renderer_score, GTK_TYPE_CELL_RENDERER_COMBO)
 
+static inline gconstpointer
+malgtk_cell_renderer_score_get_instance_private_const (const MalgtkCellRendererScore *self)
+{
+  return (G_STRUCT_MEMBER_P (self, MalgtkCellRendererScore_private_offset));
+}
+
 
 /* Some boring function declarations: GObject type system stuff */
 static void     malgtk_cell_renderer_score_get_property    (GObject                      *object,
@@ -191,6 +197,6 @@ malgtk_cell_renderer_score_new (void)
 gint
 malgtk_cell_renderer_score_get_score(const MalgtkCellRendererScore* cellscore)
 {
-    MalgtkCellRendererScorePrivate *priv = malgtk_cell_renderer_score_get_instance_private((MalgtkCellRendererScore*)cellscore);
+    const MalgtkCellRendererScorePrivate *priv = malgtk_cell_renderer_score_get_instance_private_const(cellscore);
     return priv->score;
 }

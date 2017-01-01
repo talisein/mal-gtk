@@ -36,11 +36,13 @@ mal_gtk_SOURCES = main.cpp                                                   \
                   gui/increment_entry.cpp          gui/increment_entry.hpp   \
                   gui/fancy_label.cpp              gui/fancy_label.hpp       \
                   gui/date_widgets.cpp             gui/date_widgets.hpp      \
+                  malgtk_xml.c                     malgtk_xml.h              \
                   malgtk_date.c                    malgtk_date.h             \
                   malgtk_malitem.c                 malgtk_malitem.h          \
                   malgtk_anime.c                   malgtk_anime.h            \
                   malgtk_manga.c                   malgtk_manga.h            \
-                  malgtk_enumtypes.c
+                  malgtk_enumtypes.c                                         \
+                  malgtk_gtree.c                   malgtk_gtree.h
 
 INST_H_BUILT_FILES = \
                     malgtk_enumtypes.h \

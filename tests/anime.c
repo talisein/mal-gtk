@@ -77,7 +77,7 @@ test_anime_getset(void)
 }
 
 static void
-test_anime_xml (void)
+test_anime_xmlset (void)
 {
     static const char xml[] = "<anime version=\"1\"><MALitem version=\"1\"><series_itemdb_id>1</series_itemdb_id><series_title>Cowboy Bebop</series_title><series_preferred_title></series_preferred_title><series_date_begin>1998-04-03</series_date_begin><series_date_end>1999-04-24</series_date_end><image_url>http://cdn.myanimelist.net/images/anime/4/19644.jpg</image_url><series_synonyms><series_synonym>Cowboy Bebop</series_synonym></series_synonyms><series_synopsis></series_synopsis><tags/><date_start>0000-00-00</date_start><date_finish>0000-00-00</date_finish><id>9755128</id><last_updated>1238650198</last_updated><score>0.000000</score><enable_reconsuming>0</enable_reconsuming><fansub_group></fansub_group><comments></comments><downloaded_items>0</downloaded_items><times_consumed>0</times_consumed><reconsume_value>Invalid Reconsume Value</reconsume_value><priority>Invalid Priority</priority><enable_discussion>0</enable_discussion><has_details>0</has_details></MALitem><series_type>TV</series_type><series_status>Finished</series_status><series_episodes>26</series_episodes><status>Completed</status><episodes>26</episodes><rewatch_episode>0</rewatch_episode><storage_type>Invalid Anime Storage</storage_type><storage_value>0.000000</storage_value></anime>";
     g_autoptr(MalgtkAnime) anime  = malgtk_anime_new();
@@ -129,6 +129,35 @@ test_anime_xml (void)
     g_assert_cmpfloat(storage_value,   ==, _storage_value);
 
     xmlFreeTextReader(reader);
+}
+
+static void
+test_anime_xmlget (void)
+{
+    static const char xml[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<anime version=\"1\"><MALitem version=\"1\"><series_itemdb_id>71</series_itemdb_id><series_title>Full Metal Panic!</series_title><series_preferred_title></series_preferred_title><series_date_begin>2002-01-08</series_date_begin><series_date_end>2002-06-18</series_date_end><image_url>https://myanimelist.cdn-dena.com/images/anime/2/75259.jpg</image_url><series_synonyms><series_synonym>FMP</series_synonym><series_synonym>Full Metal Panic!</series_synonym></series_synonyms><series_synopsis></series_synopsis><tags/><date_start>0000-00-00</date_start><date_finish>0000-00-00</date_finish><id>9755223</id><last_updated>1238650530</last_updated><score>0.000000</score><enable_reconsuming>0</enable_reconsuming><fansub_group></fansub_group><comments></comments><downloaded_items>0</downloaded_items><times_consumed>0</times_consumed><reconsume_value>Invalid Reconsume Value</reconsume_value><priority>Invalid Priority</priority><enable_discussion>0</enable_discussion><has_details>1</has_details></MALitem><series_type>TV</series_type><series_status>Finished</series_status><series_episodes>24</series_episodes><status>Completed</status><episodes>24</episodes><rewatch_episode>0</rewatch_episode><storage_type>Invalid Anime Storage</storage_type><storage_value>2.000000</storage_value></anime>\n";
+
+    g_autoptr(MalgtkAnime) anime = malgtk_anime_new();
+    xmlBufferPtr     buffer = xmlBufferCreate();;
+    xmlTextWriterPtr writer = xmlNewTextWriterMemory(buffer, 0);
+    xmlTextReaderPtr reader = xmlReaderForMemory(xml, G_N_ELEMENTS(xml) - 1, NULL, NULL, 0);
+
+    /* Set the state */
+    xmlTextReaderRead(reader);
+    malgtk_anime_set_from_xml(anime, reader);
+
+    /* Now serialize the state */
+    xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
+    malgtk_anime_get_xml(anime, writer);
+    xmlTextWriterEndDocument(writer);
+
+    /* Check idempotent */
+    const char *content = (char*)xmlBufferContent(buffer);
+    g_assert_cmpstr(xml, ==, content);
+
+    /* Free */
+    xmlFreeTextReader(reader);
+    xmlFreeTextWriter(writer);
+    xmlBufferFree(buffer);
 }
 
 struct notify_ctx
@@ -183,8 +212,10 @@ main(int argc, char *argv[])
     setlocale (LC_ALL, "");
     g_test_init (&argc, &argv, NULL);
     g_test_add_func("/malgtk/anime/getset", test_anime_getset);
-    g_test_add_func("/malgtk/anime/xml", test_anime_xml);
+    g_test_add_func("/malgtk/anime/xmlset", test_anime_xmlset);
     g_test_add_func("/malgtk/anime/notify", test_anime_notify);
+    g_test_add_func("/malgtk/anime/xmlget", test_anime_xmlget);
+
 
     int res = g_test_run ();
 

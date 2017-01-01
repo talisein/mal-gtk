@@ -18,6 +18,7 @@
 #include "malgtk_anime.h"
 #include "malgtk_enumtypes.h"
 #include "malgtk_deserialize_v1_tools.h"
+#include "malgtk_xml.h"
 
 typedef struct _MalgtkAnime
 {
@@ -39,6 +40,12 @@ typedef struct _MalgtkAnimePrivate
 } MalgtkAnimePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (MalgtkAnime, malgtk_anime, MALGTK_TYPE_MALITEM)
+
+static inline gconstpointer
+malgtk_anime_get_instance_private_const (const MalgtkAnime *self)
+{
+  return (G_STRUCT_MEMBER_P (self, MalgtkAnime_private_offset));
+}
 
 enum
 {
@@ -384,4 +391,71 @@ malgtk_anime_set_from_xml(MalgtkAnime *anime,
                 break;
         }
     }
+}
+
+static GOnce s_defs_once = G_ONCE_INIT;
+static struct malgtk_xml_serialization_defs s_defs[N_PROPERTIES] = { 0 };
+static void*
+_init_s_defs(void* v)
+{
+    (void)v;
+    s_defs[0] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_ANIME_SERIES_TYPE, PROP_SERIES_TYPE, "series-type", "series_type",
+        NULL, offsetof(MalgtkAnimePrivate, series_type), sizeof(MalgtkAnimeSeriesType) };
+
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkAnimeSeriesType);
+
+    s_defs[1] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_ANIME_SERIES_STATUS, PROP_SERIES_STATUS, "series-status", "series_status",
+        NULL, offsetof(MalgtkAnimePrivate, series_status), sizeof(MalgtkAnimeSeriesStatus) };
+
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkAnimeSeriesStatus);
+
+    s_defs[2] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_SERIES_EPISODES, "series-episodes", "series_episodes",
+        NULL, offsetof(MalgtkAnimePrivate, series_episodes), 0 };
+
+    s_defs[3] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_ANIME_STATUS, PROP_STATUS, "status", "status",
+        NULL, offsetof(MalgtkAnimePrivate, series_status), sizeof(MalgtkAnimeStatus) };
+
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkAnimeStatus);
+
+    s_defs[4] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_EPISODES, "episodes", "episodes",
+        NULL, offsetof(MalgtkAnimePrivate, episodes), 0 };
+
+    s_defs[5] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_REWATCH_EPISODE, "rewatch-episode", "rewatch_episode",
+        NULL, offsetof(MalgtkAnimePrivate, rewatch_episode), 0 };
+
+    s_defs[6] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_ANIME_STORAGE_TYPE, PROP_STORAGE_TYPE, "storage-type", "storage_type",
+        NULL, offsetof(MalgtkAnimePrivate, storage_type), sizeof(MalgtkAnimeStorageType) };
+
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkAnimeStorageType);
+
+    s_defs[7] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_DOUBLE, PROP_STORAGE_VALUE, "storage-value", "storage_value",
+        NULL, offsetof(MalgtkAnimePrivate, storage_value), 0 };
+
+    return NULL;
+}
+
+void
+malgtk_anime_get_xml(const MalgtkAnime *anime,
+                     xmlTextWriterPtr writer)
+{
+    const MalgtkAnimePrivate *priv;
+    g_return_if_fail (MALGTK_IS_ANIME((MalgtkAnime*)anime));
+    g_once (&s_defs_once, _init_s_defs, NULL);
+    priv = malgtk_anime_get_instance_private_const (anime);
+    xmlTextWriterStartElement(writer, BAD_CAST"anime");
+    xmlTextWriterWriteAttribute(writer, BAD_CAST"version", BAD_CAST"1");
+    malgtk_malitem_get_xml(MALGTK_MALITEM((MalgtkAnime*)anime), writer);
+
+    malgtk_xml_serialize(writer, s_defs, priv);
+
+    xmlTextWriterEndElement(writer); /* anime */
+
 }

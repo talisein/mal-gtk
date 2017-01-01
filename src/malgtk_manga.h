@@ -73,6 +73,7 @@ struct _MalgtkMangaClass
 
 MalgtkManga     *malgtk_manga_new (void);
 void             malgtk_manga_set_from_xml(MalgtkManga *manga, xmlTextReaderPtr reader);
+void             malgtk_manga_get_xml(const MalgtkManga *manga, xmlTextWriterPtr writer);
 
 G_END_DECLS
 

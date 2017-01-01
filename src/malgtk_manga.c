@@ -18,6 +18,7 @@
 #include "malgtk_manga.h"
 #include "malgtk_enumtypes.h"
 #include "malgtk_deserialize_v1_tools.h"
+#include "malgtk_xml.h"
 
 typedef struct _MalgtkManga MalgtkManga;
 
@@ -44,6 +45,12 @@ typedef struct _MalgtkMangaPrivate
 } MalgtkMangaPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (MalgtkManga, malgtk_manga, MALGTK_TYPE_MALITEM);
+
+static inline gconstpointer
+malgtk_manga_get_instance_private_const (const MalgtkManga *self)
+{
+  return (G_STRUCT_MEMBER_P (self, MalgtkManga_private_offset));
+}
 
 enum
 {
@@ -411,5 +418,80 @@ malgtk_manga_set_from_xml(MalgtkManga *manga, xmlTextReaderPtr reader)
                 break;
         }
     }
+
+}
+
+static GOnce s_defs_once = G_ONCE_INIT;
+static struct malgtk_xml_serialization_defs s_defs[N_PROPERTIES] = { 0 };
+static void*
+_init_s_defs(void* v)
+{
+    (void)v;
+    s_defs[0] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_MANGA_SERIES_TYPE, PROP_SERIES_TYPE, "series-type", "series_type",
+        NULL, offsetof(MalgtkMangaPrivate, series_type), sizeof(MalgtkMangaSeriesType) };
+
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkMangaSeriesType);
+
+    s_defs[1] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_MANGA_SERIES_STATUS, PROP_SERIES_STATUS, "series-status", "series_status",
+        NULL, offsetof(MalgtkMangaPrivate, series_status), sizeof(MalgtkMangaSeriesStatus) };
+
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkMangaSeriesStatus);
+
+    s_defs[2] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_SERIES_CHAPTERS, "series-chapters", "series_chapters",
+        NULL, offsetof(MalgtkMangaPrivate, series_chapters), 0 };
+
+    s_defs[3] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_SERIES_VOLUMES, "series-volumes", "series_volumes",
+        NULL, offsetof(MalgtkMangaPrivate, series_volumes), 0 };
+
+    s_defs[4] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_MANGA_STATUS, PROP_STATUS, "status", "status",
+        NULL, offsetof(MalgtkMangaPrivate, series_status), sizeof(MalgtkMangaStatus) };
+
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkMangaStatus);
+
+    s_defs[5] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_CHAPTERS, "chapters", "chapters",
+        NULL, offsetof(MalgtkMangaPrivate, chapters), 0 };
+
+    s_defs[6] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_VOLUMES, "volumes", "volumes",
+        NULL, offsetof(MalgtkMangaPrivate, volumes), 0 };
+
+    s_defs[7] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_REREADING_CHAPTER, "rereading-chapter", "rereading_chapter",
+        NULL, offsetof(MalgtkMangaPrivate, rereading_chapter), 0 };
+
+    s_defs[8] = (struct malgtk_xml_serialization_defs){
+        G_TYPE_INT, PROP_RETAIL_VOLUMES, "retail-volumes", "retail_volumes",
+        NULL, offsetof(MalgtkMangaPrivate, retail_volumes), 0 };
+
+    s_defs[9] = (struct malgtk_xml_serialization_defs){
+        MALGTK_TYPE_MANGA_STORAGE_TYPE, PROP_STORAGE_TYPE, "storage-type", "storage_type",
+        NULL, offsetof(MalgtkMangaPrivate, storage_type), sizeof(MalgtkMangaStorageType) };
+
+    MALGTK_ENUM_IS_SERIALIZABLE(MalgtkMangaStorageType);
+
+    return NULL;
+}
+
+void
+malgtk_manga_get_xml(const MalgtkManga *manga,
+                     xmlTextWriterPtr writer)
+{
+    const MalgtkMangaPrivate *priv;
+    g_return_if_fail (MALGTK_IS_MANGA((MalgtkManga*)manga));
+    g_once (&s_defs_once, _init_s_defs, NULL);
+    priv = malgtk_manga_get_instance_private_const (manga);
+    xmlTextWriterStartElement(writer, BAD_CAST"manga");
+    xmlTextWriterWriteAttribute(writer, BAD_CAST"version", BAD_CAST"1");
+    malgtk_malitem_get_xml(MALGTK_MALITEM((MalgtkManga*)manga), writer);
+
+    malgtk_xml_serialize(writer, s_defs, priv);
+
+    xmlTextWriterEndElement(writer); /* manga */
 
 }
