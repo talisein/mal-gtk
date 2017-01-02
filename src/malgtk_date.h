@@ -20,7 +20,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _malgtk_date
+typedef struct _MalgtkDate
 {
     guint day : 8;
     guint month : 8;
