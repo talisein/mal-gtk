@@ -19,8 +19,7 @@
 
 #include <glib-object.h>
 
-#if GLIB_CHECK_VERSION(2,52,0)
-#else
+#ifndef G_TYPE_TREE
 #define G_TYPE_TREE (g_tree_get_type ())
 GType   g_tree_get_type            (void) G_GNUC_CONST;
 #endif
