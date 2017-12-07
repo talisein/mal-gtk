@@ -19,7 +19,5 @@
 
 #include <glib-object.h>
 
-#ifndef G_TYPE_TREE
 #define G_TYPE_TREE (g_tree_get_type ())
 GType   g_tree_get_type            (void) G_GNUC_CONST;
-#endif

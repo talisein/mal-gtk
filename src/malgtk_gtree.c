@@ -18,7 +18,5 @@
 #include "malgtk_gtree.h"
 #include <glib.h>
 
-#if GLIB_CHECK_VERSION(2,52,0)
-#else
 G_DEFINE_BOXED_TYPE (GTree, g_tree, g_tree_ref, g_tree_unref);
-#endif
+
