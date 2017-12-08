@@ -39,44 +39,49 @@ namespace MAL {
         set_padding(5, 1);
         auto provider = Gtk::CssProvider::create();
         provider->load_from_data(
-            "GtkLabel {"
+            ".fancy {"
+            "  border-top-right-radius: 5px;"
+            "  border-top-left-radius: 5px;"
+            "  border-bottom-left-radius: 5px;"
+            "  border-bottom-right-radius: 5px;"
             "  border-radius: 5px;"
             "}"
-            "GtkLabel#TV, GtkLabel#Manga {"
+            ".fancy#TV, .fancy#Manga {"
             "  background-color: " TV_COLOR ";"
             "}"
-            "GtkLabel#OVA, GtkLabel#One-Shot {"
+            ".fancy#OVA, .fancy#One-Shot {"
             "  background-color: " OVA_COLOR ";"
             "}"
-            "GtkLabel#Movie, GtkLabel#Novel {"
+            ".fancy#Movie, .fancy#Novel {"
             "  background-color: " MOVIE_COLOR ";"
             "}"
-            "GtkLabel#Special, GtkLabel#Doujin {"
+            ".fancy#Special, .fancy#Doujin {"
             "  background-color: " SPECIAL_COLOR ";"
             "}"
-            "GtkLabel#ONA, GtkLabel#Manhwa {"
+            ".fancy#ONA, .fancy#Manhwa {"
             "  background-color: " ONA_COLOR ";"
             "}"
-            "GtkLabel#Music, GtkLabel#Manhua {"
+            ".fancy#Music, .fancy#Manhua {"
             "  background-color: " MUSIC_COLOR ";"
             "}"
-            "GtkLabel#OEL {"
+            ".fancy#OEL {"
             "  background-color: " OEL_COLOR ";"
             "}"
-            "GtkLabel#Invalid-Type, GtkLabel#Invalid-Status {"
+            ".fancy#Invalid-Type, .fancy#Invalid-Status {"
             "  background-color: " INVALID_COLOR ";"
             "}"
-            "GtkLabel#Airing, GtkLabel#Publishing {"
+            ".fancy#Airing, .fancy#Publishing {"
             "  background-color: " AIRING_COLOR ";"
             "}"
-            "GtkLabel#Finished {"
+            ".fancy#Finished {"
             "  background-color: " FINISHED_COLOR ";"
             "}"
-            "GtkLabel#Not-Yet-Aired, GtkLabel#Not-Yet-Published {"
+            ".fancy#Not-Yet-Aired, .fancy#Not-Yet-Published {"
             "  background-color: " NOTYETAIRED_COLOR ";"
             "}"
             );
         auto style = get_style_context();
+        style->add_class("fancy");
         style->add_provider(provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
 
@@ -84,7 +89,6 @@ namespace MAL {
     {
         constexpr gunichar spc = ' ';
         constexpr gunichar dash = '-';
-
         set_text(label);
 
         Glib::ustring::size_type pos = label.find(spc);
