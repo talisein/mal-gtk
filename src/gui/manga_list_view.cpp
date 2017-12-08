@@ -78,8 +78,11 @@ namespace MAL {
         m_status_type_grid->attach(*m_series_type_label, 0, 0, 1, 1);
         m_status_type_grid->attach(*m_series_status_label, 1, 0, 1, 1);
         m_status_type_grid->set_column_spacing(10);
+        m_status_type_grid->set_hexpand(false);
         m_series_status_label->set_vexpand(true);
         m_series_type_label->set_vexpand(true);
+        m_series_status_label->set_hexpand(true);
+        m_series_type_label->set_hexpand(true);
     }
 
     void MangaDetailViewBase::display_item(const std::shared_ptr<MALItem>& item)
