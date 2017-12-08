@@ -212,6 +212,7 @@ namespace MAL {
         m_synopsis_label->set_line_wrap(true);
         m_synopsis_label->set_line_wrap(true);
         m_synopsis_label->set_valign(Gtk::ALIGN_START);
+        m_synopsis_label->set_hexpand(true);
 		m_signal_image_available.connect(sigc::mem_fun(*this, &MALItemDetailViewBase::on_image_available));
         m_grid_left->attach(*m_series_date_grid, 0, 1, 1, 1);
         
