@@ -116,13 +116,12 @@ Competitors
 These are the GUI MAL updaters I know about. There's a ton of CLI-only
 clients out there, but that's not the same thing. 
 
-- [Taiga](http://taiga.erengy.com/) - Mac/Windows Only, but pretty
-  cool.
-- [MALDECK](http://myanimelist.net/clubs.php?cid=33305) - Mac/Windows
-  only.
+- [Taiga](http://taiga.moe/) - Mac/Windows Only, but pretty
+  cool. [FOSS](https://github.com/erengy/taiga).
+- [Toshocat](https://github.com/tofuness/Toshocat) - Mac/Windows. FOSS.
 - [MALU](http://www.malupdater.com/) - Windows only bloatware.
 - [Trackma](https://github.com/z411/trackma) - Python, Gtk2. It has a
-  cool curses interface, and connects to more than just MAL.
+  cool curses interface, and connects to more than just MAL. FOSS.
 
 IRC --- I'm usually alone in #malgtk on Rizon. I may not respond
 immediately, but please feel free to leave a comment.
