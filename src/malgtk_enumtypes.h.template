@@ -19,6 +19,8 @@
 #pragma once
 #include <glib-object.h>
 
+G_BEGIN_DECLS
+
 /*** END file-header ***/
 
 /*** BEGIN file-production ***/
@@ -31,3 +33,8 @@
 GType @enum_name@_get_type(void);
 #define @ENUMPREFIX@_TYPE_@ENUMSHORT@ (@enum_name@_get_type())
 /*** END value-header ***/
+
+/*** BEGIN file-tail ***/
+
+G_END_DECLS
+/*** END file-tail ***/
