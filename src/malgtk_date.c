@@ -163,6 +163,7 @@ malgtk_date_get_season(const MalgtkDate *date)
         switch (date->month) {
             case G_DATE_DECEMBER:
                 ++year;
+                __attribute__ ((fallthrough));
             case G_DATE_JANUARY:
             case G_DATE_FEBRUARY:
                 return g_strdup_printf("Winter %u", year);

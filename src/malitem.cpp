@@ -554,6 +554,7 @@ namespace MAL {
                 switch (date.get_month()) {
                     case Glib::Date::DECEMBER:
                         date.add_years(1);
+                        [[fallthrough]];
                     case Glib::Date::JANUARY:
                     case Glib::Date::FEBRUARY:
                         return "Winter " + std::to_string(date.get_year());
@@ -589,6 +590,7 @@ namespace MAL {
             switch (month) {
                 case 12:
                     ++year;
+                    [[fallthrough]];
                 case 1:
                 case 2:
                     return "Winter " + std::to_string(year);
