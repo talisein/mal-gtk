@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gtkmm.h>
+#include <glibmm.h>
 #include "malgtk_date.h"
 
 extern "C" { typedef struct _MalgtkDate MalgtkDate; }

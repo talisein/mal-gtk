@@ -1,4 +1,3 @@
-project('libmalgtk', 'c', default_options : ['c_std=c11'])
 libmalgtk_version = '0.4.0'
 libmalgtk_soversion = '0'
 
