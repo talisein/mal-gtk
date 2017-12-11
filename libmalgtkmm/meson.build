@@ -9,7 +9,7 @@ libmalgtkmm_srcs = files(['malgtkmm_date.cpp',
                           'malgtkmm_malitem.cpp',
                           'malgtkmm_wrap_init.cpp'])
 
-libmalgtkmm = shared_library('malgtkmm', libmalgtkmm_srcs,
+libmalgtkmm = static_library('malgtkmm', libmalgtkmm_srcs,
                              include_directories: libmalgtk_inc,
                              dependencies: malgtkmm_deps,
                              link_with: libmalgtk)
