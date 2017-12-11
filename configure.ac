@@ -56,12 +56,10 @@ AC_SUBST([LIBSECRET_CFLAGS])
 AC_SUBST([LIBSECRET_LIBS])
 
 #GLIB_GSETTINGS
-GLIB_TESTS
 
 # Checks for header files.
 AC_CHECK_HEADERS([locale.h stdio.h stdarg.h])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile
-                 tests/Makefile])
+                 src/Makefile])
 AC_OUTPUT

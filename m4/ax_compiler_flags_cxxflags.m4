@@ -1,6 +1,6 @@
-# ==============================================================================
-#  http://www.gnu.org/software/autoconf-archive/ax_compiler_flags_cxxflags.html
-# ==============================================================================
+# ===============================================================================
+#  https://www.gnu.org/software/autoconf-archive/ax_compiler_flags_cxxflags.html
+# ===============================================================================
 #
 # SYNOPSIS
 #
@@ -26,7 +26,7 @@
 #   and this notice are preserved.  This file is offered as-is, without any
 #   warranty.
 
-#serial 7
+#serial 10
 
 AC_DEFUN([AX_COMPILER_FLAGS_CXXFLAGS],[
     AC_REQUIRE([AC_PROG_SED])
@@ -35,7 +35,7 @@ AC_DEFUN([AX_COMPILER_FLAGS_CXXFLAGS],[
     AX_REQUIRE_DEFINED([AX_CHECK_COMPILE_FLAG])
 
     # Variable names
-    m4_define(ax_warn_cxxflags_variable,
+    m4_define([ax_warn_cxxflags_variable],
               [m4_normalize(ifelse([$1],,[WARN_CXXFLAGS],[$1]))])
 
     AC_LANG_PUSH([C++])
@@ -49,6 +49,13 @@ AC_DEFUN([AX_COMPILER_FLAGS_CXXFLAGS],[
         ax_compiler_flags_test="-Werror=unknown-warning-option"
     ],[
         ax_compiler_flags_test=""
+    ])
+
+    # Check that -Wno-suggest-attribute=format is supported
+    AX_CHECK_COMPILE_FLAG([-Wno-suggest-attribute=format],[
+        ax_compiler_no_suggest_attribute_flags="-Wno-suggest-attribute=format"
+    ],[
+        ax_compiler_no_suggest_attribute_flags=""
     ])
 
     # Base flags
@@ -104,7 +111,7 @@ AC_DEFUN([AX_COMPILER_FLAGS_CXXFLAGS],[
         AX_APPEND_FLAG([-Werror],ax_warn_cxxflags_variable)
 
         AX_APPEND_COMPILE_FLAGS([ dnl
-            -Wno-suggest-attribute=format dnl
+            [$ax_compiler_no_suggest_attribute_flags] dnl
         ],ax_warn_cxxflags_variable,[$ax_compiler_flags_test])
     ])
 

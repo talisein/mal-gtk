@@ -8,7 +8,7 @@ AM_CFLAGS=-std=c11 $(GLIB_CFLAGS)
 
 mal_gtk_CFLAGS=-std=c11 $(WARN_CFLAGS)
 mal_gtk_LDFLAGS=$(WARN_LDFLAGS)
-mal_gtk_CXXFLAGS=-Wall -Wextra -pedantic $(WARN_CXXFLAGS) -Wno-redundant-decls
+mal_gtk_CXXFLAGS=-Wall -Wextra -pedantic $(WARN_CXXFLAGS) -Wno-redundant-decls -I../libmalgtk
 
 mal_gtk_SOURCES = main.cpp                                                   \
                   application.cpp                  application.hpp           \
@@ -35,33 +35,6 @@ mal_gtk_SOURCES = main.cpp                                                   \
                   gui/manga_list_view.cpp          gui/manga_list_view.hpp   \
                   gui/increment_entry.cpp          gui/increment_entry.hpp   \
                   gui/fancy_label.cpp              gui/fancy_label.hpp       \
-                  gui/date_widgets.cpp             gui/date_widgets.hpp      \
-                  malgtkmm_wrap_init.cpp           malgtkmm_wrap_init.hpp    \
-                  malgtk_xml.c                     malgtk_xml.h              \
-                  malgtk_date.c                    malgtk_date.h             \
-                  malgtkmm_date.cpp                malgtkmm_date.hpp         \
-                  malgtk_malitem.c                 malgtk_malitem.h          \
-                  malgtkmm_malitem.cpp             malgtkmm_malitem.hpp      \
-                  malgtk_anime.c                   malgtk_anime.h            \
-                  malgtk_manga.c                   malgtk_manga.h            \
-                  malgtk_enumtypes.c               malgtk_enumtypes.h        \
-                  malgtk_gtree.c                   malgtk_gtree.h
-
-INST_H_BUILT_FILES = \
-                    malgtk_enumtypes.h \
-                    $(NULL)
-
-BUILT_SOURCES = malgtk_enumtypes.c malgtk_enumtypes.h
-CLEANFILES = $(BUILT_SOURCES)
-EXTRA_DIST = malgtk_enumtypes.h.template malgtk_enumtypes.c.template
-
-malgtk_enum_headers = malgtk_malitem.h malgtk_anime.h malgtk_manga.h
-
-malgtk_enumtypes.h: $(malgtk_enum_headers) malgtk_enumtypes.h.template
-	$(GLIB_MKENUMS) --template $(filter %.template,$^) $(filter-out %.template,$^) > \
-	malgtk_enumtypes.h.tmp && mv malgtk_enumtypes.h.tmp malgtk_enumtypes.h
+                  gui/date_widgets.cpp             gui/date_widgets.hpp
 
 
-malgtk_enumtypes.c: $(malgtk_enum_headers) malgtk_enumtypes.h malgtk_enumtypes.c.template
-	$(GLIB_MKENUMS) --template $(filter %.template,$^) $(filter-out %.template,$^) > \
-	malgtk_enumtypes.c.tmp && mv malgtk_enumtypes.c.tmp malgtk_enumtypes.c
