@@ -4,14 +4,19 @@ GTK+3 Interface for myanimelist.net
 
 Requirements
 ------------
-gtkmm3, libsecret, libxml2, libcurl, and a org.freedesktop.secrets
+[gtkmm3](https://www.gtkmm.org), [libsecret](https://wiki.gnome.org/Projects/Libsecret), [libxml2](http://xmlsoft.org/), [libcurl](https://curl.haxx.se/libcurl/), and a org.freedesktop.secrets
 provider such as gnome-keyring-daemon or ksecretservice.
+
+Also [meson](http://mesonbuild.com/) and [ninja](https://ninja-build.org/) to build it.
 
 Building
 --------
-        # ./autogen.sh
-        # make -j8 # -j8 does 8 parallel compilations
-        # sudo make install # (Or just run src/mal-gtk)
+        # mkdir build
+        # cd build
+        # meson --buildtype release ..
+        # ninja
+        # ./src/mal-gtk # run the program
+        # sudo ninja install # optional, installs program
 
 mal-gtk is the executable name.
 
