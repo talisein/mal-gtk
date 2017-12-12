@@ -18,5 +18,5 @@
 #include "malgtk_gtree.h"
 #include <glib.h>
 
-G_DEFINE_BOXED_TYPE (GTree, g_tree, g_tree_ref, g_tree_unref);
+G_DEFINE_BOXED_TYPE (GTree, g_tree, g_tree_ref, g_tree_unref)
 

@@ -195,7 +195,7 @@ malgtk_anime_finalize (GObject *obj)
     //MalgtkAnimePrivate *priv = malgtk_anime_get_instance_private (MALGTK_ANIME(obj));
 //    (void)priv;
     G_OBJECT_CLASS (malgtk_anime_parent_class)->finalize (obj);
-};
+}
 
 static void
 malgtk_anime_class_init (MalgtkAnimeClass *klass)

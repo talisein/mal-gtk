@@ -44,7 +44,7 @@ typedef struct _MalgtkMangaPrivate
     MalgtkMangaStorageType storage_type;
 } MalgtkMangaPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (MalgtkManga, malgtk_manga, MALGTK_TYPE_MALITEM);
+G_DEFINE_TYPE_WITH_PRIVATE (MalgtkManga, malgtk_manga, MALGTK_TYPE_MALITEM)
 
 static inline gconstpointer
 malgtk_manga_get_instance_private_const (const MalgtkManga *self)

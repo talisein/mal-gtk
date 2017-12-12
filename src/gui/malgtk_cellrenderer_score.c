@@ -81,7 +81,7 @@ malgtk_cell_renderer_score_init (MalgtkCellRendererScore *cellscore)
 }
 
 static void
-malgtk_cell_renderer_score_notify_score_cb(GObject *obj, GParamSpec *pspec, gpointer user_data)
+malgtk_cell_renderer_score_notify_score_cb(GObject *obj, GParamSpec *pspec __attribute__((unused)), gpointer user_data __attribute__((unused)))
 {
     MalgtkCellRendererScore *cellscore = MALGTK_CELL_RENDERER_SCORE(obj);
     gint score;

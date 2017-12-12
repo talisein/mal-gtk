@@ -41,7 +41,7 @@ malitem_fixture_set_up (MalitemFixture *fixture,
 
 static void
 malitem_fixture_tear_down (MalitemFixture *fixture,
-                           gconstpointer user_data)
+                           gconstpointer user_data __attribute__((unused)))
 {
     g_clear_object (&fixture->item);
 }

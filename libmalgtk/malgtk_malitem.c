@@ -109,7 +109,7 @@ struct strv_tree_data
 
 static gboolean
 strv_tree_eq_fn(gpointer key,
-                gpointer value,
+                gpointer value __attribute__((unused)),
                 gpointer data)
 {
     struct strv_tree_data *d = (struct strv_tree_data*)data;
@@ -785,7 +785,7 @@ struct _foreach_data {
 
 static gboolean
 _foreach_cb(gpointer key,
-            gpointer value,
+            gpointer value __attribute__((unused)),
             gpointer data)
 {
     struct _foreach_data *bkt = data;
@@ -819,7 +819,7 @@ malgtk_malitem_foreach_tag(const MalgtkMalitem *item,
 
 static gboolean
 _tree_to_gstrv_cb(gpointer key,
-                  gpointer value,
+                  gpointer value __attribute__((unused)),
                   gpointer data)
 {
     gchar ***strvp = data;

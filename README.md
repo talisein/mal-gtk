@@ -13,7 +13,7 @@ Building
 --------
         # mkdir build
         # cd build
-        # meson --buildtype release ..
+        # meson ..
         # ninja
         # ./src/mal-gtk # run the program
         # sudo ninja install # optional, installs program

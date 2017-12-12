@@ -121,7 +121,7 @@ struct key_writer_pair
 
 static gboolean
 _gtree_to_writer_cb(gpointer key,
-                    gpointer value,
+                    gpointer value __attribute__((unused)),
                     gpointer data)
 {
     struct key_writer_pair *pair = (struct key_writer_pair*)data;
