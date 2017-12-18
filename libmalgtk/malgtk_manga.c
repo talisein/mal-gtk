@@ -22,11 +22,6 @@
 
 typedef struct _MalgtkManga MalgtkManga;
 
-typedef struct _MalgtkManga
-{
-    MalgtkMalitem parent_instance;
-} MalgtkManga;
-
 typedef struct _MalgtkMangaPrivate
 {
     MalgtkMangaSeriesType series_type;

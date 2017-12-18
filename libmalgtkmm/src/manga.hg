@@ -1,0 +1,58 @@
+/* Copyright (c) 2010  Joe Hacker <joe@example.com>
+ *
+ * This file is part of skeletonmm.
+ *
+ * skeletonmm is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 2.1 of the License,
+ * or (at your option) any later version.
+ *
+ * skeletonmm is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+_DEFS(malgtkmm,malgtk)
+_PINCLUDE(malgtkmm/private/malitem_p.h)
+
+#include <malgtkmm/malitem.h>
+#include <libxml/xmlreader.h>
+#include <libxml/xmlwriter.h>
+
+namespace MALnew
+{
+  _WRAP_ENUM(MangaStatus,MalgtkMangaStatus)
+  _WRAP_ENUM(MangaSeriesStatus,MalgtkMangaSeriesStatus)
+  _WRAP_ENUM(MangaSeriesType,MalgtkMangaSeriesType)
+  _WRAP_ENUM(MangaStorageType,MalgtkMangaStorageType)
+  
+class Manga : public Malitem
+{
+  _CLASS_GOBJECT(Manga, MalgtkManga, MALGTK_MANGA, MALnew::Malitem, MalgtkMalitem)
+
+  _WRAP_PROPERTY('status', MALnew::MangaStatus)
+  _WRAP_PROPERTY('retail-volumes', int)
+  _WRAP_PROPERTY('series-type', MALnew::MangaSeriesType)
+  _WRAP_PROPERTY('series-status', MALnew::MangaSeriesStatus)
+  _WRAP_PROPERTY('series-chapters', int)
+  _WRAP_PROPERTY('series-volumes', int)
+  _WRAP_PROPERTY('rereading-chapter', int)
+  _WRAP_PROPERTY('chapters', int)
+  _WRAP_PROPERTY('volumes', int)
+  _WRAP_PROPERTY('storage-type', MALnew::MangaStorageType)
+
+  _WRAP_METHOD(void get_xml(xmlTextWriterPtr writer) const, malgtk_manga_get_xml)
+  _WRAP_METHOD(void set_from_xml(xmlTextReaderPtr reader), malgtk_manga_set_from_xml)
+  
+protected:
+  _CTOR_DEFAULT()
+
+public:
+  _WRAP_CREATE()
+};
+
+} // namespace MALnew

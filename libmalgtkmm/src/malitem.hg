@@ -1,0 +1,80 @@
+/*
+ *  This file is part of mal-gtk.
+ *
+ *  mal-gtk is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  mal-gtk is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with mal-gtk.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+_DEFS(malgtkmm,malgtk)
+_PINCLUDE(glibmm/private/object_p.h)
+
+#include <functional>
+#include <glibmm.h>
+#include <libxml/xmlreader.h>
+#include <libxml/xmlwriter.h>
+#include <malgtkmm/date.h>
+
+namespace MALnew
+{
+  _WRAP_ENUM(ReconsumeValue, MalgtkMalitemReconsumeValue)
+  _WRAP_ENUM(Priority, MalgtkMalitemPriority)
+
+class Malitem : public Glib::Object
+{
+  _CLASS_GOBJECT(Malitem, MalgtkMalitem, MALGTK_MALITEM, Glib::Object, GObject)
+
+public:
+
+  _WRAP_PROPERTY("mal-db-id", int64_t)
+  _WRAP_PROPERTY("series-title", Glib::ustring)
+  _WRAP_PROPERTY("preferred-title", Glib::ustring)
+  _WRAP_PROPERTY("series-date-begin", MALnew::Date)
+  _WRAP_PROPERTY("series-date-end", MALnew::Date)
+  _WRAP_PROPERTY("season-begin", Glib::ustring)
+  _WRAP_PROPERTY("season-end", Glib::ustring)
+  _WRAP_PROPERTY("image-url", std::string)
+  _WRAP_PROPERTY("series-synonyms", std::vector<Glib::ustring>)
+  _WRAP_PROPERTY("series-synopsis", Glib::ustring)
+  _WRAP_PROPERTY("tags", std::vector<Glib::ustring>)
+  _WRAP_PROPERTY("date-start", Glib::Date)
+  _WRAP_PROPERTY("date-finish", Glib::Date)
+  _WRAP_PROPERTY("id", int64_t)
+  _WRAP_PROPERTY("last-updated", Glib::DateTime)
+  _WRAP_PROPERTY("score", double)
+  _WRAP_PROPERTY("enable-reconsuming", bool)
+  _WRAP_PROPERTY("fansub-group", Glib::ustring)
+  _WRAP_PROPERTY("comments", Glib::ustring)
+  _WRAP_PROPERTY("downloaded-items", int)
+  _WRAP_PROPERTY("times-consumed", int)
+  _WRAP_PROPERTY("reconsume-value", MALnew::ReconsumeValue)
+  _WRAP_PROPERTY("priority", MALnew::Priority)
+  _WRAP_PROPERTY("enable-discussion", bool)
+  _WRAP_PROPERTY("has-details", bool)
+
+  _WRAP_METHOD(void set_from_xml(xmlTextReaderPtr reader), malgtk_malitem_set_from_xml)
+  _WRAP_METHOD(void get_xml(xmlTextWriterPtr writer) const, malgtk_malitem_get_xml)
+  _WRAP_METHOD(void add_synonym(const Glib::ustring& synonym), malgtk_malitem_add_synonym)
+  _WRAP_METHOD(void add_tag(const Glib::ustring& tag), malgtk_malitem_add_tag)
+
+  _IGNORE(malgtk_malitem_foreach_tag, malgtk_malitem_foreach_synonym)
+  void foreach_synonym(const std::function<void (const Glib::ustring&)>& cb) const;
+  void foreach_tag(const std::function<void (const Glib::ustring&)>& cb) const;
+  
+protected:
+    _CTOR_DEFAULT()
+
+public:
+    _WRAP_CREATE()
+};
+
+} // namespace MALnew

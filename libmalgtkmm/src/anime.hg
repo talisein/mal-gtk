@@ -1,0 +1,57 @@
+/* Copyright (c) 2010  Joe Hacker <joe@example.com>
+ *
+ * This file is part of skeletonmm.
+ *
+ * skeletonmm is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 2.1 of the License,
+ * or (at your option) any later version.
+ *
+ * skeletonmm is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+_DEFS(malgtkmm,malgtk)
+_PINCLUDE(malgtkmm/private/malitem_p.h)
+
+#include <malgtkmm/malitem.h>
+#include "malgtk_enumtypes.h"
+#include <glibmm.h>
+
+namespace MALnew
+{
+
+  _WRAP_ENUM(AnimeStatus, MalgtkAnimeStatus)
+  _WRAP_ENUM(AnimeSeriesStatus, MalgtkAnimeSeriesStatus)
+  _WRAP_ENUM(AnimeSeriesType, MalgtkAnimeSeriesType)
+  _WRAP_ENUM(AnimeStorageType, MalgtkAnimeStorageType)
+
+class Anime : public Malitem
+{
+  _CLASS_GOBJECT(Anime, MalgtkAnime, MALGTK_ANIME, MALnew::Malitem, MalgtkMalitem)
+
+  _WRAP_PROPERTY('series-type', MALnew::AnimeSeriesType)
+  _WRAP_PROPERTY('series-status', MALnew::AnimeSeriesStatus)
+  _WRAP_PROPERTY('series-episodes', int)
+  _WRAP_PROPERTY('status', MALnew::AnimeStatus)
+  _WRAP_PROPERTY('episodes', int)
+  _WRAP_PROPERTY('rewatch-episode', int)
+  _WRAP_PROPERTY('storage-type', MALnew::AnimeStorageType)
+  _WRAP_PROPERTY('storage-value', double)
+
+  _WRAP_METHOD(void get_xml(xmlTextWriterPtr writer) const, malgtk_anime_get_xml)
+  _WRAP_METHOD(void set_from_xml(xmlTextReaderPtr reader), malgtk_anime_set_from_xml)
+  
+protected:
+  _CTOR_DEFAULT()
+
+public:
+  _WRAP_CREATE()
+};
+
+} // namespace MALnew

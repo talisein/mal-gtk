@@ -27,11 +27,16 @@ libmalgtk_enums = gnome.mkenums('malgtk_enumtypes',
                                 h_template : 'malgtk_enumtypes.h.template',
                                 sources: ['malgtk_malitem.h', 'malgtk_anime.h', 'malgtk_manga.h'])
 
+libmalgtk_inc = include_directories('.')
+
 libmalgtk = static_library('malgtk', libmalgtk_srcs, libmalgtk_enums,
                             version      : libmalgtk_version,
                             soversion    : libmalgtk_soversion,
-                            dependencies : libmalgtk_deps)
+                            dependencies : libmalgtk_deps,
+                            include_directories: libmalgtk_inc)
 
-libmalgtk_inc = include_directories('.')
+libmalgtk_dep = declare_dependency(link_with: libmalgtk,
+                                   include_directories: libmalgtk_inc,
+                                   dependencies: libmalgtk_deps)
 
 subdir('tests')

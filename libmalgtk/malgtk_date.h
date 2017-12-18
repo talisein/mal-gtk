@@ -46,6 +46,7 @@ gchar*      malgtk_date_get_string      (const MalgtkDate *date);
 gboolean    malgtk_date_is_complete     (const MalgtkDate *date);
 gboolean    malgtk_date_is_clear        (const MalgtkDate *date);
 gboolean    malgtk_date_is_equal        (const MalgtkDate *a, const MalgtkDate *b);
+gint        malgtk_date_compare         (const MalgtkDate *a, const MalgtkDate *b);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(MalgtkDate, malgtk_date_free)
 

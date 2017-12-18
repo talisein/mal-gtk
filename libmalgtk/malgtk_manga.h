@@ -62,9 +62,11 @@ typedef enum /*< prefix=MALGTK_MANGA >*/
     MALGTK_MANGA_STORAGE_TYPE_MAGAZINE     = 5,  /*< nick=Magazine >*/
     MALGTK_MANGA_STORAGE_TYPE_NAS          = 6,  /*< nick=NAS >*/
 } MalgtkMangaStorageType;
-    
+
+
 #define MALGTK_TYPE_MANGA             (malgtk_manga_get_type ())
-G_DECLARE_FINAL_TYPE(MalgtkManga, malgtk_manga, MALGTK, MANGA, MalgtkMalitem)
+G_DECLARE_DERIVABLE_TYPE(MalgtkManga, malgtk_manga, MALGTK, MANGA, MalgtkMalitem)
+
 
 struct _MalgtkMangaClass
 {

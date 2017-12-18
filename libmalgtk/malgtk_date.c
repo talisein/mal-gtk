@@ -223,6 +223,8 @@ malgtk_date_set_from_string (MalgtkDate *date, const gchar *str)
 gchar *
 malgtk_date_get_string(const MalgtkDate *date)
 {
+    if (NULL == date)
+        return NULL;
     if (malgtk_date_is_complete(date))
         return g_strdup_printf("%u-%02u-%02u", date->year, date->month, date->day);
     if (g_date_valid_month(date->month) && g_date_valid_year(date->year))
@@ -235,6 +237,9 @@ malgtk_date_get_string(const MalgtkDate *date)
 gboolean
 malgtk_date_is_complete(const MalgtkDate *date)
 {
+    if (NULL == date)
+        return FALSE;
+    
     return g_date_valid_dmy(date->day, date->month, date->year);
 }
 
@@ -248,4 +253,30 @@ gboolean
 malgtk_date_is_equal(const MalgtkDate *a, const MalgtkDate *b)
 {
     return a->day == b->day && a->month == b->month && a->year == b->year;
+}
+
+gboolean
+malgtk_date_compare(const MalgtkDate *a, const MalgtkDate *b)
+{
+    g_return_val_if_fail(a != NULL, 0);
+    g_return_val_if_fail(b != NULL, 0);
+
+    if (a->year < b->year)
+        return -1;
+    else if (a->year > b->year)
+        return 1;
+    else {
+        if (a->month < b->month)
+            return -1;
+        else if (a->month > b->month)
+            return 1;
+        else {
+            if (a->day < b->day)
+                return -1;
+            else if (a->day > b->day)
+                return 1;
+            else
+                return 0;
+        }
+    }
 }

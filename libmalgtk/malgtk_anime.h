@@ -64,7 +64,13 @@ typedef enum /*< prefix=MALGTK_ANIME >*/
 } MalgtkAnimeStorageType;
 
 #define MALGTK_TYPE_ANIME             (malgtk_anime_get_type ())
-G_DECLARE_FINAL_TYPE(MalgtkAnime, malgtk_anime, MALGTK, ANIME, MalgtkMalitem)
+G_DECLARE_DERIVABLE_TYPE(MalgtkAnime, malgtk_anime, MALGTK, ANIME, MalgtkMalitem)
+
+struct _MalgtkAnimeClass
+{
+    MalgtkMalitemClass parent_class;
+};
+
 
 MalgtkAnime     *malgtk_anime_new (void);
 void             malgtk_anime_set_from_xml(MalgtkAnime *anime, xmlTextReaderPtr reader);

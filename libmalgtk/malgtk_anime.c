@@ -20,10 +20,7 @@
 #include "malgtk_deserialize_v1_tools.h"
 #include "malgtk_xml.h"
 
-typedef struct _MalgtkAnime
-{
-    MalgtkMalitem parent_instance;
-} MalgtkAnime;
+typedef struct _MalgtkAnime MalgtkAnime;
 
 typedef struct _MalgtkAnimePrivate
 {

@@ -6,5 +6,6 @@ project('mal-gtk', ['c', 'cpp'],
                            'buildtype=release'])
 
 subdir('libmalgtk')
+subdir('tools')
 subdir('libmalgtkmm')
 subdir('src')

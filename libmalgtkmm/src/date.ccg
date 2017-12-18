@@ -1,0 +1,15 @@
+
+#include "malgtk_date.h"
+
+namespace MALnew {
+
+Glib::Date
+Date::get_g_date() const
+{
+  if (is_complete())
+    return Glib::Date(get_day(), get_month(), get_year());
+  else
+    return Glib::Date();
+}
+
+}
