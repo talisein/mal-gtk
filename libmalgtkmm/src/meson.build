@@ -18,12 +18,24 @@ signal_defs = custom_target('signals.defs',
                           capture: true,
                           depends: libmalgtk)
 
-cat = find_program('cat')
 
+malgtkmm_malitem_tmpls = files('malitem.ccg', 'malitem.hg')
+malgtkmm_anime_tmpls = files('anime.ccg', 'anime.hg')
+malgtkmm_manga_tmpls = files('manga.ccg', 'manga.hg')
+malgtkmm_date_tmpls = files('date.ccg', 'date.hg')
+
+malgtkmm_hdr_tmpls = files('date.hg','malitem.hg','anime.hg','manga.hg')
+
+malgtkmm_defsdir = meson.current_build_dir()
+malgtkmm_srcdir = meson.current_source_dir()
+
+cat = find_program('cat')
 malgtk_defs = custom_target('malgtk.defs',
                             input: [method_defs, enum_defs, signal_defs],
                             output: 'malgtk.defs',
                             command: [cat, '@INPUT@'],
                             capture: true)
+
+
 
 

@@ -4,59 +4,58 @@ gmmproc = find_program(join_paths(gmmproc_dir, 'gmmproc'))
 
 malgtkmm_targets = []
 
-private_dir = join_paths(meson.build_root(), 'libmalgtkmm', 'malgtkmm', 'private')
-python = find_program('python3')
-private_tgt = custom_target('glibmm_generate_priv_dir',
+malgtkmm_private_dir = join_paths(meson.current_build_dir(), 'private')
+python_mod = import('python3')
+python = python_mod.find_python()
+private_tgt = custom_target('malgtkmm_generate_priv_dir',
                             output : 'private',
                             command : [python, '-c',
-                                       'import os\nos.makedirs("' + private_dir + '", exist_ok=True)'])
+                                       'import os\nos.makedirs("' + malgtkmm_private_dir + '", exist_ok=True)'])
 
-malgtkmm_targets += custom_target('date',
+malgtkmm_targets += custom_target('malgtkmm_date',
                                   depends: [malgtk_defs, private_tgt],
-                                  input: [join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'date.hg'), join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'date.ccg')],
+                                  input: malgtkmm_date_tmpls,
                                   output:  ['date.h', 'date.cc'],
                                   command: [gmmproc,
-                                            '--defs', join_paths(meson.build_root(), 'libmalgtkmm', 'src'),
+                                            '--defs', malgtkmm_defsdir,
                                             'date',
-                                            join_paths(meson.current_source_dir(), '..', 'src'),
+                                            malgtkmm_srcdir,
                                             meson.current_build_dir()])
 
-malgtkmm_targets += custom_target('malitem',
+malgtkmm_targets += custom_target('malgtkmm_malitem',
                                   depends: [malgtk_defs, private_tgt],
-                                  input: [join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'malitem.hg'), join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'malitem.ccg')],
+                                  input: malgtkmm_malitem_tmpls,
                                   output:  ['malitem.h', 'malitem.cc'],
                                   command: [gmmproc,
-                                            '--defs', join_paths(meson.build_root(), 'libmalgtkmm', 'src'),
+                                            '--defs', malgtkmm_defsdir,
                                             'malitem',
-                                            join_paths(meson.current_source_dir(), '..', 'src'),
+                                            malgtkmm_srcdir,
                                             meson.current_build_dir()])
                                             
-malgtkmm_targets += custom_target('anime',
+malgtkmm_targets += custom_target('malgtkmm_anime',
                                   depends: [malgtk_defs, private_tgt],
-                                  input: [join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'anime.hg'), join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'anime.ccg')],
+                                  input: malgtkmm_anime_tmpls,
                                   output:  ['anime.h', 'anime.cc'],
                                   command: [gmmproc,
-                                            '--defs', join_paths(meson.build_root(), 'libmalgtkmm', 'src'),
+                                            '--defs', malgtkmm_defsdir,
                                             'anime',
-                                            join_paths(meson.current_source_dir(), '..', 'src'),
+                                            malgtkmm_srcdir,
                                             meson.current_build_dir()])
 
-malgtkmm_targets += custom_target('manga',
+malgtkmm_targets += custom_target('malgtkmm_manga',
                                   depends: [malgtk_defs, private_tgt],
-                                  input: [join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'manga.hg'), join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'manga.ccg')],
+                                  input: malgtkmm_manga_tmpls,
                                   output:  ['manga.h', 'manga.cc'],
                                   command: [gmmproc,
-                                            '--defs', join_paths(meson.build_root(), 'libmalgtkmm', 'src'),
+                                            '--defs', malgtkmm_defsdir,
                                             'manga',
-                                            join_paths(meson.current_source_dir(), '..', 'src'),
+                                            malgtkmm_srcdir,
                                             meson.current_build_dir()])
 
 
-gmmproc = find_program(join_paths(gmmproc_dir, 'gmmproc'))
 generate_wrap_init = find_program(join_paths(gmmproc_dir, 'generate_wrap_init.pl'))
 malgtkmm_targets += custom_target('wrap_init',
-                                  depends: [malgtk_defs, private_tgt],
-                                  input: [join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'anime.hg'), join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'manga.hg'),join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'malitem.hg'),join_paths(meson.source_root(), 'libmalgtkmm', 'src', 'date.hg')],
+                                  input: malgtkmm_hdr_tmpls,
                                   output: 'wrap_init.cc',
                                   capture: true,
                                   command: [generate_wrap_init,
