@@ -1,8 +1,8 @@
 subdir('src')
 
-malgtkmm_inc = include_directories('.')
+libmalgtkmm_inc = include_directories('.')
 
 subdir('malgtkmm')
-
+subdir('tests')
 
 

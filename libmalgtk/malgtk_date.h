@@ -31,6 +31,9 @@ typedef struct _MalgtkDate
 
 GType       malgtk_date_get_type        (void);
 MalgtkDate* malgtk_date_new             (void);
+MalgtkDate* malgtk_date_new_from_string(const gchar *str);
+MalgtkDate* malgtk_date_new_from_date(const GDate *gdate);
+
 MalgtkDate* malgtk_date_copy            (const MalgtkDate *date);
 void        malgtk_date_free            (MalgtkDate *date);
 void        malgtk_date_clear           (MalgtkDate *date);
