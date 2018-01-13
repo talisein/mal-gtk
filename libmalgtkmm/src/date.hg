@@ -35,10 +35,11 @@ public:
 #m4 _CONVERSION(`Glib::Date::Year',`GDateYear',`static_cast<GDateYear>($3)')
 #m4 _CONVERSION(`const Date&',`const MalgtkDate*',`$3.gobj()')
 
+  Date(const Glib::ustring& str);
+  Date(const std::string& str);
+  Date(const Glib::Date& date);
+  Date(const char *cstr);
 
-  _WRAP_METHOD(Glib::Date::Day get_day() const, malgtk_date_get_day)
-  _WRAP_METHOD(Glib::Date::Month get_month() const, malgtk_date_get_month)
-  _WRAP_METHOD(Glib::Date::Year get_year() const, malgtk_date_get_year)
   _WRAP_METHOD(Glib::ustring get_season() const, malgtk_date_get_season)
   _WRAP_METHOD(void set(Glib::Date::Day day, Glib::Date::Month month, Glib::Date::Year year), malgtk_date_set_dmy)
   _WRAP_METHOD(void set(const std::string& str), malgtk_date_set_from_string)
@@ -49,7 +50,16 @@ public:
   _WRAP_METHOD(void clear(), malgtk_date_clear)
   _WRAP_METHOD(void is_equal(const Date& rhs) const, malgtk_date_is_equal)
   _WRAP_METHOD(int compare(const Date& rhs) const, malgtk_date_compare)
-  
+
+  _MEMBER_GET(day, day, Glib::Date::Day, GDateDay)
+  _MEMBER_GET(month, month, Glib::Date::Month, GDateMonth)
+  _MEMBER_GET(year, year, Glib::Date::Year, GDateYear)
+
+  _MEMBER_SET(day, day, Glib::Date::Day, GDateDay)
+  _MEMBER_SET(month, month, Glib::Date::Month, GDateMonth)
+  _MEMBER_SET(year, year, Glib::Date::Year, GDateYear)
+
+  _IGNORE(malgtk_date_get_day, malgtk_date_get_month, malgtk_date_get_year)
   _IGNORE(malgtk_date_get_g_date, malgtk_date_free, malgtk_date_copy)
   
   Glib::Date get_g_date() const;

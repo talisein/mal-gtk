@@ -64,15 +64,15 @@ malgtkmm_targets += custom_target('wrap_init',
                                             '@INPUT@'])
                                             
 gtkmm_dep = dependency('gtkmm-3.0', version : '>=3.0.0')
-malgtkmm_deps = [glibmm_dep, gtkmm_dep, xml_dep, libmalgtk_dep]
+libmalgtkmm_deps = [glibmm_dep, gtkmm_dep, xml_dep, libmalgtk_dep]
 
 libmalgtkmm = static_library('malgtkmm', malgtkmm_targets, 'init.cc',
-                             include_directories: malgtkmm_inc,
-                             dependencies: malgtkmm_deps)
+                             include_directories: libmalgtkmm_inc,
+                             dependencies: libmalgtkmm_deps)
 
 libmalgtkmm_dep = declare_dependency(link_with: libmalgtkmm,
-                                     include_directories: malgtkmm_inc,
-                                     dependencies: malgtkmm_deps)
+                                     include_directories: libmalgtkmm_inc,
+                                     dependencies: libmalgtkmm_deps)
 
 
 

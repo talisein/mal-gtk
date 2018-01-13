@@ -6,10 +6,34 @@ namespace MALnew {
 Glib::Date
 Date::get_g_date() const
 {
-  if (is_complete())
+  if (G_LIKELY(is_complete()))
     return Glib::Date(get_day(), get_month(), get_year());
   else
     return Glib::Date();
+}
+
+Date::Date(const Glib::ustring& str)
+:
+  gobject_ (malgtk_date_new_from_string(str.c_str()))
+{
+}
+
+Date::Date(const std::string& str)
+:
+  gobject_ (malgtk_date_new_from_string(str.c_str()))
+{
+}
+
+Date::Date(const Glib::Date& d)
+:
+  gobject_ (malgtk_date_new_from_date(d.gobj()))
+{
+}
+
+Date::Date(const char *cstr)
+:
+  gobject_ (malgtk_date_new_from_string(cstr))
+{
 }
 
 }

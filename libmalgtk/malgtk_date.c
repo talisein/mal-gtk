@@ -21,12 +21,8 @@
 static void
 xform_from_g_date(const GValue *src_value, GValue *dest_value)
 {
-    MalgtkDate *d = malgtk_date_new();
     const GDate *src = g_value_get_boxed(src_value);
-    malgtk_date_set_dmy(d,
-                        g_date_get_day(src),
-                        g_date_get_month(src),
-                        g_date_get_year(src));
+    MalgtkDate *d = malgtk_date_new_from_date(src);
     g_value_take_boxed(dest_value, d);
 }
 
@@ -40,9 +36,8 @@ xform_to_g_date(const GValue *src_value, GValue *dest_value)
 static void
 xform_from_string(const GValue *src_value, GValue *dest_value)
 {
-    MalgtkDate *d = malgtk_date_new();
     const gchar *src = g_value_get_string(src_value);
-    malgtk_date_set_from_string(d, src);
+    MalgtkDate *d = malgtk_date_new_from_string(src);
     g_value_take_boxed(dest_value, d);
 }
 
@@ -72,6 +67,29 @@ malgtk_date_new(void)
 {
     MalgtkDate *d = g_malloc (sizeof (MalgtkDate));
     malgtk_date_clear (d);
+
+    return d;
+}
+
+MalgtkDate*
+malgtk_date_new_from_string(const gchar *str)
+{
+    MalgtkDate *d = g_malloc (sizeof (MalgtkDate));
+    malgtk_date_set_from_string(d, str);
+
+    return d;
+}
+
+MalgtkDate*
+malgtk_date_new_from_date(const GDate *gdate)
+{
+    MalgtkDate *d = g_malloc (sizeof (MalgtkDate));
+
+    *d = (MalgtkDate){
+        .day   = gdate->day,
+        .month = gdate->month,
+        .year  = gdate->year,
+    };
 
     return d;
 }
