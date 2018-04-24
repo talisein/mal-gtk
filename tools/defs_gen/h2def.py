@@ -73,7 +73,10 @@ import sys
 
 import defsparser
 
-from sets import Set
+try:
+    from sets import Set
+except ImportError:
+    Set = set
 
 # ------------------ Create typecodes from typenames ---------
 
