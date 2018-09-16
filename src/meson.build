@@ -6,9 +6,10 @@ xml_dep    = dependency('libxml-2.0',  version : '>=2.7.8')
 curl_dep   = dependency('libcurl',     version : '>=7.24.0')
 secret_dep = dependency('libsecret-1', version : '>=0.12')
 sigcpp_dep = dependency('sigc++-2.0',  version : '>=2.2.11')
+gcr_dep    = dependency('gcr-base-3')
 thread_dep = dependency('threads')
 
-malgtk_deps = [gobj_dep, glib_dep, glibmm_dep, gtkmm_dep, xml_dep, curl_dep, secret_dep, thread_dep]
+malgtk_deps = [gobj_dep, glib_dep, glibmm_dep, gtkmm_dep, xml_dep, curl_dep, secret_dep, thread_dep, gcr_dep]
 
 malgtk_src = files(['main.cpp',
                     'application.cpp',
@@ -36,4 +37,4 @@ malgtk_src = files(['main.cpp',
 malgtk = executable('mal-gtk', malgtk_src,
                     include_directories : libmalgtk_inc,
                     dependencies : malgtk_deps,
-                    install      : true)  
+                    install      : true)

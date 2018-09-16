@@ -16,8 +16,9 @@
  */
 
 #pragma once
-#include <libsecret/secret.h>
 #include <memory>
+#include "glib.h"
+#include "secret_allocator.h"
 
 namespace MAL {
 
@@ -32,7 +33,9 @@ namespace MAL {
         bool has_details() const;
 
         std::shared_ptr<gchar> get_username() const;
+        secret_string get_username_str() const;
         std::shared_ptr<gchar> get_password() const;
+        secret_string get_password_str() const;
 
     private:
         void lookup_details();
