@@ -411,7 +411,7 @@ namespace MAL {
             series_type     = anime->series_type;
             series_status   = anime->series_status;
             series_episodes = anime->series_episodes;
-            
+
             // TODO: Handle conflicts
             status          = anime->status;
             episodes        = anime->episodes;
@@ -425,12 +425,12 @@ namespace MAL {
         if (str.size() == 1) {
             try {
                 series_type = anime_series_type(std::stoi(str));
-            } catch (std::invalid_argument e) {
+            } catch (const std::invalid_argument& e) {
                 std::cerr << "Error: Invalid argument converting series type \""
                           << str << "\" to an integer: "
                           << e.what() << std::endl;
                 series_type = SeriesType::INVALID;
-            } catch (std::out_of_range e) {
+            } catch (const std::out_of_range& e) {
                 std::cerr << "Error: Converting series type \"" << str
                           << "\" to int falls outside the expected range: "
                           << e.what() << std::endl;
@@ -449,12 +449,12 @@ namespace MAL {
             int s = status_invalid;
             try {
                 s = std::stoi(str);
-            } catch (std::invalid_argument e) {
+            } catch (const std::invalid_argument& e) {
                 std::cerr << "Error: Invalid argument converting series type \""
                           << str << "\" to an integer: "
                           << e.what() << std::endl;
                 s = status_invalid;
-            } catch (std::out_of_range e) {
+            } catch (const std::out_of_range& e) {
                 std::cerr << "Error: Converting \"" << str
                           << "\" to int falls outside the expected range: "
                           << e.what() << std::endl;
@@ -498,7 +498,7 @@ namespace MAL {
     {
         try {
             rewatch_episode = std::stoi(str);
-        } catch (std::exception e) {
+        } catch (const std::exception& e) {
             rewatch_episode = 0;
         }
     }
