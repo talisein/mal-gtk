@@ -128,7 +128,7 @@ namespace MAL {
 
         m_series_status_label->set_label(to_string(anime->series_status));
         m_series_type_label->set_label(to_string(anime->series_type));
-
+        std::cout << item->series_title << " has details: " << item->has_details << std::endl;
         if (anime->series_synopsis.empty()) {
             m_synopsis_frame->show_all();
             m_synopsis_label->set_markup("Fetching...");
@@ -247,7 +247,7 @@ namespace MAL {
                     row.set_value(columns->episodes, episodes);
                 }
             }
-        } catch (std::exception e) {
+        } catch (const std::exception& e) {
             auto anime = std::static_pointer_cast<Anime>(m_item);
             m_episodes_entry->set_entry_text(std::to_string(anime->episodes));
         }
@@ -423,14 +423,14 @@ namespace MAL {
      * Called when the tree model was changed due to editing.
      * This method should set the appropriate field in item from
      * the tree row, then set the item back into the model as
-     * well. 
+     * well.
      * Return true when the item value is different from the model value.
      */
     bool AnimeListViewEditable::model_changed_cb(std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         bool is_changed = false;
         auto mal_changed = MALItemListViewEditable::model_changed_cb(item, row);
-        
+
         auto const columns = std::dynamic_pointer_cast<AnimeModelColumnsEditable>(m_columns);
         auto anime = std::static_pointer_cast<Anime>(item);
         auto new_anime = std::static_pointer_cast<Anime>(anime->clone());
@@ -485,7 +485,7 @@ namespace MAL {
             }
         }
     }
-    
+
     AnimeSearchListPage::AnimeSearchListPage(const std::shared_ptr<MAL>& mal,
                                              AnimeListViewStatic*        list_view,
                                              AnimeDetailViewStatic*      detail_view) :
@@ -563,7 +563,7 @@ namespace MAL {
 
     void AnimeFilteredListPage::refresh()
     {
-        auto complete_cb = [this](bool success) { 
+        auto complete_cb = [this](bool success) {
             m_refresh_button->set_sensitive(true);
             m_refresh_button->show();
             m_progressbar->hide();

@@ -2,8 +2,6 @@ glibmm_dep = dependency('glibmm-2.4', version : '>=2.44.0')
 gmmproc_dir = glibmm_dep.get_pkgconfig_variable('gmmprocdir')
 gmmproc = find_program(join_paths(gmmproc_dir, 'gmmproc'))
 
-malgtkmm_targets = []
-
 malgtkmm_private_dir = join_paths(meson.current_build_dir(), 'private')
 python_mod = import('python3')
 python = python_mod.find_python()
@@ -12,6 +10,7 @@ private_tgt = custom_target('malgtkmm_generate_priv_dir',
                             command : [python, '-c',
                                        'import os\nos.makedirs("' + malgtkmm_private_dir + '", exist_ok=True)'])
 
+malgtkmm_targets = []
 malgtkmm_targets += custom_target('malgtkmm_date',
                                   depends: [malgtk_defs, private_tgt],
                                   input: malgtkmm_date_tmpls,
@@ -31,7 +30,7 @@ malgtkmm_targets += custom_target('malgtkmm_malitem',
                                             'malitem',
                                             malgtkmm_srcdir,
                                             meson.current_build_dir()])
-                                            
+
 malgtkmm_targets += custom_target('malgtkmm_anime',
                                   depends: [malgtk_defs, private_tgt],
                                   input: malgtkmm_anime_tmpls,
@@ -52,6 +51,7 @@ malgtkmm_targets += custom_target('malgtkmm_manga',
                                             malgtkmm_srcdir,
                                             meson.current_build_dir()])
 
+malgtkmm_generated_headers = [malgtkmm_targets[0][0], malgtkmm_targets[1][0], malgtkmm_targets[2][0], malgtkmm_targets[3][0]]
 
 generate_wrap_init = find_program(join_paths(gmmproc_dir, 'generate_wrap_init.pl'))
 malgtkmm_targets += custom_target('wrap_init',
@@ -62,7 +62,7 @@ malgtkmm_targets += custom_target('wrap_init',
                                             '--parent_dir=malgtkmm',
                                             '--namespace=MALnew',
                                             '@INPUT@'])
-                                            
+
 gtkmm_dep = dependency('gtkmm-3.0', version : '>=3.0.0')
 libmalgtkmm_deps = [glibmm_dep, gtkmm_dep, xml_dep, libmalgtk_dep]
 
@@ -72,7 +72,5 @@ libmalgtkmm = static_library('malgtkmm', malgtkmm_targets, 'init.cc',
 
 libmalgtkmm_dep = declare_dependency(link_with: libmalgtkmm,
                                      include_directories: libmalgtkmm_inc,
-                                     dependencies: libmalgtkmm_deps)
-
-
-
+                                     dependencies: libmalgtkmm_deps,
+                                     sources: malgtkmm_generated_headers)

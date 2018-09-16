@@ -416,6 +416,8 @@ namespace MAL {
             status          = anime->status;
             episodes        = anime->episodes;
             rewatch_episode = anime->rewatch_episode;
+
+            has_details     = false;
         }
     }
 

@@ -17,6 +17,7 @@
 
 #include <gtkmm/application.h>
 #include "gui/main_window.hpp"
+#include "mal_curl.hpp"
 #include "mal.hpp"
 
 namespace MAL {
@@ -30,6 +31,7 @@ namespace MAL {
 
 	private:
 		Glib::RefPtr<Gtk::Application> app;
+        std::shared_ptr<curl_pool> pool;
 		std::shared_ptr<MAL> mal;
 		MainWindow window;
 

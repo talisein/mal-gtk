@@ -209,7 +209,7 @@ namespace MAL {
             auto chapters = std::stoi(m_chapters_entry->get_entry_text());
             if (chapters != row.get_value(columns->chapters))
                 row.set_value(columns->chapters, chapters);
-        } catch (std::exception e) {
+        } catch (const std::exception& e) {
             auto manga = std::static_pointer_cast<Manga>(m_item);
             m_chapters_entry->set_entry_text(std::to_string(manga->chapters));
         }
@@ -218,7 +218,7 @@ namespace MAL {
             auto volumes = std::stoi(m_volumes_entry->get_entry_text());
             if (volumes != row.get_value(columns->volumes))
                 row.set_value(columns->volumes, volumes);
-        } catch (std::exception e) {
+        } catch (const std::exception& e) {
             auto manga = std::static_pointer_cast<Manga>(m_item);
             m_volumes_entry->set_entry_text(std::to_string(manga->volumes));
         }
@@ -381,14 +381,14 @@ namespace MAL {
      * Called when the tree model was changed due to editing.
      * This method should set the appropriate field in item from
      * the tree row, then set the item back into the model as
-     * well. 
+     * well.
      * Return true when the item value is different from the model value.
      */
     bool MangaListViewEditable::model_changed_cb(std::shared_ptr<MALItem>& item, const Gtk::TreeRow& row)
     {
         bool is_changed = false;
         auto mal_changed = MALItemListViewEditable::model_changed_cb(item, row);
-        
+
         auto const columns = std::dynamic_pointer_cast<MangaModelColumnsEditable>(m_columns);
         auto manga = std::static_pointer_cast<Manga>(item);
         auto new_manga = std::static_pointer_cast<Manga>(manga->clone());
@@ -455,7 +455,7 @@ namespace MAL {
             }
 		}
     }
-    
+
     MangaSearchListPage::MangaSearchListPage(const std::shared_ptr<MAL>& mal,
                                              MangaListViewStatic*        list_view,
                                              MangaDetailViewStatic*      detail_view) :

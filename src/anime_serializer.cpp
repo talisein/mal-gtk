@@ -187,7 +187,7 @@ namespace MAL {
 		     ret = xmlTextReaderRead(reader.get()) ) {
 			const std::string name  = xmlchar_to_str(xmlTextReaderConstName (reader.get()));
 			std::string value = xmlchar_to_str(xmlTextReaderConstValue(reader.get()));
-            m_text_util->parse_html_entities(value);
+//            m_text_util->parse_html_entities(value);
 
 			if (name.size() > 0) {
 				auto field_iter = field_map.find(name);
@@ -222,7 +222,7 @@ namespace MAL {
 							member_iter->second(anime, std::move(value));
 						}
 					} else {
-						std::cerr << "Error: Unexpected " << name << " = " 
+						std::cerr << "Error: Unexpected " << name << " = "
 						          << value << std::endl;
 					}
 					break;
@@ -236,7 +236,7 @@ namespace MAL {
 				}
 			}
 		}
-		
+
 		if ( ret != 0 ) {
 			std::cerr << "Error: Failed to parse! ret = " << ret << std::endl;
             std::cerr << "The xml is:\n" << xml << std::endl;
@@ -247,17 +247,18 @@ namespace MAL {
 
     /** Parse the 'detailed' Anime fields from HTML
      *
-     * 
+     *
      */
     std::shared_ptr<Anime> AnimeSerializer::deserialize_details(const std::string& xml) const
     {
+        std::cout << "deserializing details: " << xml << std::endl;
         typedef std::unique_ptr<xmlChar, XmlCharDeleter> xmlStringUPtr;
         auto res = std::make_shared<Anime>();
 		std::unique_ptr<char[]> cstr(new char[xml.size()]);
 		std::memcpy(cstr.get(), xml.c_str(), xml.size());
         std::unique_ptr<xmlDoc, XmlDocDeleter> doc(htmlReadMemory(cstr.get(), xml.size(), "http://myanimelist.net/",
                                                                    nullptr, HTML_PARSE_RECOVER
-                                                                   | HTML_PARSE_NOERROR 
+                                                                   | HTML_PARSE_NOERROR
                                                                    | HTML_PARSE_NOWARNING
                                                                    | HTML_PARSE_NONET));
 		std::unique_ptr<xmlTextReader, xmlTextReaderDeleter> reader(xmlReaderWalker(doc.get()));
@@ -266,7 +267,7 @@ namespace MAL {
             std::cerr << "XML follows: " << xml << std::endl;
 			return nullptr;
 		}
-        
+
         enum { PRIORITY, STORAGE, REWATCHVALUE, DISCUSS, SELECTOR_NONE } selector = SELECTOR_NONE;
         enum { TAGS, COMMENTS, NONE } textarea = NONE;
         std::string textbuf;
@@ -319,7 +320,7 @@ namespace MAL {
                 if (xmlStrEqual(attr_name.get(), "priority"_xml)) selector = PRIORITY;
                 if (xmlStrEqual(attr_name.get(), "storage"_xml)) selector = STORAGE;
                 if (xmlStrEqual(attr_name.get(), "list_rewatch_value"_xml)) selector = REWATCHVALUE;
-                if (xmlStrEqual(attr_name.get(), "discuss"_xml)) selector = DISCUSS;                
+                if (xmlStrEqual(attr_name.get(), "discuss"_xml)) selector = DISCUSS;
             } else if (name == "select" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_END_ELEMENT)  {
                 selector = SELECTOR_NONE;
             } else if (name == "option" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
@@ -347,7 +348,7 @@ namespace MAL {
         }
 
         if (ret != 0) return nullptr; // Some sort of parsing error
-        
+
         return res;
     }
 
@@ -403,5 +404,5 @@ namespace MAL {
         writer.endDoc();
         return writer.getString();
 	}
-	
+
 }

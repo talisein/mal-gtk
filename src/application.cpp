@@ -24,7 +24,8 @@
 namespace MAL {
 	Application::Application(int& argc, char**& argv) :
 		app(Gtk::Application::create(argc, argv, Glib::ustring(APPLICATION_ID))),
-		mal(std::make_shared<MAL>(std::unique_ptr<UserInfo>{new UserInfo()})),
+		pool(std::make_shared<curl_pool>()),
+		mal(std::make_shared<MAL>(std::unique_ptr<UserInfo>{new UserInfo()}, pool)),
 		window(mal)
 	{
         auto action = Gio::SimpleAction::create("quit");

@@ -15,6 +15,7 @@
  *  along with mal-gtk.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <libsecret/secret.h>
 #include "user_info.hpp"
 
 namespace {
@@ -124,8 +125,20 @@ namespace MAL {
         return pimpl->username;
     }
 
+    secret_string UserInfo::get_username_str() const
+    {
+        return pimpl->username.get();
+    }
+
     std::shared_ptr<gchar> UserInfo::get_password() const
     {
         return pimpl->password;
     }
+
+    secret_string UserInfo::get_password_str() const
+    {
+        return pimpl->password.get();
+    }
+
+
 }

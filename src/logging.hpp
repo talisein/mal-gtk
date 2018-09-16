@@ -15,27 +15,27 @@
  *  along with mal-gtk.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <locale>
-#include <iostream>
-#include <cstdlib>
-#include <curl/curl.h>
-#include "application.hpp"
+#pragma once
 #include "glib.h"
 
-int main(int argc, char* argv[]) {
-    std::locale::global(std::locale(""));
+namespace MAL
+{
+    constexpr const char * log_level_to_priority(GLogLevelFlags log_level)
+    {
+        if (log_level & G_LOG_LEVEL_ERROR)
+            return "3";
+        else if (log_level & G_LOG_LEVEL_CRITICAL)
+            return "4";
+        else if (log_level & G_LOG_LEVEL_WARNING)
+            return "4";
+        else if (log_level & G_LOG_LEVEL_MESSAGE)
+            return "5";
+        else if (log_level & G_LOG_LEVEL_INFO)
+            return "6";
+        else if (log_level & G_LOG_LEVEL_DEBUG)
+            return "7";
 
-    CURLcode code = curl_global_init(CURL_GLOBAL_DEFAULT);
-    if (code != CURLE_OK) {
-        std::cerr << "Error: " << curl_easy_strerror(code) << std::endl;
-        return EXIT_FAILURE;
+        /* Default to LOG_NOTICE for custom log levels. */
+        return "5";
     }
-
-    g_log_set_writer_func(g_log_writer_journald, NULL, NULL);
-
-    MAL::Application app(argc, argv);
-    app.run();
-
-    curl_global_cleanup();
-    return EXIT_SUCCESS;
 }
