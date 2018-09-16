@@ -176,7 +176,7 @@ namespace {
         return curl_easy_perform(curl.get());
     }
 }
-    
+
 namespace MAL {
     MAL::MAL(std::unique_ptr<UserInfo>&& info) :
         user_info(std::move(info)),
@@ -345,7 +345,7 @@ namespace MAL {
         if (buf) {
             text_util->parse_html_entities(*buf);
             auto anime_list = serializer.deserialize(*buf);
-        
+
             {
                 std::lock_guard<std::mutex> lock(m_anime_list_mutex);
                 std::for_each(anime_list.begin(), anime_list.end(),
@@ -485,7 +485,7 @@ namespace MAL {
                 if (progress_cb) {
                     curl_setup_progress(curl, bound_cb);
                 }
-                
+
                 code = curl_easy_perform(curl.get());
                 if (code != CURLE_OK) {
                     signal_mal_error(std::string("Error communicating with myanimelist.net: ") + curl_ebuffer.get());
@@ -539,7 +539,7 @@ namespace MAL {
             GByteArray *ba = g_byte_array_new();
             setup_curl_easy_mis(curl.get(), item.image_url, ba);
             CURLcode code = curl_easy_perform(curl.get());
-            
+
             if (code != CURLE_OK) {
                 print_curl_error(code, curl_ebuffer);
                 signal_mal_info("Unable to fetch image for " + item.series_title + ": " + curl_ebuffer.get());
@@ -777,7 +777,7 @@ namespace MAL {
     void MAL::update_anime_async(const std::shared_ptr<Anime>& anime) {
         active.send( [=] { update_anime_sync(anime); } );
     }
-    
+
     bool MAL::update_anime_sync(const std::shared_ptr<Anime>& anime) {
         const std::string url = UPDATED_BASE_URL + std::to_string(anime->series_itemdb_id) + ".xml";
         std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
@@ -1017,13 +1017,13 @@ namespace MAL {
                 signal_anime_added();
                 signal_manga_added();
                 signal_mal_info("Loaded anime and manga list from local storage.");
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 std::cerr << "Caught exception " << e.what() << " on node " << reader.get_name() << " value '" << reader.get_value() << "'" << std::endl;
                 reader.read();
                 std::cerr << "Next node was " << reader.get_name() << std::endl;
             }
 
-        } catch (Glib::FileError e) {
+        } catch (const Glib::FileError& e) {
             if (e.code() != Glib::FileError::NO_SUCH_ENTITY)
                 signal_mal_error("Error reading anime list from disk: " + e.what());
             get_anime_list_async();
@@ -1057,7 +1057,7 @@ namespace MAL {
                     signal_mal_error("Unable to create directory " + dirfile->get_parse_name() + ". Unable to save to disk!");
                     return;
                 }
-            } catch (Glib::Error e) {
+            } catch (const Glib::Error& e) {
                 signal_mal_error("Unable to create directory " + dirfile->get_parse_name() + ". Unable to save to disk: " + e.what());
                 return;
             }
@@ -1071,7 +1071,7 @@ namespace MAL {
         auto filename = Glib::build_filename(dir, "AnimeMangaList.xml");
         try {
             Glib::file_set_contents(filename, writer.getString());
-        } catch (Glib::FileError e) {
+        } catch (const Glib::FileError& e) {
             signal_mal_error("Unable to save to disk: " + e.what());
         }
     }
