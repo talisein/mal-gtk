@@ -51,7 +51,7 @@ namespace MAL {
             curl_easy_cleanup(curl);
         }
     };
-    
+
     struct CURLShareDeleter {
         void operator()(CURLSH* share) const {
             CURLSHcode code = curl_share_cleanup(share);
@@ -121,7 +121,7 @@ namespace MAL {
                 else
                     return std::static_pointer_cast<Anime>((**iter).clone());
             }
-        
+
         /** Provides a callback on GTK+ Main Thread when an error occurs.
          */
         MessageDispatcher<Glib::ustring> signal_mal_error;
@@ -259,7 +259,7 @@ namespace MAL {
         template <typename T>
         class MALItemComparator {
         public:
-            bool operator()(const std::shared_ptr<const T>& l,const std::shared_ptr<const T>& r)
+            bool operator()(const std::shared_ptr<const T>& l,const std::shared_ptr<const T>& r) const
                 {
                     return l->series_itemdb_id < r->series_itemdb_id;
                     /*auto season = l->series_date_begin.substr(0,7).compare(r->series_date_begin.substr(0,7));
@@ -285,7 +285,7 @@ namespace MAL {
         std::unique_ptr<char[]> curl_ebuffer;
         std::unique_ptr<pair_lock_functor_t> share_lock_functors;
         std::map<curl_lock_data, std::mutex> map_mutex;
-        
+
         std::map<std::string, Glib::RefPtr<Glib::Bytes> > image_cache;
 
         std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
