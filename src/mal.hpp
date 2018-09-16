@@ -35,32 +35,9 @@
 #include "active.hpp"
 #include "message_dispatcher.hpp"
 #include "callback_dispatcher.hpp"
+#include "mal_curl.hpp"
 
 namespace MAL {
-
-    /* Deleters for libcurl */
-    struct CURLEscapeDeleter {
-        void operator()(char* str) const
-            {
-                curl_free(str);
-            }
-    };
-
-    struct CURLEasyDeleter {
-        void operator()(CURL* curl) const {
-            curl_easy_cleanup(curl);
-        }
-    };
-
-    struct CURLShareDeleter {
-        void operator()(CURLSH* share) const {
-            CURLSHcode code = curl_share_cleanup(share);
-            if (code != CURLSHE_OK) {
-                std::cerr << "Error: Curl share cleanup: "
-                          << curl_share_strerror(code) << std::endl;
-            }
-        }
-    };
 
     /** Interface to myanimelist.net.
      *
@@ -72,7 +49,7 @@ namespace MAL {
         typedef std::function<void (CURL*, curl_lock_data)> unlock_functor_t;
 
     public:
-        MAL(std::unique_ptr<UserInfo>&& info);
+        MAL(std::unique_ptr<UserInfo>&& info, const std::shared_ptr<curl_pool>& pool);
         ~MAL();
 
         /** Applies the given functor object f to all anime.
@@ -289,6 +266,7 @@ namespace MAL {
         std::map<std::string, Glib::RefPtr<Glib::Bytes> > image_cache;
 
         std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
+        std::shared_ptr<curl_pool> pool;
         Active active; /* Must be destroyed before curl_share */
     };
 }

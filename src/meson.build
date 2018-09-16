@@ -23,6 +23,8 @@ malgtk_src = files(['main.cpp',
                     'anime_serializer.cpp',
                     'manga_serializer.cpp',
                     'text_util.cpp',
+                    'mal_curl.cpp',
+                    'logging.cpp',
                     'gui/malgtk_cellrenderer_score.c',
                     'gui/cellrendererscore.cpp',
                     'gui/main_window.cpp',
@@ -37,4 +39,8 @@ malgtk_src = files(['main.cpp',
 malgtk = executable('mal-gtk', malgtk_src,
                     include_directories : libmalgtk_inc,
                     dependencies : malgtk_deps,
-                    install      : true)
+                    install      : true,
+                    gui_app      : true,
+                    c_args       : ['-DG_LOG_DOMAIN="mal-gtk"', '-DG_LOG_USE_STRUCTURED'],
+                    cpp_args     : ['-DG_LOG_DOMAIN="mal-gtk"', '-DG_LOG_USE_STRUCTURED']
+                    )

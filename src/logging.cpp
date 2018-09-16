@@ -15,27 +15,8 @@
  *  along with mal-gtk.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <locale>
-#include <iostream>
-#include <cstdlib>
-#include <curl/curl.h>
-#include "application.hpp"
-#include "glib.h"
+#include "logging.hpp"
 
-int main(int argc, char* argv[]) {
-    std::locale::global(std::locale(""));
-
-    CURLcode code = curl_global_init(CURL_GLOBAL_DEFAULT);
-    if (code != CURLE_OK) {
-        std::cerr << "Error: " << curl_easy_strerror(code) << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    g_log_set_writer_func(g_log_writer_journald, NULL, NULL);
-
-    MAL::Application app(argc, argv);
-    app.run();
-
-    curl_global_cleanup();
-    return EXIT_SUCCESS;
+namespace MAL
+{
 }

@@ -178,7 +178,7 @@ namespace {
 }
 
 namespace MAL {
-    MAL::MAL(std::unique_ptr<UserInfo>&& info) :
+    MAL::MAL(std::unique_ptr<UserInfo>&& info, const std::shared_ptr<curl_pool>& pool) :
         user_info(std::move(info)),
         text_util(std::make_shared<TextUtility>()),
         serializer(text_util),
@@ -186,7 +186,8 @@ namespace MAL {
         curl_ebuffer(std::make_unique<char[]>(CURL_ERROR_SIZE)),
         share_lock_functors(new pair_lock_functor_t(std::bind(&MAL::involke_lock_function, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
                                                     std::bind(&MAL::involke_unlock_function, this, std::placeholders::_1, std::placeholders::_2))),
-        curl_share(curl_share_init())
+        curl_share(curl_share_init()),
+        pool(pool)
     {
         signal_run_password_dialog.connect(sigc::mem_fun(*this, &MAL::run_password_dialog));
         CURLSHcode code;
