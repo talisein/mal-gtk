@@ -96,7 +96,7 @@ namespace MAL {
             auto const field = ustring_to_gint(text) + 1;
             m_entry->set_text(std::to_string(field));
             m_entry->activate();
-        } catch (std::exception e) {
+        } catch (const std::exception& e) {
             m_entry->set_text(text);
         }
     }

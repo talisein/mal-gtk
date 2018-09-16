@@ -27,9 +27,9 @@ namespace {
             year  = std::stoi(date.substr(0,4));
             month = std::stoi(date.substr(5,2));
             day   = std::stoi(date.substr(8,2));
-        } catch (std::exception e) {
+        } catch (const std::exception& e) {
         }
-        
+
         if (year > 0 && month > 0 && day > 0) {
             if (Glib::Date::valid_dmy(day, static_cast<Glib::Date::Month>(month), year)) {
                 const Glib::Date d(day, static_cast<Glib::Date::Month>(month), year);
@@ -155,5 +155,5 @@ namespace MAL {
     {
         set_text(date.format_string("%F"));
     }
-    
+
 }

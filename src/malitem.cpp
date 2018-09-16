@@ -57,7 +57,7 @@ namespace {
 }
 
 namespace MAL {
-    
+
     Priority priority_from_int(const int i)
     {
         switch (i) {
@@ -69,7 +69,7 @@ namespace MAL {
                 return Priority::INVALID;
         }
     }
-    
+
     ReconsumeValue reconsume_value_from_int(const int i)
     {
         switch (i) {
@@ -178,7 +178,7 @@ namespace MAL {
     }
 
     namespace {
-        enum FIELDS { 
+        enum FIELDS {
             FIELD_INVALID, SERIES_ITEMDB_ID, SERIES_TITLE, SERIES_PREFERRED_TITLE,
             SERIES_DATE_BEGIN, SERIES_DATE_END, IMAGE_URL, SERIES_SYNONYMS,
             SERIES_SYNONYM, SERIES_SYNOPSIS, TAGS, TAG, DATE_FINISH,
@@ -240,7 +240,7 @@ namespace MAL {
             {PRIORITY,               std::mem_fn(&MALItem::set_priority)},
             {ENABLE_DISCUSSION,      std::mem_fn(&MALItem::set_enable_discussion)},
             {HAS_DETAILS,            std::mem_fn(&MALItem::set_has_details)}
-            
+
         };
     }
 
@@ -336,7 +336,7 @@ namespace MAL {
         writer.writeElement("has_details",        to_string(has_details));
         writer.endElement();
     }
-    
+
     void MALItem::update_from_details(const std::shared_ptr<MALItem>& details)
     {
         fansub_group      = details->fansub_group;
@@ -374,7 +374,7 @@ namespace MAL {
             last_updated       = item->last_updated;
             series_synonyms.insert(item->series_synonyms.begin(), item->series_synonyms.end());
             tags           .insert(item->tags.begin(),            item->tags.end());
-            
+
             // TODO: handle conflicts for these:
             date_start         = item->date_start;
             date_finish        = item->date_finish;
@@ -467,7 +467,7 @@ namespace MAL {
 		if (substr.size() > 0)
 			tags.insert(substr);
 	}
-		
+
 	void MALItem::set_date_start(std::string&& str)
 	{
 		date_start = std::move(str);
@@ -647,7 +647,7 @@ namespace MAL {
                 case 12: month = Glib::Date::DECEMBER;  break;
                 default: month = Glib::Date::BAD_MONTH; break;
             }
-        } catch (std::exception e) {
+        } catch (const std::exception& e) {
         }
 
         if (Glib::Date::valid_year(year))

@@ -215,7 +215,7 @@ namespace MAL {
         m_synopsis_label->set_hexpand(true);
 		m_signal_image_available.connect(sigc::mem_fun(*this, &MALItemDetailViewBase::on_image_available));
         m_grid_left->attach(*m_series_date_grid, 0, 1, 1, 1);
-        
+
         m_series_date_grid->attach(*m_series_start_date_label, 0, 0, 1, 1);
         auto label = Gtk::manage(new Gtk::Label("–"));
         m_series_date_grid->attach(*label, 1, 0, 1, 1);
@@ -313,7 +313,7 @@ namespace MAL {
             m_series_date_grid->get_child_at(1, 0)->show();
         }
 
-        if (!m_series_end_date_label->set_date(item->series_date_end) 
+        if (!m_series_end_date_label->set_date(item->series_date_end)
             || item->series_date_end == item->series_date_begin) {
             m_series_end_date_label->hide();
             m_series_date_grid->get_child_at(1, 0)->hide();
@@ -340,7 +340,7 @@ namespace MAL {
             auto pixbuf = Gdk::Pixbuf::create_from_stream(image_stream);
             m_image->set(pixbuf);
             m_image->show();
-        } catch (Glib::Error e) {
+        } catch (const Glib::Error& e) {
             std::cerr << "Error: can't create image from the stream: " << e.what() << std::endl;
 /*
             image_stream->seek(0, Glib::SeekType::SEEK_TYPE_END);
@@ -481,7 +481,7 @@ namespace MAL {
 
         auto const olditem = m_item;
         MALItemDetailViewBase::display_item(item);
-        
+
         if (!olditem || item->series_itemdb_id != olditem->series_itemdb_id) {
             auto score = static_cast<int>(item->score);
             m_score->set_score(score);
@@ -510,7 +510,7 @@ namespace MAL {
             m_times_consumed_entry->set_sensitive(true);
             m_priority_combo->set_sensitive(true);
             m_reconsume_value_combo->set_sensitive(true);
-            
+
             m_fansub_group_entry->set_text(m_item->fansub_group);
             m_downloaded_items_entry->set_entry_text(std::to_string(item->downloaded_items));
             m_times_consumed_entry->set_entry_text(std::to_string(item->times_consumed));
