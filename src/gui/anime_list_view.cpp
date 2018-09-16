@@ -128,7 +128,7 @@ namespace MAL {
 
         m_series_status_label->set_label(to_string(anime->series_status));
         m_series_type_label->set_label(to_string(anime->series_type));
-
+        std::cout << item->series_title << " has details: " << item->has_details << std::endl;
         if (anime->series_synopsis.empty()) {
             m_synopsis_frame->show_all();
             m_synopsis_label->set_markup("Fetching...");

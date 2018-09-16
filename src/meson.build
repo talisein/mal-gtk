@@ -8,8 +8,9 @@ secret_dep = dependency('libsecret-1', version : '>=0.12')
 sigcpp_dep = dependency('sigc++-2.0',  version : '>=2.2.11')
 gcr_dep    = dependency('gcr-base-3')
 thread_dep = dependency('threads')
+xmlpp_dep  = dependency('libxml++-3.0')
 
-malgtk_deps = [gobj_dep, glib_dep, glibmm_dep, gtkmm_dep, xml_dep, curl_dep, secret_dep, thread_dep, gcr_dep]
+malgtk_deps = [gobj_dep, glib_dep, glibmm_dep, gtkmm_dep, xml_dep, curl_dep, secret_dep, thread_dep, gcr_dep, xmlpp_dep]
 
 malgtk_src = files(['main.cpp',
                     'application.cpp',
@@ -25,6 +26,7 @@ malgtk_src = files(['main.cpp',
                     'text_util.cpp',
                     'mal_curl.cpp',
                     'logging.cpp',
+                    'mal_api_unstable.cpp',
                     'gui/malgtk_cellrenderer_score.c',
                     'gui/cellrendererscore.cpp',
                     'gui/main_window.cpp',

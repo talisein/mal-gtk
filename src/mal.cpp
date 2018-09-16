@@ -24,6 +24,9 @@
 #include <glibmm.h>
 #include <chrono>
 #include "xml_reader.hpp"
+#include "secret_allocator.h"
+#include <glib.h>
+#include "mal_api_unstable.hpp"
 
 namespace {
     extern "C" {
@@ -52,25 +55,6 @@ namespace {
             return size*nmemb;
         }
 
-        static void
-        mal_curl_lock_function(CURL* curl,
-                               curl_lock_data data,
-                               curl_lock_access access,
-                               void* userp)
-        {
-            auto functor_pair_p = static_cast<MAL::MAL::pair_lock_functor_t*>(userp);
-            functor_pair_p->first(curl, data, access);
-        }
-
-        static void
-        mal_curl_unlock_function(CURL* curl,
-                                 curl_lock_data data,
-                                 void* userp)
-        {
-            auto functor_pair_p = static_cast<MAL::MAL::pair_lock_functor_t*>(userp);
-            functor_pair_p->second(curl, data);
-        }
-
         static int
         mal_curl_progress_function(void *clientp,
                                    double,// dltotal,
@@ -96,84 +80,30 @@ namespace {
     }
 
     static void
-    print_curl_share_error(CURLSHcode code)
-    {
-        std::cerr << "Error: " << curl_share_strerror(code) << std::endl;
-    }
-
-    static void
-    curl_setup_httpauth(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
+    curl_setup_httpauth(MAL::curlp &curl,
                         std::unique_ptr<MAL::UserInfo>& user_info)
     {
-        CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        if (G_UNLIKELY(code != CURLE_OK)) {
-            print_curl_error(code, nullptr);
-        }
-        code = curl_easy_setopt(curl.get(), CURLOPT_USERNAME, user_info->get_username().get());
-        if (G_UNLIKELY(code != CURLE_OK)) {
-            print_curl_error(code, nullptr);
-        }
-        code = curl_easy_setopt(curl.get(), CURLOPT_PASSWORD, user_info->get_password().get());
-        if (G_UNLIKELY(code != CURLE_OK)) {
-            print_curl_error(code, nullptr);
-        }
+        curl_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_setopt(curl, CURLOPT_USERNAME, user_info->get_username().get());
+        curl_setopt(curl, CURLOPT_PASSWORD, user_info->get_password().get());
     }
 
     static void
-    curl_setup_progress(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
+    curl_setup_progress(MAL::curlp& curl,
                         MAL::MAL::DownloadProgressCb_t& bound_cb)
     {
-        CURLcode code = curl_easy_setopt(curl.get(),
-                                         CURLOPT_PROGRESSFUNCTION,
-                                         &mal_curl_progress_function);
-        if (code != CURLE_OK) {
-            print_curl_error(code, nullptr);
-        }
-
-        code = curl_easy_setopt(curl.get(), CURLOPT_NOPROGRESS, 0);
-        if (code != CURLE_OK) {
-            print_curl_error(code, nullptr);
-        }
-
-        code = curl_easy_setopt(curl.get(), CURLOPT_PROGRESSDATA, &bound_cb);
-        if (code != CURLE_OK) {
-            print_curl_error(code, nullptr);
-        }
+        curl_setopt(curl, CURLOPT_PROGRESSFUNCTION, &mal_curl_progress_function);
+        curl_setopt(curl, CURLOPT_NOPROGRESS, 0);
+        curl_setopt(curl, CURLOPT_PROGRESSDATA, &bound_cb);
     }
 
     static void
-    curl_setup_post(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
+    curl_setup_post(MAL::curlp& curl,
                     const std::string& fields)
     {
-        CURLcode code = curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
-        if (code != CURLE_OK) {
-            print_curl_error(code, nullptr);
-        }
-
-        code = curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(fields.size()));
-        if (code != CURLE_OK) {
-            print_curl_error(code, nullptr);
-        }
-
-        code = curl_easy_setopt(curl.get(), CURLOPT_COPYPOSTFIELDS, fields.c_str());
-        if (code != CURLE_OK) {
-            print_curl_error(code, nullptr);
-        }
-    }
-
-    static CURLcode
-    curl_do_html_login(std::unique_ptr<CURL, MAL::CURLEasyDeleter>& curl,
-                       const std::string& username,
-                       const std::string& password)
-    {
-        std::string fields = "username=";
-        fields += username;
-        fields += "&password=";
-        fields += password;
-        fields += "&cookie=1";
-        curl_setup_post(curl, fields);
-        curl_easy_setopt(curl.get(), CURLOPT_URL, "https://myanimelist.net/login.php");
-        return curl_easy_perform(curl.get());
+        curl_setopt(curl, CURLOPT_POST, 1);
+        curl_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(fields.size()));
+        curl_setopt(curl, CURLOPT_POSTFIELDS, fields.c_str());
     }
 }
 
@@ -184,38 +114,9 @@ namespace MAL {
         serializer(text_util),
         manga_serializer(text_util),
         curl_ebuffer(std::make_unique<char[]>(CURL_ERROR_SIZE)),
-        share_lock_functors(new pair_lock_functor_t(std::bind(&MAL::involke_lock_function, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-                                                    std::bind(&MAL::involke_unlock_function, this, std::placeholders::_1, std::placeholders::_2))),
-        curl_share(curl_share_init()),
         pool(pool)
     {
         signal_run_password_dialog.connect(sigc::mem_fun(*this, &MAL::run_password_dialog));
-        CURLSHcode code;
-
-        code = curl_share_setopt(curl_share.get(), CURLSHOPT_LOCKFUNC, &mal_curl_lock_function);
-        if (code != CURLSHE_OK) {
-            print_curl_share_error(code);
-        }
-        code = curl_share_setopt(curl_share.get(), CURLSHOPT_UNLOCKFUNC, &mal_curl_unlock_function);
-        if (code != CURLSHE_OK) {
-            print_curl_share_error(code);
-        }
-        code = curl_share_setopt(curl_share.get(), CURLSHOPT_USERDATA, share_lock_functors.get());
-        if (code != CURLSHE_OK) {
-            print_curl_share_error(code);
-        }
-        code = curl_share_setopt(curl_share.get(), CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);
-        if (code != CURLSHE_OK) {
-            print_curl_share_error(code);
-        }
-        code = curl_share_setopt(curl_share.get(), CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
-        if (code != CURLSHE_OK) {
-            print_curl_share_error(code);
-        }
-        code = curl_share_setopt(curl_share.get(), CURLSHOPT_SHARE, CURL_LOCK_DATA_SSL_SESSION);
-        if (code != CURLSHE_OK) {
-            print_curl_share_error(code);
-        }
 
         if (!user_info->has_details()) {
             run_password_dialog();
@@ -243,93 +144,26 @@ namespace MAL {
         }
     }
 
-    void MAL::setup_curl_easy_mis(CURL* easy, const std::string& url, GByteArray *ba)
+    void MAL::setup_curl_easy_mis(curlp& easy, const std::string& url, GByteArray *ba)
     {
-        CURLcode code;
-        code = curl_easy_setopt(easy, CURLOPT_WRITEFUNCTION, &curl_write_function_mis);
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_WRITEDATA, static_cast<void*>(ba));
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_ERRORBUFFER, curl_ebuffer.get());
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_FAILONERROR, 1);
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_NOSIGNAL, 1);
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_URL, url.c_str());
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_SHARE, curl_share.get());
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_FOLLOWLOCATION, 1);
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        std::stringstream user_agent;
-//        auto const cvid = curl_version_info(CURLVERSION_NOW);
-        user_agent << "mal-gtk/0.1.0 (linux)" << " "
-                   << "libcurl" << "/7.32.0"; /* Have to lie. */
-//                   << cvid->version;
-//        std::cerr << "Setting user agent to " << user_agent.str() << std::endl;
-        code = curl_easy_setopt(easy, CURLOPT_USERAGENT, user_agent.str().c_str());
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
+        curl_setopt(easy, CURLOPT_WRITEFUNCTION, &curl_write_function_mis);
+        curl_setopt(easy, CURLOPT_WRITEDATA, static_cast<void*>(ba));
+        curl_setopt(easy, CURLOPT_ERRORBUFFER, curl_ebuffer.get());
+        curl_setopt(easy, CURLOPT_FAILONERROR, 1L);
+        curl_setopt(easy, CURLOPT_NOSIGNAL, 1L);
+        curl_setopt(easy, CURLOPT_HTTPGET, 1L);
+        curl_setopt(easy, CURLOPT_URL, url.c_str());
+        curl_setopt(easy, CURLOPT_FOLLOWLOCATION, 1);
     }
 
-    void MAL::setup_curl_easy(CURL* easy, const std::string& url, std::string* buffer) {
-        CURLcode code;
-        code = curl_easy_setopt(easy, CURLOPT_WRITEFUNCTION, &curl_write_function);
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_WRITEDATA, buffer);
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_ERRORBUFFER, curl_ebuffer.get());
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_FAILONERROR, 1);
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_NOSIGNAL, 1);
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_URL, url.c_str());
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        code = curl_easy_setopt(easy, CURLOPT_SHARE, curl_share.get());
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
-        std::stringstream user_agent;
-//        auto const cvid = curl_version_info(CURLVERSION_NOW);
-        user_agent << "mal-gtk/0.1.0 (linux)" << " "
-                   << "libcurl" << "/7.32.0"; /* Have to lie. */
-//                   << cvid->version;
-//        std::cerr << "Setting user agent to " << user_agent.str() << std::endl;
-        code = curl_easy_setopt(easy, CURLOPT_USERAGENT, user_agent.str().c_str());
-        if (code != CURLE_OK) {
-            print_curl_error(code, curl_ebuffer);
-        }
+    void MAL::setup_curl_easy(curlp& easy, const std::string& url, std::string* buffer) {
+        curl_setopt(easy, CURLOPT_WRITEFUNCTION, &curl_write_function);
+        curl_setopt(easy, CURLOPT_WRITEDATA, buffer);
+        curl_setopt(easy, CURLOPT_ERRORBUFFER, curl_ebuffer.get());
+        curl_setopt(easy, CURLOPT_FAILONERROR, 1L);
+        curl_setopt(easy, CURLOPT_NOSIGNAL, 1L);
+        curl_setopt(easy, CURLOPT_HTTPGET, 1L);
+        curl_setopt(easy, CURLOPT_URL, url.c_str());
     }
 
     void MAL::get_anime_list_async(DownloadProgressCb_t progress_cb,
@@ -446,10 +280,11 @@ namespace MAL {
             return nullptr;
         }
 
-        std::unique_ptr<CURL, CURLEasyDeleter> curl { curl_easy_init() };
+        curlp curl { pool->get() };
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
-        setup_curl_easy(curl.get(), url, buf.get());
-        curl_setup_httpauth(curl, user_info);
+        setup_curl_easy(curl, url, buf.get());
+        curl_setopt(curl, CURLOPT_VERBOSE, 1);
+
         DownloadProgressCb_t bound_cb = [this, &progress_cb] (int_fast64_t progress) {
             cb_dispatcher.send( std::bind(progress_cb, progress) );
         };
@@ -458,49 +293,44 @@ namespace MAL {
             curl_setup_progress(curl, bound_cb);
         }
 
-        CURLcode code = curl_easy_perform(curl.get());
+        CURLcode code = curl_perform(curl);
         if (code != CURLE_OK) {
             signal_mal_error(std::string("Error communicating with myanimelist.net: ") + curl_ebuffer.get());
             return nullptr;
         }
 
-        if (buf->find("Error: You must first login to see this page.") == std::string::npos) {
+        if (buf->find("Error: You must first login to see this page.") == std::string::npos &&
+            buf->find("login.php") == std::string::npos) {
             return buf;
         } else {
-            code = curl_do_html_login(curl, user_info->get_username().get(), user_info->get_password().get());
+            Glib::ustring error_msg;
+            if (0 > mal_unstable_html_login(user_info, curl, error_msg)) {
+                signal_mal_error(error_msg);
+                return nullptr;
+            }
+
+            buf->clear();
+            setup_curl_easy(curl, url, buf.get());
+
+            if (progress_cb) {
+                curl_setup_progress(curl, bound_cb);
+            }
+
+            code = curl_perform(curl);
             if (code != CURLE_OK) {
-                signal_mal_error(std::string("Couldn't perform myanimelist.net php login: ") + curl_ebuffer.get() );
+                signal_mal_error(std::string("Error communicating with myanimelist.net: ") + curl_ebuffer.get());
                 return nullptr;
             } else {
-                buf->clear();
-
-                code = curl_easy_setopt(curl.get(), CURLOPT_HTTPGET, 1);
-                if (code != CURLE_OK) {
-                    print_curl_error(code, curl_ebuffer);
-                }
-                code = curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
-                if (code != CURLE_OK) {
-                    print_curl_error(code, curl_ebuffer);
-                }
-
-                if (progress_cb) {
-                    curl_setup_progress(curl, bound_cb);
-                }
-
-                code = curl_easy_perform(curl.get());
-                if (code != CURLE_OK) {
-                    signal_mal_error(std::string("Error communicating with myanimelist.net: ") + curl_ebuffer.get());
-                    return nullptr;
-                } else {
-                    return buf;
-                }
+                std::cerr << "On second try to " << url.c_str() << " got " << *buf << std::endl;
+                return buf;
             }
         }
     }
 
     void MAL::get_anime_details_sync(const std::shared_ptr<const Anime>& anime)
     {
-        const std::string url = DETAILS_BASE_URL + std::to_string(anime->series_itemdb_id);
+        std::cout << "getting details for " << anime->series_title << std::endl;
+        const std::string url = DETAILS_BASE_URL + std::to_string(anime->series_itemdb_id) + "/edit?hideLayout";
         auto buf = get_sync(url);
         std::shared_ptr<Anime> details = nullptr;
         if (buf) {
@@ -536,10 +366,10 @@ namespace MAL {
     Glib::RefPtr<Gio::MemoryInputStream> MAL::get_image_sync(const MALItem& item) {
         auto iter = image_cache.find(item.image_url);
         if (iter == std::end(image_cache)) {
-            std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+            curlp curl {pool->get()};
             GByteArray *ba = g_byte_array_new();
-            setup_curl_easy_mis(curl.get(), item.image_url, ba);
-            CURLcode code = curl_easy_perform(curl.get());
+            setup_curl_easy_mis(curl, item.image_url, ba);
+            CURLcode code = curl_perform(curl);
 
             if (code != CURLE_OK) {
                 print_curl_error(code, curl_ebuffer);
@@ -578,15 +408,15 @@ namespace MAL {
     }
 
     void MAL::search_anime_sync(const std::string& terms) {
-        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        curlp curl {pool->get()};
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
-        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped {curl_easy_escape(curl.get(), terms.c_str(), terms.size())};
-        const std::string url = SEARCH_BASE_URL + terms_escaped.get();
+        std::string terms_escaped = curl_escape(curl, terms);
+        const std::string url = SEARCH_BASE_URL + terms_escaped;
 
-        setup_curl_easy(curl.get(), url, buf.get());
+        setup_curl_easy(curl, url, buf.get());
         curl_setup_httpauth(curl, user_info);
 
-        CURLcode code = curl_easy_perform(curl.get());
+        CURLcode code = curl_perform(curl);
         if (code != CURLE_OK) {
             long res = 0;
             code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
@@ -623,15 +453,15 @@ namespace MAL {
     }
 
     std::shared_ptr<Anime> MAL::refresh_anime_sync(const std::shared_ptr<Anime>& anime) {
-        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        curlp curl {pool->get()};
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
-        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped {curl_easy_escape(curl.get(), anime->series_title.c_str(), anime->series_title.size())};
-        const std::string url = SEARCH_BASE_URL + terms_escaped.get();
+        std::string terms_escaped = curl_escape(curl, anime->series_title);
+        const std::string url = SEARCH_BASE_URL + terms_escaped;
 
-        setup_curl_easy(curl.get(), url, buf.get());
+        setup_curl_easy(curl, url, buf.get());
         curl_setup_httpauth(curl, user_info);
 
-        CURLcode code = curl_easy_perform(curl.get());
+        CURLcode code = curl_perform(curl);
         if (code != CURLE_OK) {
             long res = 0;
             code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
@@ -685,15 +515,15 @@ namespace MAL {
 
     std::shared_ptr<Manga> MAL::refresh_manga_sync(const std::shared_ptr<Manga>& manga)
     {
-        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        curlp curl {pool->get()};
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
-        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped {curl_easy_escape(curl.get(), manga->series_title.c_str(), manga->series_title.size())};
-        const std::string url = MANGA_SEARCH_BASE_URL + terms_escaped.get();
+        std::string terms_escaped = curl_escape(curl, manga->series_title);
+        const std::string url = MANGA_SEARCH_BASE_URL + terms_escaped;
 
-        setup_curl_easy(curl.get(), url, buf.get());
+        setup_curl_easy(curl, url, buf.get());
         curl_setup_httpauth(curl, user_info);
 
-        CURLcode code = curl_easy_perform(curl.get());
+        CURLcode code = curl_perform(curl);
         if (code != CURLE_OK) {
             long res = 0;
             code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
@@ -740,15 +570,15 @@ namespace MAL {
     }
 
     void MAL::search_manga_sync(const std::string& terms) {
-        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        curlp curl {pool->get()};
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
-        std::unique_ptr<char, CURLEscapeDeleter> terms_escaped {curl_easy_escape(curl.get(), terms.c_str(), terms.size())};
-        const std::string url = MANGA_SEARCH_BASE_URL + terms_escaped.get();
+        std::string terms_escaped = curl_escape(curl, terms);
+        const std::string url = MANGA_SEARCH_BASE_URL + terms_escaped;
 
-        setup_curl_easy(curl.get(), url, buf.get());
+        setup_curl_easy(curl, url, buf.get());
         curl_setup_httpauth(curl, user_info);
 
-        CURLcode code = curl_easy_perform(curl.get());
+        CURLcode code = curl_perform(curl);
         if (code != CURLE_OK) {
             long res = 0;
             code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
@@ -781,16 +611,16 @@ namespace MAL {
 
     bool MAL::update_anime_sync(const std::shared_ptr<Anime>& anime) {
         const std::string url = UPDATED_BASE_URL + std::to_string(anime->series_itemdb_id) + ".xml";
-        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        curlp curl {pool->get()};
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
-        setup_curl_easy(curl.get(), url, buf.get());
+        setup_curl_easy(curl, url, buf.get());
         auto xml = serializer.serialize(*anime);
 //        std::cerr << "Sending: " << xml << std::endl;
         xml.insert(0, "data=");
         curl_setup_post(curl, xml);
         curl_setup_httpauth(curl, user_info);
 
-        CURLcode code = curl_easy_perform(curl.get());
+        CURLcode code = curl_perform(curl);
         if (code != CURLE_OK) {
             long res = 0;
             code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
@@ -831,15 +661,15 @@ namespace MAL {
 
     bool MAL::update_manga_sync(const std::shared_ptr<Manga>& manga) {
         const std::string url = MANGA_UPDATED_BASE_URL + std::to_string(manga->series_itemdb_id) + ".xml";
-        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        curlp curl {pool->get()};
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
-        setup_curl_easy(curl.get(), url, buf.get());
+        setup_curl_easy(curl, url, buf.get());
         auto xml = manga_serializer.serialize(*manga);
         xml.insert(0, "data=");
         curl_setup_post(curl, xml);
         curl_setup_httpauth(curl, user_info);
 
-        CURLcode code = curl_easy_perform(curl.get());
+        CURLcode code = curl_perform(curl);
         if (code != CURLE_OK) {
             long res = 0;
             code = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &res);
@@ -882,16 +712,16 @@ namespace MAL {
                         OperationCompleteCb_t complete_cb)
     {
         const std::string url = ADD_BASE_URL + std::to_string(anime.series_itemdb_id) + ".xml";
-        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        curlp curl {pool->get()};
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
-        setup_curl_easy(curl.get(), url, buf.get());
+        setup_curl_easy(curl, url, buf.get());
         auto xml = serializer.serialize(anime);
 //        std::cerr << "Adding anime " << anime.series_title << " with status = " << to_string(anime.status) << std::endl;
 //        std::cerr << "The xml we are sending is: " << xml << std::endl;
         xml.insert(0, "data=");
         curl_setup_post(curl, xml);
         curl_setup_httpauth(curl, user_info);
-        CURLcode code = curl_easy_perform(curl.get());
+        CURLcode code = curl_perform(curl);
         if (code != CURLE_OK) {
             signal_mal_error(anime.series_title + " not added due to myanimelist.net error: " + curl_ebuffer.get());
             long res = 0;
@@ -935,15 +765,15 @@ namespace MAL {
 
     bool MAL::add_manga_sync(const Manga& manga) {
         const std::string url = MANGA_ADD_BASE_URL + std::to_string(manga.series_itemdb_id) + ".xml";
-        std::unique_ptr<CURL, CURLEasyDeleter> curl {curl_easy_init()};
+        curlp curl {pool->get()};
         std::unique_ptr<std::string> buf = std::make_unique<std::string>();
-        setup_curl_easy(curl.get(), url, buf.get());
+        setup_curl_easy(curl, url, buf.get());
         auto xml = manga_serializer.serialize(manga);
         xml.insert(0, "data=");
         curl_setup_post(curl, xml);
         curl_setup_httpauth(curl, user_info);
 
-        CURLcode code = curl_easy_perform(curl.get());
+        CURLcode code = curl_perform(curl);
         long html_code = 0;
         curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &html_code);
 
@@ -963,30 +793,6 @@ namespace MAL {
             signal_mal_error(manga.series_title + " could not be added due to myanimelist.net error: " + *buf);
             return false;
         }
-    }
-
-    void MAL::involke_lock_function(CURL*, curl_lock_data data, curl_lock_access) {
-        auto iter = map_mutex.find(data);
-        if (iter == map_mutex.end()) {
-            auto res = map_mutex.emplace(std::piecewise_construct, std::forward_as_tuple(data), std::tuple<>());
-            if (!res.second) {
-                std::cerr << "Error: Trying to lock curl data but we can't create the mutex" << std::endl;
-                return;
-            }
-            iter = res.first;
-        }
-
-        iter->second.lock();
-    }
-
-    void MAL::involke_unlock_function(CURL*, curl_lock_data data) {
-        auto iter = map_mutex.find(data);
-        if (iter == map_mutex.end()) {
-            std::cerr << "Error: Trying to unlock curl data but we don't have the mutex." << std::endl;
-            return;
-        }
-
-        iter->second.unlock();
     }
 
     void MAL::deserialize_from_disk_async()

@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <functional>
 #include <mutex>
-#include <curl/curl.h>
 #include <giomm/memoryinputstream.h>
 #include <glibmm/bytes.h>
 #include <glibmm/dispatcher.h>
@@ -45,9 +44,6 @@ namespace MAL {
      * performed in worker thread using libcurl.
      */
     class MAL {
-        typedef std::function<void (CURL*, curl_lock_data, curl_lock_access)> lock_functor_t;
-        typedef std::function<void (CURL*, curl_lock_data)> unlock_functor_t;
-
     public:
         MAL(std::unique_ptr<UserInfo>&& info, const std::shared_ptr<curl_pool>& pool);
         ~MAL();
@@ -147,12 +143,11 @@ namespace MAL {
         void get_image_async(const MALItem& item, const std::function<void (const Glib::RefPtr<Gio::MemoryInputStream>&)>& cb);
         Glib::RefPtr<Gio::MemoryInputStream> get_image_sync(const MALItem& item);
 
-        typedef std::pair<lock_functor_t, unlock_functor_t> pair_lock_functor_t;
         void serialize_to_disk_async();
 
     private:
         const std::string LIST_BASE_URL          = "https://myanimelist.net/malappinfo.php?u=";
-        const std::string DETAILS_BASE_URL       = "https://myanimelist.net/editlist.php?type=anime&id=";
+        const std::string DETAILS_BASE_URL       = "https://myanimelist.net/ownlist/anime/";
         const std::string SEARCH_BASE_URL        = "https://myanimelist.net/api/anime/search.xml?q=";
         const std::string UPDATED_BASE_URL       = "https://myanimelist.net/api/animelist/update/";
         const std::string ADD_BASE_URL           = "https://myanimelist.net/api/animelist/add/";
@@ -223,11 +218,9 @@ namespace MAL {
         Glib::Dispatcher signal_run_password_dialog;
         void run_password_dialog();
 
-        void involke_lock_function(CURL*, curl_lock_data, curl_lock_access);
-        void involke_unlock_function(CURL*, curl_lock_data);
 
-        void setup_curl_easy(CURL* easy, const std::string& url, std::string*);
-        void setup_curl_easy_mis(CURL* easy, const std::string& url, GByteArray *);
+        void setup_curl_easy(curlp& easy, const std::string& url, std::string*);
+        void setup_curl_easy_mis(curlp& easy, const std::string& url, GByteArray *);
 
         void serialize_to_disk_sync();
         void deserialize_from_disk_async();
@@ -259,13 +252,9 @@ namespace MAL {
         std::shared_ptr<TextUtility> text_util;
         AnimeSerializer serializer;
         MangaSerializer manga_serializer;
-        std::unique_ptr<char[]> curl_ebuffer;
-        std::unique_ptr<pair_lock_functor_t> share_lock_functors;
-        std::map<curl_lock_data, std::mutex> map_mutex;
 
         std::map<std::string, Glib::RefPtr<Glib::Bytes> > image_cache;
-
-        std::unique_ptr<CURLSH, CURLShareDeleter> curl_share;
+        std::unique_ptr<char[]> curl_ebuffer;
         std::shared_ptr<curl_pool> pool;
         Active active; /* Must be destroyed before curl_share */
     };

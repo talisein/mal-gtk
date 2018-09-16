@@ -135,7 +135,7 @@ namespace MAL {
             /* Determine entity to convert */
             auto end_pos = str.find(";", pos);
             if (G_UNLIKELY(end_pos == std::string::npos))
-                break;
+                continue;
             auto entity = str.substr(pos+1, end_pos - pos);
 
             /* Ignore valid xml entities */
