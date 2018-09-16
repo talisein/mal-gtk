@@ -2,6 +2,13 @@ mal-gtk
 =======
 GTK+3 Interface for myanimelist.net
 
+
+myanimelist.net's API is [not available](https://myanimelist.net/forum/?topicid=1731860) so this app doesn't currently work
+===========================================================================================================================
+When the API is available again, it is likely I will need to rework at
+least authentication, and possibily the rest of the API as well. I
+will leave an update here when I begin that work.
+
 Requirements
 ------------
 [gtkmm3](https://www.gtkmm.org), [libsecret](https://wiki.gnome.org/Projects/Libsecret), [libxml2](http://xmlsoft.org/), [libcurl](https://curl.haxx.se/libcurl/), and a org.freedesktop.secrets
@@ -101,7 +108,7 @@ Features
 - Get a .rpm and .deb in Debian/Fedora
 - Make builds available for Mac/Windows
 
-### Not Planned 
+### Not Planned
 Most of these are either bad ideas, better implemented in a specialized
 program, or too difficult to get right in 100% of situations:
 
@@ -119,7 +126,7 @@ for these features anytime soon.
 Competitors
 -----------
 These are the GUI MAL updaters I know about. There's a ton of CLI-only
-clients out there, but that's not the same thing. 
+clients out there, but that's not the same thing.
 
 - [Taiga](http://taiga.moe/) - Mac/Windows Only, but pretty
   cool. [FOSS](https://github.com/erengy/taiga).
