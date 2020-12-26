@@ -148,7 +148,7 @@ namespace {
 			return std::string();
 	}
 
-    constexpr const xmlChar* operator"" _xml(const char* str, size_t) {
+    const xmlChar* operator"" _xml(const char* str, size_t) {
         return reinterpret_cast<const xmlChar*>(str);
     }
 }
@@ -226,7 +226,7 @@ namespace MAL {
                                 member_iter->second(manga, std::move(value));
                             }
                         } else {
-                            std::cerr << "Error: Unexpected " << name << " = " 
+                            std::cerr << "Error: Unexpected " << name << " = "
                                       << value << std::endl;
                         }
                         break;
@@ -240,7 +240,7 @@ namespace MAL {
 				}
 			}
 		}
-		
+
 		if ( ret != 0 ) {
 			std::cerr << "Error: Failed to parse! ret = " << ret << std::endl;
 		}
@@ -256,7 +256,7 @@ namespace MAL {
 		std::memcpy(cstr.get(), xml.c_str(), xml.size());
         std::unique_ptr<xmlDoc, XmlDocDeleter> doc(htmlReadMemory(cstr.get(), xml.size(), "http://myanimelist.net/",
                                                                    nullptr, HTML_PARSE_RECOVER
-                                                                   | HTML_PARSE_NOERROR 
+                                                                   | HTML_PARSE_NOERROR
                                                                    | HTML_PARSE_NOWARNING
                                                                    | HTML_PARSE_NONET));
 		std::unique_ptr<xmlTextReader, xmlTextReaderDeleter> reader(xmlReaderWalker(doc.get()));
@@ -265,7 +265,7 @@ namespace MAL {
             std::cerr << "XML follows: " << xml << std::endl;
 			return nullptr;
 		}
-        
+
         enum { PRIORITY, STORAGE, REREADVALUE, DISCUSS, SELECTOR_NONE } selector = SELECTOR_NONE;
         enum { TAGS, COMMENTS, NONE } textarea = NONE;
         std::string textbuf;
@@ -316,7 +316,7 @@ namespace MAL {
                 if (xmlStrEqual(attr_name.get(), "priority"_xml)) selector = PRIORITY;
                 if (xmlStrEqual(attr_name.get(), "storage_num"_xml)) selector = STORAGE;
                 if (xmlStrEqual(attr_name.get(), "reread_value"_xml)) selector = REREADVALUE;
-                if (xmlStrEqual(attr_name.get(), "discuss"_xml)) selector = DISCUSS;                
+                if (xmlStrEqual(attr_name.get(), "discuss"_xml)) selector = DISCUSS;
             } else if (name == "select" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_END_ELEMENT)  {
                 selector = SELECTOR_NONE;
             } else if (name == "option" && xmlTextReaderNodeType(reader.get()) == XML_READER_TYPE_ELEMENT) {
@@ -344,7 +344,7 @@ namespace MAL {
         }
 
         if (ret != 0) return nullptr; // Some sort of parsing error
-        
+
         return res;
     }
 
@@ -371,7 +371,7 @@ namespace MAL {
         writer.writeElement("enable_rereading", manga.enable_reconsuming?"1":"0");
         if (manga.has_details) {
             writer.writeElement("comments", manga.comments);
-            
+
             /* FIXME: MAL currently has no way to read scan group, so
              * don't overwrite what's there.
              */

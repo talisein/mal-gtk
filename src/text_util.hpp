@@ -20,6 +20,7 @@
 #include <array>
 #include <codecvt>
 #include <locale>
+#include <string>
 
 namespace MAL {
 
@@ -29,8 +30,6 @@ namespace MAL {
         void parse_html_entities(std::string&);
 
     private:
-        std::unordered_map<std::string, const std::string> html_entities;
-        std::array<std::string, 3> ignored_entities;
         std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> ucs4conv;
     };
 

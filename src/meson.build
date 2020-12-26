@@ -46,3 +46,12 @@ malgtk = executable('mal-gtk', malgtk_src,
                     c_args       : ['-DG_LOG_DOMAIN="mal-gtk"', '-DG_LOG_USE_STRUCTURED'],
                     cpp_args     : ['-DG_LOG_DOMAIN="mal-gtk"', '-DG_LOG_USE_STRUCTURED']
                     )
+
+malcli_src = ['mal-cli_main.cpp'
+             ]
+
+malcli = executable('mal-cli', malcli_src,
+                    dependencies: [libmalgtkmm_dep, gtkmm_dep],
+                    c_args : ['-DG_LOG_DOMAIN="mal-cli"', '-DG_LOG_USE_STRUCTURED'],
+                    cpp_args : ['-DG_LOG_DOMAIN="mal-cli"', '-DG_LOG_USE_STRUCTURED'],
+                    install: false)

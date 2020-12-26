@@ -52,7 +52,7 @@ namespace
 	};
     using xmlstrp = std::unique_ptr<xmlChar, XmlStrDeleter>;
 
-    constexpr const xmlChar* operator"" _xml(const char* str, size_t) {
+    const xmlChar* operator"" _xml(const char* str, size_t) {
         return reinterpret_cast<const xmlChar*>(str);
     }
 

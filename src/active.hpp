@@ -84,30 +84,30 @@ namespace MAL {
         typedef std::function<void()> Message;
         Active( const Active& ) = delete;
         void operator=( const Active& ) = delete;
- 
+
     private:
         bool done;
         message_queue<Message> mq;
         std::unique_ptr<std::thread> thd;
- 
+
         void Run() {
             while( !done ) {
                 Message msg = mq.pop();
                 msg();            // execute message
             } // note: last message sets done to true
         }
- 
+
     public:
         Active() : done(false) {
             thd = std::unique_ptr<std::thread>(
-                new std::thread( [=]{ this->Run(); } ) );
+                new std::thread( [this]{ this->Run(); } ) );
         }
 
         ~Active() {
             send( [&]{ done = true; } ); ;
             thd->join();
         }
- 
+
         /** Sends a functor to be executed on a separate thread.
          *
          * Functors are executed sequentially.

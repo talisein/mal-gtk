@@ -71,14 +71,24 @@ namespace MAL
 
     std::string curl_escape(const curlp& curl, const std::string& str)
     {
-        return std::string(curlstr{curl_easy_escape(curl.get(), str.c_str(),
-                                                    str.size())}.get());
+        curlstr escaped_str {curl_easy_escape(curl.get(), str.c_str(),
+                                              str.size())};
+        if (G_LIKELY(escaped_str)) {
+            return std::string(escaped_str.get());
+        } else {
+            g_critical("curl_easy_escape returned NULL for input of length %zu", str.size());
+            return std::string();
+        }
     }
 
     secret_string curl_escape(const curlp& curl, const secret_string& str)
     {
         curlstr s {curl_easy_escape(curl.get(), str.c_str(), str.size())};
-        if (G_UNLIKELY(!s)) return secret_string();
+        if (G_UNLIKELY(!s)) {
+            g_critical("curl_easy_escape returned NULL for secret input of length %zu", str.size());
+            return secret_string();
+        }
+
         auto len = strlen(s.get());
         secret_string res {s.get(), len};
         memset(s.get(), 0, len);

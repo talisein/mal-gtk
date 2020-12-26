@@ -169,7 +169,7 @@ namespace MAL {
     void MAL::get_anime_list_async(DownloadProgressCb_t progress_cb,
                                    OperationCompleteCb_t complete_cb)
     {
-        active.send( [=] { this->get_anime_list_sync(progress_cb, complete_cb); } );
+        active.send( [=,this] { this->get_anime_list_sync(progress_cb, complete_cb); } );
     }
 
     void MAL::get_anime_list_sync(DownloadProgressCb_t progress_cb,
@@ -606,7 +606,7 @@ namespace MAL {
     }
 
     void MAL::update_anime_async(const std::shared_ptr<Anime>& anime) {
-        active.send( [=] { update_anime_sync(anime); } );
+        active.send( [=,this] { update_anime_sync(anime); } );
     }
 
     bool MAL::update_anime_sync(const std::shared_ptr<Anime>& anime) {
@@ -704,7 +704,7 @@ namespace MAL {
     MAL::add_anime_async(const Anime& anime,
                          OperationCompleteCb_t complete_cb)
     {
-        active.send( [=] { this->add_anime_sync(anime, complete_cb); } );
+        active.send( [=,this] { this->add_anime_sync(anime, complete_cb); } );
     }
 
     bool

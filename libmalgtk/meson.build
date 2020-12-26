@@ -1,6 +1,3 @@
-libmalgtk_version = '0.4.0'
-libmalgtk_soversion = '0'
-
 gobj_dep = dependency('gobject-2.0', version : '>=2.44.0')
 glib_dep = dependency('glib-2.0',    version : '>=2.44.0')
 xml_dep  = dependency('libxml-2.0',  version : '>=2.7.8')
@@ -22,16 +19,13 @@ libmalgtk_hdrs = files(['malgtk_anime.h',
                         'malgtk_xml.h'])
 
 gnome = import('gnome')
-libmalgtk_enums = gnome.mkenums('malgtk_enumtypes',
-                                c_template : 'malgtk_enumtypes.c.template',
-                                h_template : 'malgtk_enumtypes.h.template',
-                                sources: ['malgtk_malitem.h', 'malgtk_anime.h', 'malgtk_manga.h'])
+
+libmalgtk_enums = gnome.mkenums_simple('malgtk_enumtypes',
+                                       sources : ['malgtk_malitem.h', 'malgtk_anime.h', 'malgtk_manga.h'])
 
 libmalgtk_inc = include_directories('.')
 
 libmalgtk = static_library('malgtk', libmalgtk_srcs, libmalgtk_enums,
-                            version      : libmalgtk_version,
-                            soversion    : libmalgtk_soversion,
                             dependencies : libmalgtk_deps,
                             include_directories: libmalgtk_inc)
 

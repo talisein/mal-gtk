@@ -203,3 +203,53 @@ namespace MAL
         curlshp curl_share;
     };
 }
+
+namespace MALcurl
+{
+
+    class curl
+    {
+    public:
+        curl(MAL::curlp&& p) : _p(std::move(p)) {};
+        ~curl() = default;
+
+        template<typename T>
+        int get_info(CURLINFO info, T&& val)
+        {
+            CURLcode code = curl_easy_getinfo(_p.get(), info, std::forward<T>(val));
+            if (G_UNLIKELY(CURLE_OK != code)) {
+                std::stringstream ss;
+                const char *estr = curl_easy_strerror(code);
+                ss << "Error getting curl info";
+                if (estr) ss << ": " << estr;
+                GLogField fields[] = {
+                    { "CURL_EASY_INFO_VALUE", NULL, 0},
+                    { "CURL_EASY_INFO", &info, sizeof(CURLINFO) },
+                    { "CURL_EASY_ERRORCODE", &code, sizeof(CURLcode) },
+                    { "CURL_EASY_STRERROR", estr ? estr : "", -1 },
+                    { "MESSAGE_ID", "2e8e202192914fc9ae0eb07b998e481c", -1 },
+                    { "MESSAGE", ss.str().c_str(), -1 },
+                    { "PRIORITY", MAL::log_level_to_priority(G_LOG_LEVEL_WARNING), -1},
+                };
+                std::string buf;
+                set_option_value_field(fields[0], std::forward<T>(val), buf);
+
+                g_log_structured_array(G_LOG_LEVEL_WARNING, fields, G_N_ELEMENTS(fields));
+                return -1;
+            }
+
+            return 0;
+        }
+
+
+        MAL::curlslistp get_cookies() {
+            struct curl_slist *cookies = nullptr;
+            get_info(CURLINFO_COOKIELIST, &cookies);
+
+            return MAL::curlslistp(cookies);
+        }
+
+    private:
+        MAL::curlp _p;
+    };
+}
