@@ -1,0 +1,5 @@
+#include <string_view>
+
+constexpr std::string_view APPLICATION_ID {"@malcli_appid@"};
+constexpr std::string_view REDIRECT_URI {"@malcli_appid@://oauth2redirect"};
+constexpr std::string_view CLIENT_ID {"@malcli_clientid@"};

@@ -26,7 +26,7 @@ namespace MAL {
 	{
 	public:
 		Application(int& argc, char**& argv);
-		
+
 		int run();
 
 	private:
@@ -36,6 +36,6 @@ namespace MAL {
 		MainWindow window;
 
 	};
-	
-	constexpr char APPLICATION_ID[] = "com.malgtk";
+
+	constexpr char APPLICATION_ID[] = "net.talinet.malgtk";
 }

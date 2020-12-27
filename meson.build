@@ -1,6 +1,6 @@
 project('mal-gtk', ['c', 'cpp'],
         license : 'GPLv3+',
-        version : '0.4.0',
+        version : '0.5.0',
         default_options : ['c_std=c11',
                            'cpp_std=c++2a',
                            'buildtype=release'])
@@ -11,8 +11,17 @@ if (gtk_dep.version().version_compare('<3.23.0') and cpp_compiler.has_argument('
   add_project_arguments('-Wno-parentheses', language: 'cpp')
 endif
 
+malgtk_datadir = get_option('datadir')
+malgtk_pkgdatadir = join_paths(malgtk_datadir, meson.project_name())
+malgtk_bindir = get_option('bindir')
+
+update_desktop_database = find_program('update-desktop-database', required: false)
+if (update_desktop_database.found())
+  meson.add_install_script('meson_post_install.sh')
+endif
 
 subdir('libmalgtk')
 subdir('tools')
 subdir('libmalgtkmm')
 subdir('src')
+subdir('res')

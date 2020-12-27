@@ -1,0 +1,1 @@
+option('mal_client_id', type : 'string', description: 'Client ID issued from myanimelist.net')

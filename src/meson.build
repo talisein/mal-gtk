@@ -1,9 +1,11 @@
 gobj_dep   = dependency('gobject-2.0', version : '>=2.44.0')
 glib_dep   = dependency('glib-2.0',    version : '>=2.44.0')
 glibmm_dep = dependency('glibmm-2.4',  version : '>=2.44.0')
-gtkmm_dep  = dependency('gtkmm-3.0',   version : '>=3.4.0')
+# gtk_show_uri_on_window in 3.22
+gtkmm_dep  = dependency('gtkmm-3.0',   version : '>=3.22.0')
 xml_dep    = dependency('libxml-2.0',  version : '>=2.7.8')
-curl_dep   = dependency('libcurl',     version : '>=7.24.0')
+# 7.33 for CURLOPT_XOAUTH2_BEARER
+curl_dep   = dependency('libcurl',     version : '>=7.33.0')
 secret_dep = dependency('libsecret-1', version : '>=0.12')
 sigcpp_dep = dependency('sigc++-2.0',  version : '>=2.2.11')
 gcr_dep    = dependency('gcr-base-3')
@@ -47,11 +49,22 @@ malgtk = executable('mal-gtk', malgtk_src,
                     cpp_args     : ['-DG_LOG_DOMAIN="mal-gtk"', '-DG_LOG_USE_STRUCTURED']
                     )
 
+malcli_conf = configuration_data()
+malcli_conf.set('malcli_appid', 'net.talinet.malgtk.cli')
+malcli_conf.set('malcli_clientid', get_option('mal_client_id'))
+
+configure_file(
+  input: 'mal-cli_config.h.in',
+  output: 'mal-cli_config.h',
+  configuration: malcli_conf,
+)
+
 malcli_src = ['mal-cli_main.cpp'
              ]
 
 malcli = executable('mal-cli', malcli_src,
+                    include_directories: include_directories('.'),
                     dependencies: [libmalgtkmm_dep, gtkmm_dep],
                     c_args : ['-DG_LOG_DOMAIN="mal-cli"', '-DG_LOG_USE_STRUCTURED'],
                     cpp_args : ['-DG_LOG_DOMAIN="mal-cli"', '-DG_LOG_USE_STRUCTURED'],
-                    install: false)
+                    install: true)

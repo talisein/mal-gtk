@@ -1,0 +1,16 @@
+[Desktop Entry]
+Name=@malcli_name@
+Comment=@malcli_name@ is a CLI tool to access the myanimelist.net API
+GenericName=@malcli_name@
+Exec=@malcli_name@ %U
+# Translators: Do NOT translate or transliterate this text (this is an icon file name)!
+#Icon=@malcli_appid@
+DBusActivatable=true
+Type=Application
+Terminal=true
+StartupNotify=true
+X-GNOME-UsesNotifications=true
+MimeType=x-scheme-handler/@malcli_appid@;
+Categories=GTK;Network;
+# Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
+Keywords=myanimelist.net;MyAnimeList;
