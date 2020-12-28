@@ -17,11 +17,6 @@ My goals
 - Local data store in sqlite
 - Support user profiles (Switch between accounts, or different tabs for different accounts)
 
-Update June 2020: MAL still has no publically available API. I still have a continued
-interest in maintaining a GUI Linux client, so whenever a public release happens I will
-do some work. FYI I will likely change the serialization format without trying to keep
-compatability with old files, as those are now going to be years out of date anyways.
-
 Requirements
 ------------
 [gtkmm3](https://www.gtkmm.org), [libsecret](https://wiki.gnome.org/Projects/Libsecret), [libxml2](http://xmlsoft.org/), [libcurl](https://curl.haxx.se/libcurl/), and a org.freedesktop.secrets
