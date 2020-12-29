@@ -10,6 +10,7 @@ secret_dep = dependency('libsecret-1', version : '>=0.12')
 sigcpp_dep = dependency('sigc++-2.0',  version : '>=2.2.11')
 gcr_dep    = dependency('gcr-base-3')
 thread_dep = dependency('threads')
+# TODO: move to libxml++-5.0, use subproject. Do we need xml??
 xmlpp_dep  = dependency('libxml++-3.0')
 
 malgtk_deps = [gobj_dep, glib_dep, glibmm_dep, gtkmm_dep, xml_dep, curl_dep, secret_dep, thread_dep, gcr_dep, xmlpp_dep]
@@ -59,12 +60,16 @@ configure_file(
   configuration: malcli_conf,
 )
 
-malcli_src = ['mal-cli_main.cpp'
+malcli_src = ['rng.cpp',
+              'oauth.cpp'
              ]
 
-malcli = executable('mal-cli', malcli_src,
+malcli_deps = [libmalgtkmm_dep, gtkmm_dep, pcg_cpp_dep]
+malcli = executable('mal-cli', ['mal-cli_main.cpp', malcli_src],
                     include_directories: include_directories('.'),
-                    dependencies: [libmalgtkmm_dep, gtkmm_dep],
+                    dependencies: malcli_deps,
                     c_args : ['-DG_LOG_DOMAIN="mal-cli"', '-DG_LOG_USE_STRUCTURED'],
                     cpp_args : ['-DG_LOG_DOMAIN="mal-cli"', '-DG_LOG_USE_STRUCTURED'],
                     install: true)
+test_oauth = executable('oauth_test', [malcli_src, 'test_oauth.cpp'], dependencies: [boostut_dep, malcli_deps])
+test('oauth', test_oauth)

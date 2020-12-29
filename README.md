@@ -11,18 +11,22 @@ simple CLI tool 'mal-cli' to query the API.
 
 My goals
 --------
-- Use C++20
-- GTK+4 interface
+- C++20
+- GTK4 interface
 - Flatpak releases
 - Local data store in sqlite
 - Support user profiles (Switch between accounts, or different tabs for different accounts)
 
 Requirements
 ------------
-[gtkmm3](https://www.gtkmm.org), [libsecret](https://wiki.gnome.org/Projects/Libsecret), [libxml2](http://xmlsoft.org/), [libcurl](https://curl.haxx.se/libcurl/), and a org.freedesktop.secrets
-provider such as gnome-keyring-daemon or ksecretservice.
-
-Also [meson](http://mesonbuild.com/) and [ninja](https://ninja-build.org/) to build it.
+C++20 compiler, like gcc 10 or clang 10.
+[gtkmm3](https://www.gtkmm.org)
+[libsecret](https://wiki.gnome.org/Projects/Libsecret)
+[libxml2](http://xmlsoft.org/)
+[libcurl](https://curl.haxx.se/libcurl/)
+[meson](http://mesonbuild.com/)
+[ninja](https://ninja-build.org/)
+...and a org.freedesktop.secrets provider such as [gnome-keyring-daemon](https://wiki.gnome.org/Projects/GnomeKeyring).
 
 Building
 --------

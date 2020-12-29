@@ -20,6 +20,12 @@ if (update_desktop_database.found())
   meson.add_install_script('meson_post_install.sh')
 endif
 
+boostut_proj = subproject('boostut')
+boostut_dep = boostut_proj.get_variable('boostut_dep')
+
+pcg_cpp_sp = subproject('pcg')
+pcg_cpp_dep = pcg_cpp_sp.get_variable('pcg_cpp_dep')
+
 subdir('libmalgtk')
 subdir('tools')
 subdir('libmalgtkmm')
