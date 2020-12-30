@@ -11,6 +11,18 @@ if (gtk_dep.version().version_compare('<3.23.0') and cpp_compiler.has_argument('
   add_project_arguments('-Wno-parentheses', language: 'cpp')
 endif
 
+cpp_compiler.has_header('version', required: true)
+cpp_compiler.has_header_symbol('version', '__cpp_constinit', required: true)
+cpp_compiler.has_header_symbol('version', '__cpp_constexpr_dynamic_alloc')
+cpp_compiler.has_header_symbol('version', '__cpp_lib_span', required: true)
+cpp_compiler.has_header_symbol('version', '__cpp_lib_constexpr_string_view', required: true)
+cpp_compiler.has_header_symbol('version', '__cpp_lib_starts_ends_with', required: true)
+cpp_compiler.has_header_symbol('version', '__cpp_lib_array_constexpr', required: true)
+cpp_compiler.has_header_symbol('version', '__cpp_lib_integer_comparison_functions')
+cpp_compiler.has_header_symbol('version', '__cpp_lib_bit_cast')
+cpp_compiler.has_header_symbol('version', '__cpp_lib_stacktrace')
+cpp_compiler.has_header_symbol('version', '__cpp_lib_source_location')
+
 malgtk_datadir = get_option('datadir')
 malgtk_pkgdatadir = join_paths(malgtk_datadir, meson.project_name())
 malgtk_bindir = get_option('bindir')
