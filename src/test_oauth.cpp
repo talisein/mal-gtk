@@ -7,9 +7,10 @@ std::basic_string<unsigned char> operator"" _us(const char *str, size_t len) {
     return {reinterpret_cast<const unsigned char*>(str), len};
 }
 
-int main() {
+int main(int, char *[]) {
     using namespace boost::ut;
     using namespace std::string_literals;
+    using namespace std::string_view_literals;
 
     "RFC 4648 Test Vectors"_test = [] {
         expect(malgtk::base64_url_encode(""_us) == ""s);
@@ -28,7 +29,7 @@ int main() {
     };
 
     "RFC 7636 Appendix B"_test = [] {
-        OAuthRequest req;
+        OAuthAuthorizationRequest<code_challenge_method_e::S256> req;
         constexpr std::array<unsigned char,32> arr {
             116, 24, 223, 180, 151, 153, 224, 37, 79, 250, 96, 125, 216, 173,
             187, 186, 22, 212, 37, 77, 105, 214, 191, 240, 91, 88, 5, 88, 83,
@@ -36,6 +37,25 @@ int main() {
         };
         req.code_verifier = malgtk::base64_url_encode(arr);
         expect(req.code_verifier == "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"s);
-        expect(req.get_code_challenge(OAuthRequest::code_challenge_method::S256) == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"s);
+        expect(req.get_code_challenge() == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"s);
+    };
+
+    "PLAIN code challenge"_test = [] {
+        OAuthAuthorizationRequest<code_challenge_method_e::PLAIN> req;
+        constexpr std::array<unsigned char,32> arr {
+            116, 24, 223, 180, 151, 153, 224, 37, 79, 250, 96, 125, 216, 173,
+            187, 186, 22, 212, 37, 77, 105, 214, 191, 240, 91, 88, 5, 88, 83,
+            132, 141, 121
+        };
+        req.code_verifier = malgtk::base64_url_encode(arr);
+        expect(req.code_verifier == "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"s);
+        expect(req.get_code_challenge() == "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"s);
+    };
+
+    "constexpr tests"_test = [] {
+        OAuthAuthorizationRequest<code_challenge_method_e::PLAIN> req;
+        static_assert(req.get_code_challenge_method() == "plain"sv);
+        OAuthAuthorizationRequest<code_challenge_method_e::S256> req2;
+        static_assert(req2.get_code_challenge_method() == "S256"sv);
     };
 }

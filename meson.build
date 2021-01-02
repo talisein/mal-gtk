@@ -1,7 +1,7 @@
 project('mal-gtk', ['c', 'cpp'],
         license : 'GPLv3+',
         version : '0.5.0',
-        default_options : ['c_std=c11',
+        default_options : ['c_std=c18',
                            'cpp_std=c++2a',
                            'buildtype=release'])
 

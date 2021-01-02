@@ -4,6 +4,7 @@
 #include <gtkmm.h>
 #include "oauth.h"
 #include "rng.h"
+#include "mal-cli_config.h"
 
 namespace {
     constexpr static std::string_view unreserved_chars{"abcdefghijklmnopqrxtuvwxyzABCDEFGHIJKLMNOPQRXTUVWXYZ0123456789-._~"};
@@ -42,22 +43,28 @@ namespace {
     }
 }
 
-OAuthRequest::OAuthRequest() :
-        state(generate_state()),
-        code_verifier(generate_code_verifier())
+template<code_challenge_method_e CCM>
+std::string OAuthAuthorizationRequest<CCM>::get_code_challenge() const
 {
-}
-
-std::string
-OAuthRequest::get_code_challenge(code_challenge_method method)
-{
-    switch (method) {
-        case code_challenge_method::PLAIN:
+    switch (CCM) {
+        case code_challenge_method_e::PLAIN:
             return code_verifier;
-        case code_challenge_method::S256:
+        case code_challenge_method_e::S256:
             return get_code_challenge_s256(code_verifier);
     }
-    return code_verifier;
+}
+
+template<code_challenge_method_e CCM>
+OAuthAuthorizationRequest<CCM>
+OAuthActor<CCM>::get_authorization_request() const
+{
+    return {
+        m_client_id,
+        m_redirect_uri,
+        m_scope,
+        generate_state(),
+        generate_code_verifier()
+    };
 }
 
 std::string
@@ -68,3 +75,8 @@ malgtk::base64_url_encode(std::span<const unsigned char> sequence) {
     std::replace_if(std::begin(base64), std::end(base64), [](auto p){return p == '/';}, '_');
     return base64;
 }
+
+template class OAuthAuthorizationRequest<code_challenge_method_e::PLAIN>;
+template class OAuthAuthorizationRequest<code_challenge_method_e::S256>;
+template class OAuthActor<code_challenge_method_e::PLAIN>;
+template class OAuthActor<code_challenge_method_e::S256>;

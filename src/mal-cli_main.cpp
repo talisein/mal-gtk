@@ -11,6 +11,9 @@ int main(int argc, char *argv[]) {
                                         Glib::ustring(APPLICATION_ID.begin(), APPLICATION_ID.end()),
                                         Gio::ApplicationFlags::APPLICATION_HANDLES_OPEN);
 
+    static_assert(CLIENT_ID.size() > 0, "myanimelist.net client ID must be set via meson configure. See README.md");
+    OAuthActor<code_challenge_method_e::PLAIN> oauth(CLIENT_ID, REDIRECT_URI);
+
     app->signal_open().connect([&](const auto &vec_files, const Glib::ustring& str) -> void {
         // vec files is a std::vector<glib::refptr<file>>
         std::cout << "In signal open!\n"
@@ -29,16 +32,17 @@ int main(int argc, char *argv[]) {
     app->signal_activate().connect([&]() {
         std::cout << "activated!\n";
 
-        const std::string_view baseurl {"https://myanimelist.net/v1/oauth2/authorize?response_type=code"};
+        const std::string_view baseurl {"https://myanimelist.net/v1/oauth2/authorize?"};
         std::stringstream ss;
-        static_assert(CLIENT_ID.size() > 0, "myanimelist.net client ID must be set via meson configure. See README.md");
-        OAuthRequest req;
+
+        auto req = oauth.get_authorization_request();
         ss << baseurl
-           << "&client_id=" << CLIENT_ID
+           << "response_type=" << req.response_type
+           << "&client_id=" << req.client_id
            << "&state=" << req.state
-           << "&redirect_uri=" << REDIRECT_URI
-           << "&code_challenge=" << req.get_code_challenge(OAuthRequest::code_challenge_method::PLAIN)
-           << "&code_challenge_method=plain";
+           << "&redirect_uri=" << *req.redirect_uri
+           << "&code_challenge=" << req.get_code_challenge()
+           << "&code_challenge_method=" << req.get_code_challenge_method();
         auto url = ss.str();
         GError *err = NULL;
         std::cout << "Going to " << url << '\n';
