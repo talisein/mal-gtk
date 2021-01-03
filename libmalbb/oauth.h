@@ -1,9 +1,12 @@
 #pragma once
 #include <string>
 #include <span>
-#include <set>
+#include <map>
 #include <optional>
 #include <sigc++/trackable.h>
+#include <giomm/file.h>
+#include <glibmm.h>
+#include <functional>
 
 enum class code_challenge_method_e {
     PLAIN,
@@ -15,8 +18,7 @@ struct OAuthAuthorizationRequest
 {
     static constexpr std::string_view response_type {"code"};
     std::string_view client_id;
-    std::optional<std::string_view> redirect_uri;
-    std::optional<std::string_view> scope;
+    std::string redirect_uri;
     std::string state;
     std::string code_verifier;
 
@@ -33,36 +35,31 @@ struct OAuthAuthorizationRequest
     }
 };
 
+
 template<code_challenge_method_e CCM>
 class OAuthActor : public sigc::trackable
 {
 public:
-    OAuthActor(const std::string_view &client_id,
-               const std::optional<std::string_view> &redirect_uri,
-               const std::optional<std::string> &scope = std::nullopt)
-        :
-        m_client_id(client_id),
-        m_redirect_uri(redirect_uri),
-        m_scope(scope)
-    {
-    }
+    OAuthActor(const std::string_view &client_id, const std::string_view &redirect_uri);
+
+    void on_open(const std::vector<Glib::RefPtr<Gio::File>> &vec_files, const Glib::ustring& hint);
+
+    void get_access_token_async(const std::function<void (std::string_view)>& cb);
 
     OAuthAuthorizationRequest<CCM> get_authorization_request() const;
 
 private:
-    template<code_challenge_method_e CCME>
-    struct OAuthAuthorizationStateComparitor {
-        bool operator()(const OAuthAuthorizationRequest<CCME> &a, const OAuthAuthorizationRequest<CCME> &b) const {
-            return a.state < b.state;
+    struct URIDeleter {
+        void operator()(GUri *uri) const {
+            g_uri_unref(uri);
         }
     };
+    using GUriPtr = std::unique_ptr<GUri, URIDeleter>;
 
-    using pending_set_t=std::set<OAuthAuthorizationRequest<CCM>, OAuthAuthorizationStateComparitor<CCM>>;
-    pending_set_t pending_authorizations;
+    std::map<std::string, OAuthAuthorizationRequest<CCM>> pending_authorizations;
 
     const std::string_view m_client_id;
-    const std::optional<std::string_view> m_redirect_uri;
-    const std::optional<std::string> m_scope;
+    GUriPtr m_redirect_uri;
 };
 
 namespace malgtk {

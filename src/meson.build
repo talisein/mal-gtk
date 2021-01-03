@@ -49,27 +49,3 @@ malgtk = executable('mal-gtk', malgtk_src,
                     c_args       : ['-DG_LOG_DOMAIN="mal-gtk"', '-DG_LOG_USE_STRUCTURED'],
                     cpp_args     : ['-DG_LOG_DOMAIN="mal-gtk"', '-DG_LOG_USE_STRUCTURED']
                     )
-
-malcli_conf = configuration_data()
-malcli_conf.set('malcli_appid', 'net.talinet.malgtk.cli')
-malcli_conf.set('malcli_clientid', get_option('mal_client_id'))
-
-configure_file(
-  input: 'mal-cli_config.h.in',
-  output: 'mal-cli_config.h',
-  configuration: malcli_conf,
-)
-
-malcli_src = ['rng.cpp',
-              'oauth.cpp'
-             ]
-
-malcli_deps = [libmalgtkmm_dep, gtkmm_dep, pcg_cpp_dep]
-malcli = executable('mal-cli', ['mal-cli_main.cpp', malcli_src],
-                    include_directories: include_directories('.'),
-                    dependencies: malcli_deps,
-                    c_args : ['-DG_LOG_DOMAIN="mal-cli"', '-DG_LOG_USE_STRUCTURED'],
-                    cpp_args : ['-DG_LOG_DOMAIN="mal-cli"', '-DG_LOG_USE_STRUCTURED'],
-                    install: true)
-test_oauth = executable('oauth_test', [malcli_src, 'test_oauth.cpp'], dependencies: [boostut_dep, malcli_deps])
-test('oauth', test_oauth)

@@ -1,4 +1,3 @@
-glibmm_dep = dependency('glibmm-2.4', version : '>=2.44.0')
 gmmproc_dir = glibmm_dep.get_pkgconfig_variable('gmmprocdir')
 gmmproc = find_program(join_paths(gmmproc_dir, 'gmmproc'))
 
@@ -63,7 +62,6 @@ malgtkmm_targets += custom_target('wrap_init',
                                             '--namespace=MALnew',
                                             '@INPUT@'])
 
-gtkmm_dep = dependency('gtkmm-3.0', version : '>=3.0.0')
 libmalgtkmm_deps = [glibmm_dep, gtkmm_dep, xml_dep, libmalgtk_dep]
 
 libmalgtkmm = static_library('malgtkmm', malgtkmm_targets, 'init.cc',

@@ -1,5 +1,4 @@
 gobj_dep = dependency('gobject-2.0', version : '>=2.44.0')
-glib_dep = dependency('glib-2.0',    version : '>=2.44.0')
 xml_dep  = dependency('libxml-2.0',  version : '>=2.7.8')
 
 libmalgtk_deps = [gobj_dep, glib_dep, xml_dep]
